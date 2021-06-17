@@ -5,6 +5,7 @@ on:
       - lego-bluetooth-extensions
     tags:
       - "!*"
+  workflow_dispatch:
 
 jobs:
   build-deploy:
