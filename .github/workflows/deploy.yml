@@ -16,6 +16,9 @@ jobs:
           repository: bricklife/scratch-gui
           ref: lego-bluetooth-extensions
           path: ./scratch-gui
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
       - run: npm ci
         working-directory: ./scratch-gui
       - uses: actions/checkout@v2
