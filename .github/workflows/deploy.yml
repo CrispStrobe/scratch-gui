@@ -21,14 +21,6 @@ jobs:
           node-version-file: ./scratch-gui/.nvmrc
           cache: npm
           cache-dependency-path: ./scratch-gui/package-lock.json
-      - name: Info
-        run: |
-          cat <<EOF
-          Node version: $(node --version)
-          NPM version: $(npm --version)
-          GitHub ref: ${{ github.ref }}
-          GitHub head ref: ${{ github.head_ref }}
-          EOF
       - run: npm ci
         working-directory: ./scratch-gui
       - uses: actions/checkout@v4.1.1
