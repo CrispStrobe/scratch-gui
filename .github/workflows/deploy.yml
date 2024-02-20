@@ -18,8 +18,9 @@ jobs:
           path: ./scratch-gui
       - uses: actions/setup-node@v4.0.2
         with:
-          cache: npm
           node-version-file: ./scratch-gui/.nvmrc
+          cache: npm
+          cache-dependency-path: ./scratch-gui/package-lock.json
       - name: Info
         run: |
           cat <<EOF
