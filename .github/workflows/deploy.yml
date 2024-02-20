@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4.0.2
         with:
           cache: npm
-          node-version-file: .nvmrc
+          node-version-file: ./scratch-gui/.nvmrc
       - name: Info
         run: |
           cat <<EOF
