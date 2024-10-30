@@ -196,7 +196,9 @@ class LibraryComponent extends React.Component {
             description={data.description}
             disabled={data.disabled}
             extensionId={data.extensionId}
+            extensionURL={data.extensionURL}  // Added from Xcratch
             featured={data.featured}
+            helpLink={data.helpLink}          // Added from Xcratch
             hidden={data.hidden}
             iconMd5={data.costumes ? data.costumes[0].md5ext : data.md5ext}
             iconRawURL={data.rawURL}

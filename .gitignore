@@ -26,3 +26,9 @@ npm-*
 
 # for act
 .secrets
+
+# HTTPS certification
+*.pem
+
+# PWA
+assetsManifest.json

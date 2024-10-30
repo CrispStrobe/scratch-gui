@@ -14,6 +14,9 @@ import {
     projectError
 } from '../reducers/project-state';
 
+import extensionLibraryContent from '../lib/libraries/extensions/index.jsx';
+import preInstallExtensions from './libraries/extensions/preInstall/index.js';
+
 /*
  * Higher Order Component to manage events emitted by the VM
  * @param {React.Component} WrappedComponent component to manage VM events for
@@ -34,6 +37,9 @@ const vmManagerHOC = function (WrappedComponent) {
                 this.props.vm.setCompatibilityMode(true);
                 this.props.vm.initialized = true;
                 this.props.vm.setLocale(this.props.locale, this.props.messages);
+                // To load extension which is used in a project file.
+                this.props.vm.extensionManager.extensionLibraryContent = extensionLibraryContent;
+                preInstallExtensions(this.props.vm.extensionManager);
             }
             if (!this.props.isPlayerOnly && !this.props.isStarted) {
                 this.props.vm.start();
@@ -51,27 +57,50 @@ const vmManagerHOC = function (WrappedComponent) {
                 this.props.vm.start();
             }
         }
+        getProjectData () {
+            const search = window.location.search.substr(1)
+                .split('&')
+                .reduce((acc, cur) => {
+                    const keyAndValue = cur.split('=');
+                    acc[keyAndValue[0]] = keyAndValue[1];
+                    return acc;
+                }, {});
+            if (search.project) {
+                return fetch(decodeURIComponent(search.project))
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Project not found.');
+                        }
+                        return response.arrayBuffer();
+                    })
+                    .catch(() => this.props.projectData);
+            }
+            return Promise.resolve(this.props.projectData);
+        }
         loadProject () {
-            return this.props.vm.loadProject(this.props.projectData)
-                .then(() => {
-                    this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
-                    // Wrap in a setTimeout because skin loading in
-                    // the renderer can be async.
-                    setTimeout(() => this.props.onSetProjectUnchanged());
+            return this.getProjectData()
+                .then(projectData => {
+                    this.props.vm.loadProject(projectData)
+                        .then(() => {
+                            this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
+                            // Wrap in a setTimeout because skin loading in
+                            // the renderer can be async.
+                            setTimeout(() => this.props.onSetProjectUnchanged());
 
-                    // If the vm is not running, call draw on the renderer manually
-                    // This draws the state of the loaded project with no blocks running
-                    // which closely matches the 2.0 behavior, except for monitors–
-                    // 2.0 runs monitors and shows updates (e.g. timer monitor)
-                    // before the VM starts running other hat blocks.
-                    if (!this.props.isStarted) {
-                        // Wrap in a setTimeout because skin loading in
-                        // the renderer can be async.
-                        setTimeout(() => this.props.vm.renderer.draw());
-                    }
-                })
-                .catch(e => {
-                    this.props.onError(e);
+                            // If the vm is not running, call draw on the renderer manually
+                            // This draws the state of the loaded project with no blocks running
+                            // which closely matches the 2.0 behavior, except for monitors–
+                            // 2.0 runs monitors and shows updates (e.g. timer monitor)
+                            // before the VM starts running other hat blocks.
+                            if (!this.props.isStarted) {
+                                // Wrap in a setTimeout because skin loading in
+                                // the renderer can be async.
+                                setTimeout(() => this.props.vm.renderer.draw());
+                            }
+                        })
+                        .catch(e => {
+                            this.props.onError(e);
+                        });
                 });
         }
         render () {

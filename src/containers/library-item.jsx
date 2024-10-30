@@ -106,7 +106,7 @@ class LibraryItem extends React.PureComponent {
     render () {
         const iconMd5 = this.curIconMd5();
         const iconURL = iconMd5 ?
-            `https://cdn.assets.scratch.mit.edu/internalapi/asset/${iconMd5}/get/` :
+            `https://assets.scratch.mit.edu/internalapi/asset/${iconMd5}/get/` :
             this.props.iconRawURL;
         return (
             <LibraryItemComponent
@@ -115,7 +115,9 @@ class LibraryItem extends React.PureComponent {
                 description={this.props.description}
                 disabled={this.props.disabled}
                 extensionId={this.props.extensionId}
+                extensionURL={this.props.extensionURL}
                 featured={this.props.featured}
+                helpLink={this.props.helpLink}
                 hidden={this.props.hidden}
                 iconURL={iconURL}
                 icons={this.props.icons}
@@ -147,7 +149,9 @@ LibraryItem.propTypes = {
     ]),
     disabled: PropTypes.bool,
     extensionId: PropTypes.string,
+    extensionURL: PropTypes.string,
     featured: PropTypes.bool,
+    helpLink: PropTypes.string,
     hidden: PropTypes.bool,
     iconMd5: PropTypes.string,
     iconRawURL: PropTypes.string,

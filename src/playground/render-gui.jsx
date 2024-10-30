@@ -8,7 +8,7 @@ import HashParserHOC from '../lib/hash-parser-hoc.jsx';
 import log from '../lib/log.js';
 
 const onClickLogo = () => {
-    window.location = 'https://scratch.mit.edu';
+    window.location = 'https://xcratch.github.io';
 };
 
 const handleTelemetryModalCancel = () => {
@@ -41,7 +41,7 @@ export default appTarget => {
 
     // TODO a hack for testing the backpack, allow backpack host to be set by url param
     const backpackHostMatches = window.location.href.match(/[?&]backpack_host=([^&]*)&?/);
-    const backpackHost = backpackHostMatches ? backpackHostMatches[1] : null;
+    const backpackHost = backpackHostMatches ? backpackHostMatches[1] : 'localStorage';
 
     const scratchDesktopMatches = window.location.href.match(/[?&]isScratchDesktop=([^&]+)/);
     let simulateScratchDesktop;
@@ -76,7 +76,7 @@ export default appTarget => {
             <WrappedGui
                 canEditTitle
                 backpackVisible
-                showComingSoon
+                showComingSoon={false}
                 backpackHost={backpackHost}
                 canSave={false}
                 onClickLogo={onClickLogo}
