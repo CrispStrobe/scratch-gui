@@ -9,6 +9,9 @@ const WebpackPwaManifest = require('webpack-pwa-manifest');
 
 const ScratchWebpackConfigBuilder = require('scratch-webpack-configuration');
 
+console.log(`Current NODE_ENV: ${process.env.NODE_ENV}`);
+
+
 // const STATIC_PATH = process.env.STATIC_PATH || '/static';
 
 const baseConfig = new ScratchWebpackConfigBuilder(
@@ -114,6 +117,7 @@ if (process.env.NODE_ENV === 'development') {
         }));
 }
 
+
 if (!process.env.CI) {
     baseConfig.addPlugin(new webpack.ProgressPlugin());
 }
@@ -195,16 +199,12 @@ const buildConfig = baseConfig.clone()
         ]
     }));
 
-// Enable HTTPS for the dev server
+// setup the dev server
 buildConfig.merge({
     devServer: {
-        server: {
-            type: 'https',
-            options: {
-                key: '.vscode/localhost-key.pem',
-                cert: '.vscode/localhost.pem'
-            }
-        }
+        host: '0.0.0.0',
+        port: process.env.PORT || 8601,
+        allowedHosts: 'all'
     }
 });
 
