@@ -196,7 +196,6 @@ const buildConfig = baseConfig.clone()
     }));
 
 // Enable HTTPS for the dev server
-/*
 buildConfig.merge({
     devServer: {
         server: {
@@ -206,15 +205,6 @@ buildConfig.merge({
                 cert: '.vscode/localhost.pem'
             }
         }
-    }
-});*/
-
-// only http for the dev server
-buildConfig.merge({
-    devServer: {
-        host: '0.0.0.0',
-        port: process.env.PORT || 8601,
-        allowedHosts: 'all'
     }
 });
 
