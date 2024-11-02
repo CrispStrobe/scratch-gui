@@ -1,5 +1,171 @@
-# scratch-gui
+# Scratch GUI with LEGO BOOST and Xcratch Integration
 
+## Extensions in this fork repo
+This includes xcratch scratch-vm and scratch-gui combined with fix for Lego Boost Distance Sensor.
+Try it on: https://crispstrobe.github.io/scratch-gui/
+For MacOS or iOS, you might wannt to use Scrub. You can just use an URL like above in Scrub settings.
+
+## Acknowledgments
+- Scratch Team for the original Scratch, Scratch Foundation for maintaining Scratch 3.0
+- Xcratch/yokobond for the extensible Scratch mod (https://github.com/xcratch/xcratch.github.io)
+- afpeuti for the LEGO BOOST distance sensor implementation (https://github.com/scratchfoundation/scratch-vm/pull/2299))
+
+# Set this up
+
+You can of course easily setup such a modified version of Scratch GUI. Example procedure below:
+
+## Prerequisites
+
+- Node.js
+- Git
+- macOS or Linux (Windows users might need to adjust some commands)
+
+## Initial Setup
+
+### 1. Set up the Virtual Machine (VM)
+
+```bash
+# Clone your fork of scratch-vm
+cd ~/code
+git clone https://github.com/CrispStrobe/scratch-vm.git scratch-vm-4
+cd scratch-vm-4
+
+# Add Xcratch's VM as a remote
+git remote add xcratch https://github.com/xcratch/scratch-vm.git
+git fetch xcratch
+
+# Create backup branch and merge Xcratch changes
+git checkout develop
+git branch develop-backup-oct2024
+git merge xcratch/xcratch
+
+# Install dependencies and build
+npm install
+npm run build
+```
+
+### 2. Set up the GUI
+
+```bash
+# Clone your fork of scratch-gui
+cd ~/code
+git clone https://github.com/CrispStrobe/scratch-gui.git scratch-gui-3
+cd scratch-gui-3
+
+# Add Xcratch's GUI as a remote
+git remote add xcratch https://github.com/xcratch/scratch-gui.git
+git fetch xcratch
+
+# Create backup branch and merge Xcratch changes
+git checkout develop
+git branch develop-backup-oct2024
+git merge xcratch/xcratch
+
+# Install dependencies and link VM
+npm install
+npm link ../scratch-vm-4
+```
+
+## Development Setup
+
+### Configure webpack.config.js
+
+The webpack configuration needs to be updated for proper development and deployment. Key changes include:
+
+1. Update the dev server configuration
+2. Set up PWA support
+3. Configure proper asset handling
+
+Example webpack.config.js sections:
+
+```javascript
+// Dev server configuration
+buildConfig.merge({
+    devServer: {
+        host: '0.0.0.0',
+        port: process.env.PORT || 8601,
+        allowedHosts: 'all'
+    }
+});
+```
+
+### Local Development
+
+To run the project locally:
+
+```bash
+cd ~/code/scratch-gui-3
+npm start
+```
+
+Visit http://localhost:8601 in your browser.
+
+## Deployment to GitHub Pages
+
+### 1. Prepare for deployment
+
+Update package.json to include:
+```json
+{
+  "homepage": "https://crispstrobe.github.io/scratch-gui",
+  "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "touch build/.nojekyll && gh-pages -t -d build -m \"[skip ci] Build for $(git log --pretty=format:%H -n1)\""
+  }
+}
+```
+
+### 2. Manual Deployment
+
+If the automated deployment doesn't work, use these steps:
+
+```bash
+# Create a fresh directory for gh-pages
+cd ~/code
+mkdir scratch-gui-3-pages
+cd scratch-gui-3-pages
+
+# Initialize git and copy build files
+git init
+cp -r ../scratch-gui-3/build/* .
+
+# Set up gh-pages branch
+git add .
+git checkout -b gh-pages
+git commit -m "Deploy to GitHub Pages"
+git remote add origin https://github.com/CrispStrobe/scratch-gui.git
+git push -u origin gh-pages --force
+```
+
+### 3. Configure GitHub Pages
+
+1. Go to your repository settings on GitHub
+2. Navigate to Pages section
+3. Set source to "Deploy from a branch"
+4. Select "gh-pages" branch
+5. Save changes
+
+Your site will be available at https://crispstrobe.github.io/scratch-gui/
+
+## Project Structure
+
+Important directories and files:
+
+```
+scratch-vm-4/
+└── src/
+    └── extensions/
+        └── scratch3_boost/  # LEGO BOOST extension code
+
+scratch-gui-3/
+├── src/
+│   └── lib/
+│       └── libraries/
+│           └── extensions/  # Extension configurations
+└── build/                  # Built files for deployment
+```
+
+# Original general Scratch-GUI README
 Scratch GUI is a set of React components that comprise the interface for creating and running Scratch 3.0 projects
 
 To open the current build in your browser on Github Pages:
