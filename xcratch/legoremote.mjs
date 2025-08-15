@@ -13948,6 +13948,7 @@ var Scratch3LegoRemoteBlocks = /*#__PURE__*/function () {
   }]);
   return Scratch3LegoRemoteBlocks;
 }();
-exports.blockClass = Scratch3LegoRemoteBlocks;
+var blockClass = Scratch3LegoRemoteBlocks;
+blockClass = Scratch3LegoRemoteBlocks;
 
-export { entry };
+export { blockClass, entry };

@@ -14269,6 +14269,7 @@ var Scratch3ControlPlusBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
   }]);
   return Scratch3ControlPlusBlocks;
 }(BleBaseBlocks);
-exports.blockClass = Scratch3ControlPlusBlocks;
+var blockClass = Scratch3ControlPlusBlocks;
+blockClass = Scratch3ControlPlusBlocks;
 
-export { entry };
+export { blockClass, entry };

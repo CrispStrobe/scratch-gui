@@ -14310,6 +14310,7 @@ var Scratch3SpikeEssentialBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
   }]);
   return Scratch3SpikeEssentialBlocks;
 }(BleBaseBlocks);
-exports.blockClass = Scratch3SpikeEssentialBlocks;
+var blockClass = Scratch3SpikeEssentialBlocks;
+blockClass = Scratch3SpikeEssentialBlocks;
 
-export { entry };
+export { blockClass, entry };

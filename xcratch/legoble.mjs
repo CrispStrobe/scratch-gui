@@ -14271,6 +14271,7 @@ var Scratch3LegoBleBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
   }]);
   return Scratch3LegoBleBlocks;
 }(BleBaseBlocks);
-exports.blockClass = Scratch3LegoBleBlocks;
+var blockClass = Scratch3LegoBleBlocks;
+blockClass = Scratch3LegoBleBlocks;
 
-export { entry };
+export { blockClass, entry };

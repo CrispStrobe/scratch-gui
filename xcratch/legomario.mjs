@@ -14189,6 +14189,7 @@ var Scratch3LegoMarioBlocks = /*#__PURE__*/function (_MarioBaseBlocks) {
   }]);
   return Scratch3LegoMarioBlocks;
 }(MarioBaseBlocks);
-exports.blockClass = Scratch3LegoMarioBlocks;
+var blockClass = Scratch3LegoMarioBlocks;
+blockClass = Scratch3LegoMarioBlocks;
 
-export { entry };
+export { blockClass, entry };

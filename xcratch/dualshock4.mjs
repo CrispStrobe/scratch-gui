@@ -4343,7 +4343,7 @@ See the accompanying LICENSE file for terms.
   };
 })(core$1);
 
-var en$1 = {};
+var en$2 = {};
 
 (function (exports) {
 
@@ -4359,13 +4359,13 @@ var en$1 = {};
       return n == 1 && v0 ? "one" : "other";
     }
   };
-})(en$1);
+})(en$2);
 
 /* jslint esnext: true */
 (function (exports) {
 
   var src$core$$ = core$1,
-    src$en$$ = en$1;
+    src$en$$ = en$2;
   src$core$$["default"].__addLocaleData(src$en$$["default"]);
   src$core$$["default"].defaultLocale = 'en';
   exports["default"] = src$core$$["default"];
@@ -4773,13 +4773,13 @@ RelativeFormat.prototype._selectUnits = function (diffReport) {
   return units;
 };
 
-var en = {};
+var en$1 = {};
 
-Object.defineProperty(en, "__esModule", {
+Object.defineProperty(en$1, "__esModule", {
   value: true
 });
 /* @generated */
-en.default = {
+en$1.default = {
   "locale": "en",
   "pluralRuleFunction": function pluralRuleFunction(n, ord) {
     var s = String(n).split('.'),
@@ -5041,7 +5041,7 @@ Object.defineProperty(main, "__esModule", {
   value: true
 });
 var core_1 = core;
-var en_1 = en;
+var en_1 = en$1;
 core_1.default.__addLocaleData(en_1.default);
 core_1.default.defaultLocale = 'en';
 main.default = core_1.default;
@@ -6693,7 +6693,7 @@ function formatPlural(config, state, value) {
   }
   return 'other';
 }
-function formatMessage(config, state) {
+function formatMessage$1(config, state) {
   var messageDescriptor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var values = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
   var locale = config.locale,
@@ -6761,7 +6761,7 @@ function formatHTMLMessage(config, state, messageDescriptor) {
     escaped[name] = typeof value === 'string' ? escape(value) : value;
     return escaped;
   }, {});
-  return formatMessage(config, state, messageDescriptor, escapedValues);
+  return formatMessage$1(config, state, messageDescriptor, escapedValues);
 }
 var format = Object.freeze({
   formatDate: formatDate,
@@ -6769,7 +6769,7 @@ var format = Object.freeze({
   formatRelative: formatRelative,
   formatNumber: formatNumber,
   formatPlural: formatPlural,
-  formatMessage: formatMessage,
+  formatMessage: formatMessage$1,
   formatHTMLMessage: formatHTMLMessage
 });
 
@@ -7323,7 +7323,7 @@ var defaultFormatMessage = function defaultFormatMessage(descriptor, values) {
   if (process.env.NODE_ENV !== 'production') {
     console.error('[React Intl] Could not find required `intl` object. <IntlProvider> needs to exist in the component ancestry. Using default message as fallback.');
   }
-  return formatMessage({}, {
+  return formatMessage$1({}, {
     getMessageFormat: memoizeFormatConstructor(IntlMessageFormat)
   }, descriptor, values);
 };
@@ -7582,5 +7582,1160 @@ var entry = {
   bluetoothRequired: false,
   internetConnectionRequired: false
 };
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function toPrimitive(t, r) {
+  if ("object" != _typeof$1(t) || !t) return t;
+  var e = t[Symbol.toPrimitive];
+  if (void 0 !== e) {
+    var i = e.call(t, r || "default");
+    if ("object" != _typeof$1(i)) return i;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
+  }
+  return ("string" === r ? String : Number)(t);
+}
+
+function toPropertyKey(t) {
+  var i = toPrimitive(t, "string");
+  return "symbol" == _typeof$1(i) ? i : String(i);
+}
+
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, toPropertyKey(descriptor.key), descriptor);
+  }
+}
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  Object.defineProperty(Constructor, "prototype", {
+    writable: false
+  });
+  return Constructor;
+}
+
+/**
+ * Block argument types
+ * @enum {string}
+ */
+var ArgumentType = {
+  /**
+   * Numeric value with angle picker
+   */
+  ANGLE: 'angle',
+  /**
+   * Boolean value with hexagonal placeholder
+   */
+  BOOLEAN: 'Boolean',
+  /**
+   * Numeric value with color picker
+   */
+  COLOR: 'color',
+  /**
+   * Numeric value with text field
+   */
+  NUMBER: 'number',
+  /**
+   * String value with text field
+   */
+  STRING: 'string',
+  /**
+   * String value with matrix field
+   */
+  MATRIX: 'matrix',
+  /**
+   * MIDI note number with note picker (piano) field
+   */
+  NOTE: 'note',
+  /**
+   * Inline image on block (as part of the label)
+   */
+  IMAGE: 'image'
+};
+var argumentType = ArgumentType;
+
+/**
+ * Types of block
+ * @enum {string}
+ */
+var BlockType = {
+  /**
+   * Boolean reporter with hexagonal shape
+   */
+  BOOLEAN: 'Boolean',
+  /**
+   * A button (not an actual block) for some special action, like making a variable
+   */
+  BUTTON: 'button',
+  /**
+   * Command block
+   */
+  COMMAND: 'command',
+  /**
+   * Specialized command block which may or may not run a child branch
+   * The thread continues with the next block whether or not a child branch ran.
+   */
+  CONDITIONAL: 'conditional',
+  /**
+   * Specialized hat block with no implementation function
+   * This stack only runs if the corresponding event is emitted by other code.
+   */
+  EVENT: 'event',
+  /**
+   * Hat block which conditionally starts a block stack
+   */
+  HAT: 'hat',
+  /**
+   * Specialized command block which may or may not run a child branch
+   * If a child branch runs, the thread evaluates the loop block again.
+   */
+  LOOP: 'loop',
+  /**
+   * General reporter with numeric or string value
+   */
+  REPORTER: 'reporter'
+};
+var blockType = BlockType;
+
+var Color$1 = /*#__PURE__*/function () {
+  function Color() {
+    _classCallCheck(this, Color);
+  }
+  _createClass(Color, null, [{
+    key: "RGB_BLACK",
+    get:
+    /**
+     * @typedef {object} RGBObject - An object representing a color in RGB format.
+     * @property {number} r - the red component, in the range [0, 255].
+     * @property {number} g - the green component, in the range [0, 255].
+     * @property {number} b - the blue component, in the range [0, 255].
+     */
+
+    /**
+     * @typedef {object} HSVObject - An object representing a color in HSV format.
+     * @property {number} h - hue, in the range [0-359).
+     * @property {number} s - saturation, in the range [0,1].
+     * @property {number} v - value, in the range [0,1].
+     */
+
+    /** @type {RGBObject} */
+    function get() {
+      return {
+        r: 0,
+        g: 0,
+        b: 0
+      };
+    }
+
+    /** @type {RGBObject} */
+  }, {
+    key: "RGB_WHITE",
+    get: function get() {
+      return {
+        r: 255,
+        g: 255,
+        b: 255
+      };
+    }
+
+    /**
+     * Convert a Scratch decimal color to a hex string, #RRGGBB.
+     * @param {number} decimal RGB color as a decimal.
+     * @return {string} RGB color as #RRGGBB hex string.
+     */
+  }, {
+    key: "decimalToHex",
+    value: function decimalToHex(decimal) {
+      if (decimal < 0) {
+        decimal += 0xFFFFFF + 1;
+      }
+      var hex = Number(decimal).toString(16);
+      hex = "#".concat('000000'.substr(0, 6 - hex.length)).concat(hex);
+      return hex;
+    }
+
+    /**
+     * Convert a Scratch decimal color to an RGB color object.
+     * @param {number} decimal RGB color as decimal.
+     * @return {RGBObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
+     */
+  }, {
+    key: "decimalToRgb",
+    value: function decimalToRgb(decimal) {
+      var a = decimal >> 24 & 0xFF;
+      var r = decimal >> 16 & 0xFF;
+      var g = decimal >> 8 & 0xFF;
+      var b = decimal & 0xFF;
+      return {
+        r: r,
+        g: g,
+        b: b,
+        a: a > 0 ? a : 255
+      };
+    }
+
+    /**
+     * Convert a hex color (e.g., F00, #03F, #0033FF) to an RGB color object.
+     * CC-BY-SA Tim Down:
+     * https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+     * @param {!string} hex Hex representation of the color.
+     * @return {RGBObject} null on failure, or rgb: {r: red [0,255], g: green [0,255], b: blue [0,255]}.
+     */
+  }, {
+    key: "hexToRgb",
+    value: function hexToRgb(hex) {
+      var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+      hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+        return r + r + g + g + b + b;
+      });
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    /**
+     * Convert an RGB color object to a hex color.
+     * @param {RGBObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
+     * @return {!string} Hex representation of the color.
+     */
+  }, {
+    key: "rgbToHex",
+    value: function rgbToHex(rgb) {
+      return Color.decimalToHex(Color.rgbToDecimal(rgb));
+    }
+
+    /**
+     * Convert an RGB color object to a Scratch decimal color.
+     * @param {RGBObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
+     * @return {!number} Number representing the color.
+     */
+  }, {
+    key: "rgbToDecimal",
+    value: function rgbToDecimal(rgb) {
+      return (rgb.r << 16) + (rgb.g << 8) + rgb.b;
+    }
+
+    /**
+    * Convert a hex color (e.g., F00, #03F, #0033FF) to a decimal color number.
+    * @param {!string} hex Hex representation of the color.
+    * @return {!number} Number representing the color.
+    */
+  }, {
+    key: "hexToDecimal",
+    value: function hexToDecimal(hex) {
+      return Color.rgbToDecimal(Color.hexToRgb(hex));
+    }
+
+    /**
+     * Convert an HSV color to RGB format.
+     * @param {HSVObject} hsv - {h: hue [0,360), s: saturation [0,1], v: value [0,1]}
+     * @return {RGBObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
+     */
+  }, {
+    key: "hsvToRgb",
+    value: function hsvToRgb(hsv) {
+      var h = hsv.h % 360;
+      if (h < 0) h += 360;
+      var s = Math.max(0, Math.min(hsv.s, 1));
+      var v = Math.max(0, Math.min(hsv.v, 1));
+      var i = Math.floor(h / 60);
+      var f = h / 60 - i;
+      var p = v * (1 - s);
+      var q = v * (1 - s * f);
+      var t = v * (1 - s * (1 - f));
+      var r;
+      var g;
+      var b;
+      switch (i) {
+        default:
+        case 0:
+          r = v;
+          g = t;
+          b = p;
+          break;
+        case 1:
+          r = q;
+          g = v;
+          b = p;
+          break;
+        case 2:
+          r = p;
+          g = v;
+          b = t;
+          break;
+        case 3:
+          r = p;
+          g = q;
+          b = v;
+          break;
+        case 4:
+          r = t;
+          g = p;
+          b = v;
+          break;
+        case 5:
+          r = v;
+          g = p;
+          b = q;
+          break;
+      }
+      return {
+        r: Math.floor(r * 255),
+        g: Math.floor(g * 255),
+        b: Math.floor(b * 255)
+      };
+    }
+
+    /**
+     * Convert an RGB color to HSV format.
+     * @param {RGBObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
+     * @return {HSVObject} hsv - {h: hue [0,360), s: saturation [0,1], v: value [0,1]}
+     */
+  }, {
+    key: "rgbToHsv",
+    value: function rgbToHsv(rgb) {
+      var r = rgb.r / 255;
+      var g = rgb.g / 255;
+      var b = rgb.b / 255;
+      var x = Math.min(Math.min(r, g), b);
+      var v = Math.max(Math.max(r, g), b);
+
+      // For grays, hue will be arbitrarily reported as zero. Otherwise, calculate
+      var h = 0;
+      var s = 0;
+      if (x !== v) {
+        var f = r === x ? g - b : g === x ? b - r : r - g;
+        var i = r === x ? 3 : g === x ? 5 : 1;
+        h = (i - f / (v - x)) * 60 % 360;
+        s = (v - x) / v;
+      }
+      return {
+        h: h,
+        s: s,
+        v: v
+      };
+    }
+
+    /**
+     * Linear interpolation between rgb0 and rgb1.
+     * @param {RGBObject} rgb0 - the color corresponding to fraction1 <= 0.
+     * @param {RGBObject} rgb1 - the color corresponding to fraction1 >= 1.
+     * @param {number} fraction1 - the interpolation parameter. If this is 0.5, for example, mix the two colors equally.
+     * @return {RGBObject} the interpolated color.
+     */
+  }, {
+    key: "mixRgb",
+    value: function mixRgb(rgb0, rgb1, fraction1) {
+      if (fraction1 <= 0) return rgb0;
+      if (fraction1 >= 1) return rgb1;
+      var fraction0 = 1 - fraction1;
+      return {
+        r: fraction0 * rgb0.r + fraction1 * rgb1.r,
+        g: fraction0 * rgb0.g + fraction1 * rgb1.g,
+        b: fraction0 * rgb0.b + fraction1 * rgb1.b
+      };
+    }
+  }]);
+  return Color;
+}();
+var color = Color$1;
+
+var Color = color;
+
+/**
+ * @fileoverview
+ * Utilities for casting and comparing Scratch data-types.
+ * Scratch behaves slightly differently from JavaScript in many respects,
+ * and these differences should be encapsulated below.
+ * For example, in Scratch, add(1, join("hello", world")) -> 1.
+ * This is because "hello world" is cast to 0.
+ * In JavaScript, 1 + Number("hello" + "world") would give you NaN.
+ * Use when coercing a value before computation.
+ */
+var Cast = /*#__PURE__*/function () {
+  function Cast() {
+    _classCallCheck(this, Cast);
+  }
+  _createClass(Cast, null, [{
+    key: "toNumber",
+    value:
+    /**
+     * Scratch cast to number.
+     * Treats NaN as 0.
+     * In Scratch 2.0, this is captured by `interp.numArg.`
+     * @param {*} value Value to cast to number.
+     * @return {number} The Scratch-casted number value.
+     */
+    function toNumber(value) {
+      // If value is already a number we don't need to coerce it with
+      // Number().
+      if (typeof value === 'number') {
+        // Scratch treats NaN as 0, when needed as a number.
+        // E.g., 0 + NaN -> 0.
+        if (Number.isNaN(value)) {
+          return 0;
+        }
+        return value;
+      }
+      var n = Number(value);
+      if (Number.isNaN(n)) {
+        // Scratch treats NaN as 0, when needed as a number.
+        // E.g., 0 + NaN -> 0.
+        return 0;
+      }
+      return n;
+    }
+
+    /**
+     * Scratch cast to boolean.
+     * In Scratch 2.0, this is captured by `interp.boolArg.`
+     * Treats some string values differently from JavaScript.
+     * @param {*} value Value to cast to boolean.
+     * @return {boolean} The Scratch-casted boolean value.
+     */
+  }, {
+    key: "toBoolean",
+    value: function toBoolean(value) {
+      // Already a boolean?
+      if (typeof value === 'boolean') {
+        return value;
+      }
+      if (typeof value === 'string') {
+        // These specific strings are treated as false in Scratch.
+        if (value === '' || value === '0' || value.toLowerCase() === 'false') {
+          return false;
+        }
+        // All other strings treated as true.
+        return true;
+      }
+      // Coerce other values and numbers.
+      return Boolean(value);
+    }
+
+    /**
+     * Scratch cast to string.
+     * @param {*} value Value to cast to string.
+     * @return {string} The Scratch-casted string value.
+     */
+  }, {
+    key: "toString",
+    value: function toString(value) {
+      return String(value);
+    }
+
+    /**
+     * Cast any Scratch argument to an RGB color array to be used for the renderer.
+     * @param {*} value Value to convert to RGB color array.
+     * @return {Array.<number>} [r,g,b], values between 0-255.
+     */
+  }, {
+    key: "toRgbColorList",
+    value: function toRgbColorList(value) {
+      var color = Cast.toRgbColorObject(value);
+      return [color.r, color.g, color.b];
+    }
+
+    /**
+     * Cast any Scratch argument to an RGB color object to be used for the renderer.
+     * @param {*} value Value to convert to RGB color object.
+     * @return {RGBOject} [r,g,b], values between 0-255.
+     */
+  }, {
+    key: "toRgbColorObject",
+    value: function toRgbColorObject(value) {
+      var color;
+      if (typeof value === 'string' && value.substring(0, 1) === '#') {
+        color = Color.hexToRgb(value);
+
+        // If the color wasn't *actually* a hex color, cast to black
+        if (!color) color = {
+          r: 0,
+          g: 0,
+          b: 0,
+          a: 255
+        };
+      } else {
+        color = Color.decimalToRgb(Cast.toNumber(value));
+      }
+      return color;
+    }
+
+    /**
+     * Determine if a Scratch argument is a white space string (or null / empty).
+     * @param {*} val value to check.
+     * @return {boolean} True if the argument is all white spaces or null / empty.
+     */
+  }, {
+    key: "isWhiteSpace",
+    value: function isWhiteSpace(val) {
+      return val === null || typeof val === 'string' && val.trim().length === 0;
+    }
+
+    /**
+     * Compare two values, using Scratch cast, case-insensitive string compare, etc.
+     * In Scratch 2.0, this is captured by `interp.compare.`
+     * @param {*} v1 First value to compare.
+     * @param {*} v2 Second value to compare.
+     * @returns {number} Negative number if v1 < v2; 0 if equal; positive otherwise.
+     */
+  }, {
+    key: "compare",
+    value: function compare(v1, v2) {
+      var n1 = Number(v1);
+      var n2 = Number(v2);
+      if (n1 === 0 && Cast.isWhiteSpace(v1)) {
+        n1 = NaN;
+      } else if (n2 === 0 && Cast.isWhiteSpace(v2)) {
+        n2 = NaN;
+      }
+      if (isNaN(n1) || isNaN(n2)) {
+        // At least one argument can't be converted to a number.
+        // Scratch compares strings as case insensitive.
+        var s1 = String(v1).toLowerCase();
+        var s2 = String(v2).toLowerCase();
+        if (s1 < s2) {
+          return -1;
+        } else if (s1 > s2) {
+          return 1;
+        }
+        return 0;
+      }
+      // Handle the special case of Infinity
+      if (n1 === Infinity && n2 === Infinity || n1 === -Infinity && n2 === -Infinity) {
+        return 0;
+      }
+      // Compare as numbers.
+      return n1 - n2;
+    }
+
+    /**
+     * Determine if a Scratch argument number represents a round integer.
+     * @param {*} val Value to check.
+     * @return {boolean} True if number looks like an integer.
+     */
+  }, {
+    key: "isInt",
+    value: function isInt(val) {
+      // Values that are already numbers.
+      if (typeof val === 'number') {
+        if (isNaN(val)) {
+          // NaN is considered an integer.
+          return true;
+        }
+        // True if it's "round" (e.g., 2.0 and 2).
+        return val === parseInt(val, 10);
+      } else if (typeof val === 'boolean') {
+        // `True` and `false` always represent integer after Scratch cast.
+        return true;
+      } else if (typeof val === 'string') {
+        // If it contains a decimal point, don't consider it an int.
+        return val.indexOf('.') < 0;
+      }
+      return false;
+    }
+  }, {
+    key: "LIST_INVALID",
+    get: function get() {
+      return 'INVALID';
+    }
+  }, {
+    key: "LIST_ALL",
+    get: function get() {
+      return 'ALL';
+    }
+
+    /**
+     * Compute a 1-based index into a list, based on a Scratch argument.
+     * Two special cases may be returned:
+     * LIST_ALL: if the block is referring to all of the items in the list.
+     * LIST_INVALID: if the index was invalid in any way.
+     * @param {*} index Scratch arg, including 1-based numbers or special cases.
+     * @param {number} length Length of the list.
+     * @param {boolean} acceptAll Whether it should accept "all" or not.
+     * @return {(number|string)} 1-based index for list, LIST_ALL, or LIST_INVALID.
+     */
+  }, {
+    key: "toListIndex",
+    value: function toListIndex(index, length, acceptAll) {
+      if (typeof index !== 'number') {
+        if (index === 'all') {
+          return acceptAll ? Cast.LIST_ALL : Cast.LIST_INVALID;
+        }
+        if (index === 'last') {
+          if (length > 0) {
+            return length;
+          }
+          return Cast.LIST_INVALID;
+        } else if (index === 'random' || index === 'any') {
+          if (length > 0) {
+            return 1 + Math.floor(Math.random() * length);
+          }
+          return Cast.LIST_INVALID;
+        }
+      }
+      index = Math.floor(Cast.toNumber(index));
+      if (index < 1 || index > length) {
+        return Cast.LIST_INVALID;
+      }
+      return index;
+    }
+  }]);
+  return Cast;
+}();
+var cast = Cast;
+
+var en = {
+	"gamepad.name": "Universal Gamepad",
+	"gamepad.isConnected": "gamepad connected?",
+	"gamepad.getControllerInfo": "controller name",
+	"gamepad.whenButtonPressed": "when [BUTTON] pressed",
+	"gamepad.isButtonPressed": "[BUTTON] pressed?",
+	"gamepad.getStickValue": "[STICK] stick [AXIS]",
+	"gamepad.getStickDirection": "[STICK] stick direction",
+	"gamepad.getCursorX": "cursor x",
+	"gamepad.getCursorY": "cursor y",
+	"gamepad.setCursorPosition": "set cursor to x: [X] y: [Y]",
+	"gamepad.vibrate": "vibrate for [DURATION] ms at [INTENSITY]%",
+	"gamepad.showDebugInfo": "show gamepad debug info",
+	"gamepad.buttons.A": "A",
+	"gamepad.buttons.B": "B",
+	"gamepad.buttons.X": "X",
+	"gamepad.buttons.Y": "Y",
+	"gamepad.buttons.LB": "LB",
+	"gamepad.buttons.RB": "RB",
+	"gamepad.buttons.LT": "LT",
+	"gamepad.buttons.RT": "RT",
+	"gamepad.buttons.SELECT": "Select",
+	"gamepad.buttons.START": "Start",
+	"gamepad.buttons.LS": "Left Stick",
+	"gamepad.buttons.RS": "Right Stick",
+	"gamepad.buttons.UP": "Up",
+	"gamepad.buttons.DOWN": "Down",
+	"gamepad.buttons.LEFT": "Left",
+	"gamepad.buttons.RIGHT": "Right",
+	"gamepad.buttons.HOME": "Home",
+	"gamepad.sticks.left": "left",
+	"gamepad.sticks.right": "right",
+	"gamepad.axes.x": "x-axis",
+	"gamepad.axes.y": "y-axis"
+};
+var de = {
+	"gamepad.name": "Universal-Gamepad",
+	"gamepad.isConnected": "Gamepad verbunden?",
+	"gamepad.getControllerInfo": "Controller-Name",
+	"gamepad.whenButtonPressed": "wenn Taste [BUTTON] gedrückt",
+	"gamepad.isButtonPressed": "Taste [BUTTON] gedrückt?",
+	"gamepad.getStickValue": "[STICK] Stick [AXIS]",
+	"gamepad.getStickDirection": "[STICK] Stick Richtung",
+	"gamepad.getCursorX": "Cursor x",
+	"gamepad.getCursorY": "Cursor y",
+	"gamepad.setCursorPosition": "Setze Cursor auf x: [X] y: [Y]",
+	"gamepad.vibrate": "Vibriere für [DURATION] ms bei [INTENSITY]%",
+	"gamepad.showDebugInfo": "Gamepad-Debuginformationen anzeigen",
+	"gamepad.buttons.A": "A",
+	"gamepad.buttons.B": "B",
+	"gamepad.buttons.X": "X",
+	"gamepad.buttons.Y": "Y",
+	"gamepad.buttons.LB": "LB",
+	"gamepad.buttons.RB": "RB",
+	"gamepad.buttons.LT": "LT",
+	"gamepad.buttons.RT": "RT",
+	"gamepad.buttons.SELECT": "Select",
+	"gamepad.buttons.START": "Start",
+	"gamepad.buttons.LS": "Linker Stick",
+	"gamepad.buttons.RS": "Rechter Stick",
+	"gamepad.buttons.UP": "Oben",
+	"gamepad.buttons.DOWN": "Unten",
+	"gamepad.buttons.LEFT": "Links",
+	"gamepad.buttons.RIGHT": "Rechts",
+	"gamepad.buttons.HOME": "Home",
+	"gamepad.sticks.left": "linker",
+	"gamepad.sticks.right": "rechter",
+	"gamepad.axes.x": "x-Achse",
+	"gamepad.axes.y": "y-Achse"
+};
+var translations = {
+	en: en,
+	de: de
+};
+
+var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAORJREFUeF7t2DEKwjAYQOG/qIMH8BbewNvY1Vt4A2/hDXQV3EQHwQOIOgiCiIODiIOLiCCCiAgOjooHD/BvhLyEjxmSH5CEJCRJkiRJkiRJkiRJkiSNB0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJGlSSJIkSZIkSZIkSZIkSZL+A2ggCAwANDVJREFUeF7t1jcQAAA=';
+var formatMessage = function formatMessage(messageData) {
+  return messageData.defaultMessage;
+};
+var setupTranslations = function setupTranslations() {
+  try {
+    var localeSetup = formatMessage.setup();
+    if (localeSetup && localeSetup.translations && localeSetup.translations[localeSetup.locale]) {
+      Object.assign(localeSetup.translations[localeSetup.locale], translations[localeSetup.locale]);
+    }
+  } catch (e) {
+    // Fails silently, which is fine.
+  }
+};
+
+// Universal button mappings for different controller types
+var GAMEPAD_BUTTONS = {
+  // Use standard gamepad button indices
+  A: 0,
+  // Bottom face button (Cross on PS, A on Xbox)
+  B: 1,
+  // Right face button (Circle on PS, B on Xbox)  
+  X: 2,
+  // Left face button (Square on PS, X on Xbox)
+  Y: 3,
+  // Top face button (Triangle on PS, Y on Xbox)
+  LB: 4,
+  // Left bumper (L1)
+  RB: 5,
+  // Right bumper (R1)
+  LT: 6,
+  // Left trigger (L2)
+  RT: 7,
+  // Right trigger (R2)
+  SELECT: 8,
+  // Select/Share/Back
+  START: 9,
+  // Start/Options/Menu
+  LS: 10,
+  // Left stick press (L3)
+  RS: 11,
+  // Right stick press (R3)
+  UP: 12,
+  // D-pad up
+  DOWN: 13,
+  // D-pad down
+  LEFT: 14,
+  // D-pad left
+  RIGHT: 15,
+  // D-pad right
+  HOME: 16 // Home/PS/Xbox button
+};
+var Scratch3GamepadBlocks = /*#__PURE__*/function () {
+  function Scratch3GamepadBlocks(runtime) {
+    var _this = this;
+    _classCallCheck(this, Scratch3GamepadBlocks);
+    this.runtime = runtime;
+    if (runtime.formatMessage) {
+      formatMessage = runtime.formatMessage;
+    }
+    this.activeController = null;
+    this.previousButtons = [];
+    this.virtualCursor = {
+      x: 0,
+      y: 0,
+      maxX: 240,
+      minX: -240,
+      maxY: 180,
+      minY: -180
+    };
+    this.runtime.on('PROJECT_RUN_START', function () {
+      _this._startPolling();
+    });
+    this.runtime.on('PROJECT_STOP_ALL', function () {
+      _this._stopPolling();
+    });
+  }
+  _createClass(Scratch3GamepadBlocks, [{
+    key: "getInfo",
+    value: function getInfo() {
+      setupTranslations();
+      return {
+        id: 'gamepad',
+        name: formatMessage({
+          id: 'gamepad.name',
+          default: 'Universal Gamepad'
+        }),
+        blockIconURI: blockIconURI,
+        showStatusButton: true,
+        blocks: [{
+          opcode: 'isConnected',
+          text: formatMessage({
+            id: 'gamepad.isConnected',
+            default: 'gamepad connected?'
+          }),
+          blockType: blockType.BOOLEAN
+        }, {
+          opcode: 'getControllerInfo',
+          text: formatMessage({
+            id: 'gamepad.getControllerInfo',
+            default: 'controller name'
+          }),
+          blockType: blockType.REPORTER
+        }, '---', {
+          opcode: 'whenButtonPressed',
+          text: formatMessage({
+            id: 'gamepad.whenButtonPressed',
+            default: 'when [BUTTON] pressed'
+          }),
+          blockType: blockType.HAT,
+          arguments: {
+            BUTTON: {
+              type: argumentType.STRING,
+              menu: 'BUTTONS',
+              defaultValue: 'A'
+            }
+          }
+        }, {
+          opcode: 'isButtonPressed',
+          text: formatMessage({
+            id: 'gamepad.isButtonPressed',
+            default: '[BUTTON] pressed?'
+          }),
+          blockType: blockType.BOOLEAN,
+          arguments: {
+            BUTTON: {
+              type: argumentType.STRING,
+              menu: 'BUTTONS',
+              defaultValue: 'A'
+            }
+          }
+        }, '---', {
+          opcode: 'getStickValue',
+          text: formatMessage({
+            id: 'gamepad.getStickValue',
+            default: '[STICK] stick [AXIS]'
+          }),
+          blockType: blockType.REPORTER,
+          arguments: {
+            STICK: {
+              type: argumentType.STRING,
+              menu: 'STICKS',
+              defaultValue: 'left'
+            },
+            AXIS: {
+              type: argumentType.STRING,
+              menu: 'AXES',
+              defaultValue: 'x'
+            }
+          }
+        }, {
+          opcode: 'getStickDirection',
+          text: formatMessage({
+            id: 'gamepad.getStickDirection',
+            default: '[STICK] stick direction'
+          }),
+          blockType: blockType.REPORTER,
+          arguments: {
+            STICK: {
+              type: argumentType.STRING,
+              menu: 'STICKS',
+              defaultValue: 'left'
+            }
+          }
+        }, '---', {
+          opcode: 'getCursorX',
+          text: formatMessage({
+            id: 'gamepad.getCursorX',
+            default: 'cursor x'
+          }),
+          blockType: blockType.REPORTER
+        }, {
+          opcode: 'getCursorY',
+          text: formatMessage({
+            id: 'gamepad.getCursorY',
+            default: 'cursor y'
+          }),
+          blockType: blockType.REPORTER
+        }, {
+          opcode: 'setCursorPosition',
+          text: formatMessage({
+            id: 'gamepad.setCursorPosition',
+            default: 'set cursor to x: [X] y: [Y]'
+          }),
+          blockType: blockType.COMMAND,
+          arguments: {
+            X: {
+              type: argumentType.NUMBER,
+              defaultValue: 0
+            },
+            Y: {
+              type: argumentType.NUMBER,
+              defaultValue: 0
+            }
+          }
+        }, '---', {
+          opcode: 'vibrate',
+          text: formatMessage({
+            id: 'gamepad.vibrate',
+            default: 'vibrate for [DURATION] ms at [INTENSITY]%'
+          }),
+          blockType: blockType.COMMAND,
+          arguments: {
+            DURATION: {
+              type: argumentType.NUMBER,
+              defaultValue: 200
+            },
+            INTENSITY: {
+              type: argumentType.NUMBER,
+              defaultValue: 50
+            }
+          }
+        }, '---', {
+          opcode: 'showDebugInfo',
+          text: formatMessage({
+            id: 'gamepad.showDebugInfo',
+            default: 'show gamepad debug info'
+          }),
+          blockType: blockType.COMMAND
+        }],
+        menus: {
+          BUTTONS: {
+            acceptReporters: true,
+            items: Object.keys(GAMEPAD_BUTTONS).map(function (key) {
+              return {
+                text: formatMessage({
+                  id: "gamepad.buttons.".concat(key),
+                  default: key
+                }),
+                value: key
+              };
+            })
+          },
+          STICKS: {
+            acceptReporters: true,
+            items: [{
+              text: formatMessage({
+                id: 'gamepad.sticks.left',
+                default: 'left'
+              }),
+              value: 'left'
+            }, {
+              text: formatMessage({
+                id: 'gamepad.sticks.right',
+                default: 'right'
+              }),
+              value: 'right'
+            }]
+          },
+          AXES: {
+            acceptReporters: true,
+            items: [{
+              text: formatMessage({
+                id: 'gamepad.axes.x',
+                default: 'x-axis'
+              }),
+              value: 'x'
+            }, {
+              text: formatMessage({
+                id: 'gamepad.axes.y',
+                default: 'y-axis'
+              }),
+              value: 'y'
+            }]
+          }
+        }
+      };
+    }
+  }, {
+    key: "_startPolling",
+    value: function _startPolling() {
+      var _this2 = this;
+      if (this._pollInterval) return;
+      this._pollInterval = setInterval(function () {
+        return _this2._pollGamepads();
+      }, 16); // ~60 FPS
+    }
+  }, {
+    key: "_stopPolling",
+    value: function _stopPolling() {
+      if (!this._pollInterval) return;
+      clearInterval(this._pollInterval);
+      this._pollInterval = null;
+    }
+  }, {
+    key: "_pollGamepads",
+    value: function _pollGamepads() {
+      try {
+        var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        var firstActive = Array.from(gamepads).find(function (g) {
+          return g;
+        });
+        if (firstActive) {
+          this.activeController = firstActive;
+          this._updateVirtualCursor(this.activeController);
+        } else {
+          this.activeController = null;
+        }
+      } catch (e) {
+        this.activeController = null;
+      }
+    }
+  }, {
+    key: "_updateVirtualCursor",
+    value: function _updateVirtualCursor(gamepad) {
+      if (!gamepad) return;
+      var leftX = this._normalizeAxis(gamepad.axes[0] || 0);
+      var leftY = this._normalizeAxis(gamepad.axes[1] || 0);
+      var speed = 5; // Adjust speed as needed
+      this.virtualCursor.x += leftX * speed;
+      this.virtualCursor.y -= leftY * speed; // Y is often inverted
+
+      this.virtualCursor.x = Math.max(this.virtualCursor.minX, Math.min(this.virtualCursor.maxX, this.virtualCursor.x));
+      this.virtualCursor.y = Math.max(this.virtualCursor.minY, Math.min(this.virtualCursor.maxY, this.virtualCursor.y));
+    }
+  }, {
+    key: "_normalizeAxis",
+    value: function _normalizeAxis(value) {
+      var deadzone = 0.1;
+      if (Math.abs(value) < deadzone) return 0;
+      return (value - Math.sign(value) * deadzone) / (1 - deadzone);
+    }
+  }, {
+    key: "whenButtonPressed",
+    value: function whenButtonPressed(args) {
+      var _this$activeControlle;
+      if (!this.activeController) return false;
+      var buttonIndex = GAMEPAD_BUTTONS[args.BUTTON];
+      if (buttonIndex === undefined) return false;
+      var wasPressed = this.previousButtons[buttonIndex] || false;
+      var isPressed = ((_this$activeControlle = this.activeController.buttons[buttonIndex]) === null || _this$activeControlle === void 0 ? void 0 : _this$activeControlle.pressed) || false;
+      this.previousButtons[buttonIndex] = isPressed;
+      return !wasPressed && isPressed;
+    }
+  }, {
+    key: "isButtonPressed",
+    value: function isButtonPressed(args) {
+      var _this$activeControlle2;
+      if (!this.activeController) return false;
+      var buttonIndex = GAMEPAD_BUTTONS[args.BUTTON];
+      if (buttonIndex === undefined) return false;
+      var isPressed = ((_this$activeControlle2 = this.activeController.buttons[buttonIndex]) === null || _this$activeControlle2 === void 0 ? void 0 : _this$activeControlle2.pressed) || false;
+      this.previousButtons[buttonIndex] = isPressed;
+      return isPressed;
+    }
+  }, {
+    key: "isConnected",
+    value: function isConnected() {
+      return !!this.activeController;
+    }
+  }, {
+    key: "getControllerInfo",
+    value: function getControllerInfo() {
+      if (!this.activeController) return 'No controller';
+      return this.activeController.id;
+    }
+  }, {
+    key: "getStickValue",
+    value: function getStickValue(args) {
+      if (!this.activeController) return 0;
+      var stick = cast.toString(args.STICK).toLowerCase();
+      var axis = cast.toString(args.AXIS).toLowerCase();
+      var stickMap = {
+        'left': {
+          'x': 0,
+          'y': 1
+        },
+        'right': {
+          'x': 2,
+          'y': 3
+        }
+      };
+      var stickAxes = stickMap[stick];
+      if (!stickAxes) return 0;
+      var axisIndex = stickAxes[axis];
+      if (axisIndex === undefined) return 0;
+      var rawValue = this.activeController.axes[axisIndex] || 0;
+      var normalizedValue = this._normalizeAxis(rawValue);
+      return Math.round(normalizedValue * 100);
+    }
+  }, {
+    key: "getStickDirection",
+    value: function getStickDirection(args) {
+      if (!this.activeController) return 0;
+      var stick = cast.toString(args.STICK).toLowerCase();
+      var stickMap = {
+        'left': {
+          'x': 0,
+          'y': 1
+        },
+        'right': {
+          'x': 2,
+          'y': 3
+        }
+      };
+      var stickAxes = stickMap[stick];
+      if (!stickAxes) return 0;
+      var x = this._normalizeAxis(this.activeController.axes[stickAxes.x] || 0);
+      var y = this._normalizeAxis(this.activeController.axes[stickAxes.y] || 0);
+      if (x === 0 && y === 0) return 90; // Default to pointing up
+
+      var radians = Math.atan2(-y, x);
+      var degrees = radians * 180 / Math.PI;
+      degrees = (degrees + 360) % 360;
+      return Math.round(degrees);
+    }
+  }, {
+    key: "getCursorX",
+    value: function getCursorX() {
+      return Math.round(this.virtualCursor.x);
+    }
+  }, {
+    key: "getCursorY",
+    value: function getCursorY() {
+      return Math.round(this.virtualCursor.y);
+    }
+  }, {
+    key: "setCursorPosition",
+    value: function setCursorPosition(args) {
+      var x = cast.toNumber(args.X);
+      var y = cast.toNumber(args.Y);
+      this.virtualCursor.x = Math.max(this.virtualCursor.minX, Math.min(this.virtualCursor.maxX, x));
+      this.virtualCursor.y = Math.max(this.virtualCursor.minY, Math.min(this.virtualCursor.maxY, y));
+    }
+  }, {
+    key: "vibrate",
+    value: function vibrate(args) {
+      if (!this.activeController) return;
+      var duration = cast.toNumber(args.DURATION);
+      var intensity = cast.toNumber(args.INTENSITY) / 100;
+      var actuator = this.activeController.vibrationActuator;
+      if (!actuator) {
+        console.log('Vibration not supported on this controller');
+        return;
+      }
+      try {
+        actuator.playEffect('dual-rumble', {
+          duration: duration,
+          weakMagnitude: intensity,
+          strongMagnitude: intensity
+        });
+      } catch (error) {
+        console.log('Vibration failed:', error);
+      }
+    }
+  }, {
+    key: "showDebugInfo",
+    value: function showDebugInfo() {
+      console.log('--- UNIVERSAL GAMEPAD DEBUG INFO ---');
+      console.log("Connected: ".concat(this.isConnected() ? "YES (".concat(this.activeController.id, ")") : 'NO'));
+      if (this.activeController) {
+        console.log('Buttons:', this.activeController.buttons.map(function (b, i) {
+          return "".concat(i, ":").concat(b.pressed ? 'P' : 'R');
+        }).join(' '));
+        console.log('Axes:', this.activeController.axes.map(function (a) {
+          return a.toFixed(2);
+        }).join(', '));
+        console.log("Cursor: x=".concat(this.virtualCursor.x.toFixed(1), ", y=").concat(this.virtualCursor.y.toFixed(1)));
+      } else {
+        console.log('Connect a controller and press a button to begin.');
+      }
+    }
+  }]);
+  return Scratch3GamepadBlocks;
+}();
+exports.blockClass = Scratch3GamepadBlocks;
 
 export { entry };

@@ -14284,6 +14284,7 @@ var Scratch3PoweredUpBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
   }]);
   return Scratch3PoweredUpBlocks;
 }(BleBaseBlocks);
-exports.blockClass = Scratch3PoweredUpBlocks;
+var blockClass = Scratch3PoweredUpBlocks;
+blockClass = Scratch3PoweredUpBlocks;
 
-export { entry };
+export { blockClass, entry };

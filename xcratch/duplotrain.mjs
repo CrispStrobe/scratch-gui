@@ -14072,6 +14072,7 @@ var Scratch3DuploTrainBlocks = /*#__PURE__*/function () {
   }]);
   return Scratch3DuploTrainBlocks;
 }();
-exports.blockClass = Scratch3DuploTrainBlocks;
+var blockClass = Scratch3DuploTrainBlocks;
+blockClass = Scratch3DuploTrainBlocks;
 
-export { entry };
+export { blockClass, entry };
