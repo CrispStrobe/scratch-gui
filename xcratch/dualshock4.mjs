@@ -8272,9 +8272,55 @@ var translations = {
   }
 };
 var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAORJREFUeF7t2DEKwjAYQOG/qIMH8BbewNvY1Vt4A2/hDXQV3EQHwQOIOgiCiIODiIOLiCCCiAgOjooHD/BvhLyEjxmSH5CEJCRJkiRJkiRJkiRJkiSNB0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJGlSSJIkSZIkSZIkSZIkSZL+A2ggCAwANDVJREFUeF7t1jcQAAA=';
-var formatMessage = function formatMessage(messageData) {
-  return messageData.defaultMessage;
+
+// Robust fallback formatMessage that actually uses translations
+var currentLocale = 'en';
+var formatMessage = function formatMessage(messageData, args) {
+  // Handle string input
+  if (typeof messageData === 'string') {
+    return messageData;
+  }
+
+  // Handle null/undefined
+  if (!messageData) {
+    return 'Missing text';
+  }
+
+  // Handle object input
+  if (_typeof$1(messageData) === 'object') {
+    var message;
+
+    // Try to get translation first
+    if (messageData.id && translations[currentLocale] && translations[currentLocale][messageData.id]) {
+      message = translations[currentLocale][messageData.id];
+    } else {
+      // Fall back to defaultMessage, then default, then id
+      message = messageData.defaultMessage || messageData.default || messageData.id || 'Missing text';
+    }
+
+    // Simple placeholder replacement: [KEY] -> args.KEY
+    if (args && typeof message === 'string') {
+      message = message.replace(/\[([^\]]+)\]/g, function (match, key) {
+        return args.hasOwnProperty(key) ? String(args[key]) : match;
+      });
+    }
+    return message;
+  }
+  return 'Missing text';
 };
+
+// Add setup function to the fallback formatMessage
+formatMessage.setup = function (options) {
+  if (options && options.locale) {
+    currentLocale = options.locale;
+  }
+  return {
+    locale: currentLocale,
+    translations: translations
+  };
+};
+
+// Setup translations function - tries to work with format-message if available
 var setupTranslations = function setupTranslations() {
   try {
     var localeSetup = formatMessage.setup();
@@ -8328,8 +8374,26 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
     var _this = this;
     _classCallCheck(this, Scratch3GamepadBlocks);
     this.runtime = runtime;
+
+    // Test if runtime.formatMessage works properly before using it
     if (runtime.formatMessage) {
-      formatMessage = runtime.formatMessage;
+      try {
+        var testResult = runtime.formatMessage({
+          id: 'test',
+          defaultMessage: 'test'
+        });
+        // If it returns the ID instead of defaultMessage, it's broken
+        if (testResult === 'test' || testResult && testResult.includes('test')) {
+          formatMessage = runtime.formatMessage;
+          console.log('Using runtime.formatMessage');
+        } else {
+          console.log('runtime.formatMessage is broken (returns IDs), using fallback');
+        }
+      } catch (e) {
+        console.log('runtime.formatMessage test failed, using fallback');
+      }
+    } else {
+      console.log('No runtime.formatMessage available, using fallback');
     }
     this.activeController = null;
     this.previousButtons = [];
@@ -8356,7 +8420,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
         id: 'gamepad',
         name: formatMessage({
           id: 'gamepad.name',
-          default: 'Universal Gamepad'
+          defaultMessage: 'Universal Gamepad'
         }),
         blockIconURI: blockIconURI,
         showStatusButton: true,
@@ -8364,21 +8428,21 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
           opcode: 'isConnected',
           text: formatMessage({
             id: 'gamepad.isConnected',
-            default: 'gamepad connected?'
+            defaultMessage: 'gamepad connected?'
           }),
           blockType: BlockType.BOOLEAN
         }, {
           opcode: 'getControllerInfo',
           text: formatMessage({
             id: 'gamepad.getControllerInfo',
-            default: 'controller name'
+            defaultMessage: 'controller name'
           }),
           blockType: BlockType.REPORTER
         }, '---', {
           opcode: 'whenButtonPressed',
           text: formatMessage({
             id: 'gamepad.whenButtonPressed',
-            default: 'when [BUTTON] pressed'
+            defaultMessage: 'when [BUTTON] pressed'
           }),
           blockType: BlockType.HAT,
           arguments: {
@@ -8392,7 +8456,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
           opcode: 'isButtonPressed',
           text: formatMessage({
             id: 'gamepad.isButtonPressed',
-            default: '[BUTTON] pressed?'
+            defaultMessage: '[BUTTON] pressed?'
           }),
           blockType: BlockType.BOOLEAN,
           arguments: {
@@ -8406,7 +8470,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
           opcode: 'getStickValue',
           text: formatMessage({
             id: 'gamepad.getStickValue',
-            default: '[STICK] stick [AXIS]'
+            defaultMessage: '[STICK] stick [AXIS]'
           }),
           blockType: BlockType.REPORTER,
           arguments: {
@@ -8425,7 +8489,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
           opcode: 'getStickDirection',
           text: formatMessage({
             id: 'gamepad.getStickDirection',
-            default: '[STICK] stick direction'
+            defaultMessage: '[STICK] stick direction'
           }),
           blockType: BlockType.REPORTER,
           arguments: {
@@ -8439,21 +8503,21 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
           opcode: 'getCursorX',
           text: formatMessage({
             id: 'gamepad.getCursorX',
-            default: 'cursor x'
+            defaultMessage: 'cursor x'
           }),
           blockType: BlockType.REPORTER
         }, {
           opcode: 'getCursorY',
           text: formatMessage({
             id: 'gamepad.getCursorY',
-            default: 'cursor y'
+            defaultMessage: 'cursor y'
           }),
           blockType: BlockType.REPORTER
         }, {
           opcode: 'setCursorPosition',
           text: formatMessage({
             id: 'gamepad.setCursorPosition',
-            default: 'set cursor to x: [X] y: [Y]'
+            defaultMessage: 'set cursor to x: [X] y: [Y]'
           }),
           blockType: BlockType.COMMAND,
           arguments: {
@@ -8470,7 +8534,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
           opcode: 'vibrate',
           text: formatMessage({
             id: 'gamepad.vibrate',
-            default: 'vibrate for [DURATION] ms at [INTENSITY]%'
+            defaultMessage: 'vibrate for [DURATION] ms at [INTENSITY]%'
           }),
           blockType: BlockType.COMMAND,
           arguments: {
@@ -8487,7 +8551,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
           opcode: 'showDebugInfo',
           text: formatMessage({
             id: 'gamepad.showDebugInfo',
-            default: 'show gamepad debug info'
+            defaultMessage: 'show gamepad debug info'
           }),
           blockType: BlockType.COMMAND
         }],
@@ -8498,7 +8562,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
               return {
                 text: formatMessage({
                   id: "gamepad.buttons.".concat(key),
-                  default: key
+                  defaultMessage: key
                 }),
                 value: key
               };
@@ -8509,13 +8573,13 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             items: [{
               text: formatMessage({
                 id: 'gamepad.sticks.left',
-                default: 'left'
+                defaultMessage: 'left'
               }),
               value: 'left'
             }, {
               text: formatMessage({
                 id: 'gamepad.sticks.right',
-                default: 'right'
+                defaultMessage: 'right'
               }),
               value: 'right'
             }]
@@ -8525,13 +8589,13 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             items: [{
               text: formatMessage({
                 id: 'gamepad.axes.x',
-                default: 'x-axis'
+                defaultMessage: 'x-axis'
               }),
               value: 'x'
             }, {
               text: formatMessage({
                 id: 'gamepad.axes.y',
-                default: 'y-axis'
+                defaultMessage: 'y-axis'
               }),
               value: 'y'
             }]
@@ -8736,7 +8800,6 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
   }]);
   return Scratch3GamepadBlocks;
 }();
-var blockClass = Scratch3GamepadBlocks; // Add this line
-blockClass = Scratch3GamepadBlocks;
+var blockClass = Scratch3GamepadBlocks;
 
 export { blockClass, entry };
