@@ -4343,7 +4343,7 @@ See the accompanying LICENSE file for terms.
   };
 })(core$1);
 
-var en$2 = {};
+var en$1 = {};
 
 (function (exports) {
 
@@ -4359,13 +4359,13 @@ var en$2 = {};
       return n == 1 && v0 ? "one" : "other";
     }
   };
-})(en$2);
+})(en$1);
 
 /* jslint esnext: true */
 (function (exports) {
 
   var src$core$$ = core$1,
-    src$en$$ = en$2;
+    src$en$$ = en$1;
   src$core$$["default"].__addLocaleData(src$en$$["default"]);
   src$core$$["default"].defaultLocale = 'en';
   exports["default"] = src$core$$["default"];
@@ -4773,13 +4773,13 @@ RelativeFormat.prototype._selectUnits = function (diffReport) {
   return units;
 };
 
-var en$1 = {};
+var en = {};
 
-Object.defineProperty(en$1, "__esModule", {
+Object.defineProperty(en, "__esModule", {
   value: true
 });
 /* @generated */
-en$1.default = {
+en.default = {
   "locale": "en",
   "pluralRuleFunction": function pluralRuleFunction(n, ord) {
     var s = String(n).split('.'),
@@ -5041,7 +5041,7 @@ Object.defineProperty(main, "__esModule", {
   value: true
 });
 var core_1 = core;
-var en_1 = en$1;
+var en_1 = en;
 core_1.default.__addLocaleData(en_1.default);
 core_1.default.defaultLocale = 'en';
 main.default = core_1.default;
@@ -7627,7 +7627,7 @@ function _createClass(Constructor, protoProps, staticProps) {
  * Block argument types
  * @enum {string}
  */
-var ArgumentType = {
+var ArgumentType$1 = {
   /**
    * Numeric value with angle picker
    */
@@ -7661,13 +7661,13 @@ var ArgumentType = {
    */
   IMAGE: 'image'
 };
-var argumentType = ArgumentType;
+var argumentType = ArgumentType$1;
 
 /**
  * Types of block
  * @enum {string}
  */
-var BlockType = {
+var BlockType$1 = {
   /**
    * Boolean reporter with hexagonal shape
    */
@@ -7704,7 +7704,7 @@ var BlockType = {
    */
   REPORTER: 'reporter'
 };
-var blockType = BlockType;
+var blockType = BlockType$1;
 
 var Color$1 = /*#__PURE__*/function () {
   function Color() {
@@ -7964,7 +7964,7 @@ var Color = color;
  * In JavaScript, 1 + Number("hello" + "world") would give you NaN.
  * Use when coercing a value before computation.
  */
-var Cast = /*#__PURE__*/function () {
+var Cast$1 = /*#__PURE__*/function () {
   function Cast() {
     _classCallCheck(this, Cast);
   }
@@ -8194,83 +8194,83 @@ var Cast = /*#__PURE__*/function () {
   }]);
   return Cast;
 }();
-var cast = Cast;
+var cast = Cast$1;
 
-var en = {
-	"gamepad.name": "Universal Gamepad",
-	"gamepad.isConnected": "gamepad connected?",
-	"gamepad.getControllerInfo": "controller name",
-	"gamepad.whenButtonPressed": "when [BUTTON] pressed",
-	"gamepad.isButtonPressed": "[BUTTON] pressed?",
-	"gamepad.getStickValue": "[STICK] stick [AXIS]",
-	"gamepad.getStickDirection": "[STICK] stick direction",
-	"gamepad.getCursorX": "cursor x",
-	"gamepad.getCursorY": "cursor y",
-	"gamepad.setCursorPosition": "set cursor to x: [X] y: [Y]",
-	"gamepad.vibrate": "vibrate for [DURATION] ms at [INTENSITY]%",
-	"gamepad.showDebugInfo": "show gamepad debug info",
-	"gamepad.buttons.A": "A",
-	"gamepad.buttons.B": "B",
-	"gamepad.buttons.X": "X",
-	"gamepad.buttons.Y": "Y",
-	"gamepad.buttons.LB": "LB",
-	"gamepad.buttons.RB": "RB",
-	"gamepad.buttons.LT": "LT",
-	"gamepad.buttons.RT": "RT",
-	"gamepad.buttons.SELECT": "Select",
-	"gamepad.buttons.START": "Start",
-	"gamepad.buttons.LS": "Left Stick",
-	"gamepad.buttons.RS": "Right Stick",
-	"gamepad.buttons.UP": "Up",
-	"gamepad.buttons.DOWN": "Down",
-	"gamepad.buttons.LEFT": "Left",
-	"gamepad.buttons.RIGHT": "Right",
-	"gamepad.buttons.HOME": "Home",
-	"gamepad.sticks.left": "left",
-	"gamepad.sticks.right": "right",
-	"gamepad.axes.x": "x-axis",
-	"gamepad.axes.y": "y-axis"
-};
-var de = {
-	"gamepad.name": "Universal-Gamepad",
-	"gamepad.isConnected": "Gamepad verbunden?",
-	"gamepad.getControllerInfo": "Controller-Name",
-	"gamepad.whenButtonPressed": "wenn Taste [BUTTON] gedrückt",
-	"gamepad.isButtonPressed": "Taste [BUTTON] gedrückt?",
-	"gamepad.getStickValue": "[STICK] Stick [AXIS]",
-	"gamepad.getStickDirection": "[STICK] Stick Richtung",
-	"gamepad.getCursorX": "Cursor x",
-	"gamepad.getCursorY": "Cursor y",
-	"gamepad.setCursorPosition": "Setze Cursor auf x: [X] y: [Y]",
-	"gamepad.vibrate": "Vibriere für [DURATION] ms bei [INTENSITY]%",
-	"gamepad.showDebugInfo": "Gamepad-Debuginformationen anzeigen",
-	"gamepad.buttons.A": "A",
-	"gamepad.buttons.B": "B",
-	"gamepad.buttons.X": "X",
-	"gamepad.buttons.Y": "Y",
-	"gamepad.buttons.LB": "LB",
-	"gamepad.buttons.RB": "RB",
-	"gamepad.buttons.LT": "LT",
-	"gamepad.buttons.RT": "RT",
-	"gamepad.buttons.SELECT": "Select",
-	"gamepad.buttons.START": "Start",
-	"gamepad.buttons.LS": "Linker Stick",
-	"gamepad.buttons.RS": "Rechter Stick",
-	"gamepad.buttons.UP": "Oben",
-	"gamepad.buttons.DOWN": "Unten",
-	"gamepad.buttons.LEFT": "Links",
-	"gamepad.buttons.RIGHT": "Rechts",
-	"gamepad.buttons.HOME": "Home",
-	"gamepad.sticks.left": "linker",
-	"gamepad.sticks.right": "rechter",
-	"gamepad.axes.x": "x-Achse",
-	"gamepad.axes.y": "y-Achse"
-};
+var ArgumentType = argumentType;
+var BlockType = blockType;
+var Cast = cast;
 var translations = {
-	en: en,
-	de: de
+  "en": {
+    "gamepad.name": "Universal Gamepad",
+    "gamepad.isConnected": "gamepad connected?",
+    "gamepad.getControllerInfo": "controller name",
+    "gamepad.whenButtonPressed": "when [BUTTON] pressed",
+    "gamepad.isButtonPressed": "[BUTTON] pressed?",
+    "gamepad.getStickValue": "[STICK] stick [AXIS]",
+    "gamepad.getStickDirection": "[STICK] stick direction",
+    "gamepad.getCursorX": "cursor x",
+    "gamepad.getCursorY": "cursor y",
+    "gamepad.setCursorPosition": "set cursor to x: [X] y: [Y]",
+    "gamepad.vibrate": "vibrate for [DURATION] ms at [INTENSITY]%",
+    "gamepad.showDebugInfo": "show gamepad debug info",
+    "gamepad.buttons.A": "A",
+    "gamepad.buttons.B": "B",
+    "gamepad.buttons.X": "X",
+    "gamepad.buttons.Y": "Y",
+    "gamepad.buttons.LB": "LB",
+    "gamepad.buttons.RB": "RB",
+    "gamepad.buttons.LT": "LT",
+    "gamepad.buttons.RT": "RT",
+    "gamepad.buttons.SELECT": "Select",
+    "gamepad.buttons.START": "Start",
+    "gamepad.buttons.LS": "Left Stick",
+    "gamepad.buttons.RS": "Right Stick",
+    "gamepad.buttons.UP": "Up",
+    "gamepad.buttons.DOWN": "Down",
+    "gamepad.buttons.LEFT": "Left",
+    "gamepad.buttons.RIGHT": "Right",
+    "gamepad.buttons.HOME": "Home",
+    "gamepad.sticks.left": "left",
+    "gamepad.sticks.right": "right",
+    "gamepad.axes.x": "x-axis",
+    "gamepad.axes.y": "y-axis"
+  },
+  "de": {
+    "gamepad.name": "Universal-Gamepad",
+    "gamepad.isConnected": "Gamepad verbunden?",
+    "gamepad.getControllerInfo": "Controller-Name",
+    "gamepad.whenButtonPressed": "wenn Taste [BUTTON] gedrückt",
+    "gamepad.isButtonPressed": "Taste [BUTTON] gedrückt?",
+    "gamepad.getStickValue": "[STICK] Stick [AXIS]",
+    "gamepad.getStickDirection": "[STICK] Stick Richtung",
+    "gamepad.getCursorX": "Cursor x",
+    "gamepad.getCursorY": "Cursor y",
+    "gamepad.setCursorPosition": "Setze Cursor auf x: [X] y: [Y]",
+    "gamepad.vibrate": "Vibriere für [DURATION] ms bei [INTENSITY]%",
+    "gamepad.showDebugInfo": "Gamepad-Debuginformationen anzeigen",
+    "gamepad.buttons.A": "A",
+    "gamepad.buttons.B": "B",
+    "gamepad.buttons.X": "X",
+    "gamepad.buttons.Y": "Y",
+    "gamepad.buttons.LB": "LB",
+    "gamepad.buttons.RB": "RB",
+    "gamepad.buttons.LT": "LT",
+    "gamepad.buttons.RT": "RT",
+    "gamepad.buttons.SELECT": "Select",
+    "gamepad.buttons.START": "Start",
+    "gamepad.buttons.LS": "Linker Stick",
+    "gamepad.buttons.RS": "Rechter Stick",
+    "gamepad.buttons.UP": "Oben",
+    "gamepad.buttons.DOWN": "Unten",
+    "gamepad.buttons.LEFT": "Links",
+    "gamepad.buttons.RIGHT": "Rechts",
+    "gamepad.buttons.HOME": "Home",
+    "gamepad.sticks.left": "linker",
+    "gamepad.sticks.right": "rechter",
+    "gamepad.axes.x": "x-Achse",
+    "gamepad.axes.y": "y-Achse"
+  }
 };
-
 var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAORJREFUeF7t2DEKwjAYQOG/qIMH8BbewNvY1Vt4A2/hDXQV3EQHwQOIOgiCiIODiIOLiCCCiAgOjooHD/BvhLyEjxmSH5CEJCRJkiRJkiRJkiRJkiSNB0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJGlSSJIkSZIkSZIkSZIkSZL+A2ggCAwANDVJREFUeF7t1jcQAAA=';
 var formatMessage = function formatMessage(messageData) {
   return messageData.defaultMessage;
@@ -8366,24 +8366,24 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             id: 'gamepad.isConnected',
             default: 'gamepad connected?'
           }),
-          blockType: blockType.BOOLEAN
+          blockType: BlockType.BOOLEAN
         }, {
           opcode: 'getControllerInfo',
           text: formatMessage({
             id: 'gamepad.getControllerInfo',
             default: 'controller name'
           }),
-          blockType: blockType.REPORTER
+          blockType: BlockType.REPORTER
         }, '---', {
           opcode: 'whenButtonPressed',
           text: formatMessage({
             id: 'gamepad.whenButtonPressed',
             default: 'when [BUTTON] pressed'
           }),
-          blockType: blockType.HAT,
+          blockType: BlockType.HAT,
           arguments: {
             BUTTON: {
-              type: argumentType.STRING,
+              type: ArgumentType.STRING,
               menu: 'BUTTONS',
               defaultValue: 'A'
             }
@@ -8394,10 +8394,10 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             id: 'gamepad.isButtonPressed',
             default: '[BUTTON] pressed?'
           }),
-          blockType: blockType.BOOLEAN,
+          blockType: BlockType.BOOLEAN,
           arguments: {
             BUTTON: {
-              type: argumentType.STRING,
+              type: ArgumentType.STRING,
               menu: 'BUTTONS',
               defaultValue: 'A'
             }
@@ -8408,15 +8408,15 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             id: 'gamepad.getStickValue',
             default: '[STICK] stick [AXIS]'
           }),
-          blockType: blockType.REPORTER,
+          blockType: BlockType.REPORTER,
           arguments: {
             STICK: {
-              type: argumentType.STRING,
+              type: ArgumentType.STRING,
               menu: 'STICKS',
               defaultValue: 'left'
             },
             AXIS: {
-              type: argumentType.STRING,
+              type: ArgumentType.STRING,
               menu: 'AXES',
               defaultValue: 'x'
             }
@@ -8427,10 +8427,10 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             id: 'gamepad.getStickDirection',
             default: '[STICK] stick direction'
           }),
-          blockType: blockType.REPORTER,
+          blockType: BlockType.REPORTER,
           arguments: {
             STICK: {
-              type: argumentType.STRING,
+              type: ArgumentType.STRING,
               menu: 'STICKS',
               defaultValue: 'left'
             }
@@ -8441,28 +8441,28 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             id: 'gamepad.getCursorX',
             default: 'cursor x'
           }),
-          blockType: blockType.REPORTER
+          blockType: BlockType.REPORTER
         }, {
           opcode: 'getCursorY',
           text: formatMessage({
             id: 'gamepad.getCursorY',
             default: 'cursor y'
           }),
-          blockType: blockType.REPORTER
+          blockType: BlockType.REPORTER
         }, {
           opcode: 'setCursorPosition',
           text: formatMessage({
             id: 'gamepad.setCursorPosition',
             default: 'set cursor to x: [X] y: [Y]'
           }),
-          blockType: blockType.COMMAND,
+          blockType: BlockType.COMMAND,
           arguments: {
             X: {
-              type: argumentType.NUMBER,
+              type: ArgumentType.NUMBER,
               defaultValue: 0
             },
             Y: {
-              type: argumentType.NUMBER,
+              type: ArgumentType.NUMBER,
               defaultValue: 0
             }
           }
@@ -8472,14 +8472,14 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             id: 'gamepad.vibrate',
             default: 'vibrate for [DURATION] ms at [INTENSITY]%'
           }),
-          blockType: blockType.COMMAND,
+          blockType: BlockType.COMMAND,
           arguments: {
             DURATION: {
-              type: argumentType.NUMBER,
+              type: ArgumentType.NUMBER,
               defaultValue: 200
             },
             INTENSITY: {
-              type: argumentType.NUMBER,
+              type: ArgumentType.NUMBER,
               defaultValue: 50
             }
           }
@@ -8489,7 +8489,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
             id: 'gamepad.showDebugInfo',
             default: 'show gamepad debug info'
           }),
-          blockType: blockType.COMMAND
+          blockType: BlockType.COMMAND
         }],
         menus: {
           BUTTONS: {
@@ -8631,8 +8631,8 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
     key: "getStickValue",
     value: function getStickValue(args) {
       if (!this.activeController) return 0;
-      var stick = cast.toString(args.STICK).toLowerCase();
-      var axis = cast.toString(args.AXIS).toLowerCase();
+      var stick = Cast.toString(args.STICK).toLowerCase();
+      var axis = Cast.toString(args.AXIS).toLowerCase();
       var stickMap = {
         'left': {
           'x': 0,
@@ -8655,7 +8655,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
     key: "getStickDirection",
     value: function getStickDirection(args) {
       if (!this.activeController) return 0;
-      var stick = cast.toString(args.STICK).toLowerCase();
+      var stick = Cast.toString(args.STICK).toLowerCase();
       var stickMap = {
         'left': {
           'x': 0,
@@ -8690,8 +8690,8 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
   }, {
     key: "setCursorPosition",
     value: function setCursorPosition(args) {
-      var x = cast.toNumber(args.X);
-      var y = cast.toNumber(args.Y);
+      var x = Cast.toNumber(args.X);
+      var y = Cast.toNumber(args.Y);
       this.virtualCursor.x = Math.max(this.virtualCursor.minX, Math.min(this.virtualCursor.maxX, x));
       this.virtualCursor.y = Math.max(this.virtualCursor.minY, Math.min(this.virtualCursor.maxY, y));
     }
@@ -8699,8 +8699,8 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
     key: "vibrate",
     value: function vibrate(args) {
       if (!this.activeController) return;
-      var duration = cast.toNumber(args.DURATION);
-      var intensity = cast.toNumber(args.INTENSITY) / 100;
+      var duration = Cast.toNumber(args.DURATION);
+      var intensity = Cast.toNumber(args.INTENSITY) / 100;
       var actuator = this.activeController.vibrationActuator;
       if (!actuator) {
         console.log('Vibration not supported on this controller');
@@ -8736,6 +8736,7 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
   }]);
   return Scratch3GamepadBlocks;
 }();
-exports.blockClass = Scratch3GamepadBlocks;
+var blockClass = Scratch3GamepadBlocks; // Add this line
+blockClass = Scratch3GamepadBlocks;
 
-export { entry };
+export { blockClass, entry };
