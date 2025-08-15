@@ -11,8 +11,8 @@
   },
   "main": "./dist/scratch-gui.js",
   "scripts": {
-    "build": "npm run clean && webpack --colors --bail",
-    "clean": "rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
+    "build": "echo '>>> Running: build (clean and webpack)' && npm run clean && webpack --colors --bail",
+    "clean": "echo '>>> Running: clean (rimraf build and dist dirs)' && rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
     "deploy": "touch build/.nojekyll && gh-pages -t -d build -m \"[skip ci] Build for $(git log --pretty=format:%H -n1)\"",
     "prepublish": "node scripts/prepublish.mjs",
     "prune": "./prune-gh-pages.sh",
@@ -24,6 +24,7 @@
     "test:lint": "eslint . --ext .js,.jsx",
     "test:unit": "jest test[\\\\/]unit",
     "test:smoke": "jest --runInBand test[\\\\/]smoke",
+    "test:vercel-build": "echo '>>> Simulating Vercel build process locally...' && rimraf ../scratch-lego-bluetooth-extensions && rimraf ./build && bash ./scripts/vercel-build.sh",
     "watch": "webpack --colors --watch"
   },
   "config": {
@@ -155,9 +156,9 @@
       "src/test.js"
     ],
     "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
-      "\\.(css|less)$": "<rootDir>/test/__mocks__/styleMock.js",
-      "editor-msgs(\\.js)?$": "<rootDir>/test/__mocks__/editor-msgs-mock.js"
+      "\\\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
+      "\\\\.(css|less)$": "<rootDir>/test/__mocks__/styleMock.js",
+      "editor-msgs(\\\\.js)?$": "<rootDir>/test/__mocks__/editor-msgs-mock.js"
     }
   }
 }
