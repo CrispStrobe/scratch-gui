@@ -20,7 +20,7 @@ echo "Current working directory: $(pwd)"
 
 # Install, register, and build the extensions
 echo "--- [STEP 4/7] Setting up extensions (install, register, build) ---"
-npm install
+npm ci
 npm run register
 npm run build
 
