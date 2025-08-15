@@ -16,7 +16,7 @@ log_step() {
 # --- Build Process ---
 
 log_step "1/8: INITIALIZING BUILD PROCESS"
-echo "Build started at: $(date)"
+echo "Build for xcratch started at: $(date)"
 
 log_step "2/8: CREATING COMPATIBILITY SYMLINK FOR 'scratch-gui'"
 ln -s "$(pwd)" ../scratch-gui
