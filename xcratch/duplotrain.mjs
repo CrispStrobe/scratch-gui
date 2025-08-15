@@ -6695,7 +6695,7 @@ function formatPlural(config, state, value) {
   }
   return 'other';
 }
-function formatMessage$1(config, state) {
+function formatMessage$2(config, state) {
   var messageDescriptor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var values = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
   var locale = config.locale,
@@ -6763,7 +6763,7 @@ function formatHTMLMessage(config, state, messageDescriptor) {
     escaped[name] = typeof value === 'string' ? escape(value) : value;
     return escaped;
   }, {});
-  return formatMessage$1(config, state, messageDescriptor, escapedValues);
+  return formatMessage$2(config, state, messageDescriptor, escapedValues);
 }
 var format = Object.freeze({
   formatDate: formatDate,
@@ -6771,7 +6771,7 @@ var format = Object.freeze({
   formatRelative: formatRelative,
   formatNumber: formatNumber,
   formatPlural: formatPlural,
-  formatMessage: formatMessage$1,
+  formatMessage: formatMessage$2,
   formatHTMLMessage: formatHTMLMessage
 });
 
@@ -7325,7 +7325,7 @@ var defaultFormatMessage = function defaultFormatMessage(descriptor, values) {
   if (process.env.NODE_ENV !== 'production') {
     console.error('[React Intl] Could not find required `intl` object. <IntlProvider> needs to exist in the component ancestry. Using default message as fallback.');
   }
-  return formatMessage$1({}, {
+  return formatMessage$2({}, {
     getMessageFormat: memoizeFormatConstructor(IntlMessageFormat)
   }, descriptor, values);
 };
@@ -7648,13 +7648,11 @@ function _createClass(Constructor, protoProps, staticProps) {
   return Constructor;
 }
 
-var _duplotrain = {exports: {}};
-
 /**
  * Block argument types
  * @enum {string}
  */
-var ArgumentType = {
+var ArgumentType$1 = {
   /**
    * Numeric value with angle picker
    */
@@ -7688,13 +7686,13 @@ var ArgumentType = {
    */
   IMAGE: 'image'
 };
-var argumentType = ArgumentType;
+var argumentType = ArgumentType$1;
 
 /**
  * Types of block
  * @enum {string}
  */
-var BlockType = {
+var BlockType$1 = {
   /**
    * Boolean reporter with hexagonal shape
    */
@@ -7731,9 +7729,9 @@ var BlockType = {
    */
   REPORTER: 'reporter'
 };
-var blockType = BlockType;
+var blockType = BlockType$1;
 
-var Color$2 = /*#__PURE__*/function () {
+var Color$3 = /*#__PURE__*/function () {
   function Color() {
     _classCallCheck(this, Color);
   }
@@ -7977,9 +7975,9 @@ var Color$2 = /*#__PURE__*/function () {
   }]);
   return Color;
 }();
-var color$1 = Color$2;
+var color$1 = Color$3;
 
-var Color$1 = color$1;
+var Color$2 = color$1;
 
 /**
  * @fileoverview
@@ -7991,7 +7989,7 @@ var Color$1 = color$1;
  * In JavaScript, 1 + Number("hello" + "world") would give you NaN.
  * Use when coercing a value before computation.
  */
-var Cast = /*#__PURE__*/function () {
+var Cast$1 = /*#__PURE__*/function () {
   function Cast() {
     _classCallCheck(this, Cast);
   }
@@ -8084,7 +8082,7 @@ var Cast = /*#__PURE__*/function () {
     value: function toRgbColorObject(value) {
       var color;
       if (typeof value === 'string' && value.substring(0, 1) === '#') {
-        color = Color$1.hexToRgb(value);
+        color = Color$2.hexToRgb(value);
 
         // If the color wasn't *actually* a hex color, cast to black
         if (!color) color = {
@@ -8094,7 +8092,7 @@ var Cast = /*#__PURE__*/function () {
           a: 255
         };
       } else {
-        color = Color$1.decimalToRgb(Cast.toNumber(value));
+        color = Color$2.decimalToRgb(Cast.toNumber(value));
       }
       return color;
     }
@@ -8221,7 +8219,7 @@ var Cast = /*#__PURE__*/function () {
   }]);
   return Cast;
 }();
-var cast = Cast;
+var cast = Cast$1;
 
 function _arrayWithHoles(arr) {
   if (Array.isArray(arr)) return arr;
@@ -11240,7 +11238,7 @@ var numberToInt16Array = function numberToInt16Array(number) {
   dataview.setInt16(0, number);
   return [dataview.getUint8(1), dataview.getUint8(0)];
 };
-var Hub = /*#__PURE__*/function () {
+var Hub$1 = /*#__PURE__*/function () {
   function Hub(runtime, extensionId) {
     var hubType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     _classCallCheck(this, Hub);
@@ -11696,9 +11694,9 @@ var Hub = /*#__PURE__*/function () {
   }]);
   return Hub;
 }();
-var hub = Hub;
+var hub = Hub$1;
 
-var Color = {
+var Color$1 = {
   BLACK: 0,
   PINK: 1,
   PURPLE: 2,
@@ -11712,9 +11710,9 @@ var Color = {
   WHITE: 10,
   NONE: -1
 };
-var color = Color;
+var color = Color$1;
 
-var setupTranslations = function setupTranslations(formatMessage) {
+var setupTranslations$1 = function setupTranslations(formatMessage) {
   var extTranslations = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var localeSetup = formatMessage.setup();
   var translations = {
@@ -11880,9 +11878,9 @@ var setupTranslations = function setupTranslations(formatMessage) {
     Object.assign(localeSetup.translations[locale], translations[locale]);
   }
 };
-var setupTranslations_1 = setupTranslations;
+var setupTranslations_1 = setupTranslations$1;
 
-var formatMessage = {exports: {}};
+var formatMessage$1 = {exports: {}};
 
 var formatMessageParse = {exports: {}};
 
@@ -13639,444 +13637,441 @@ var plurals = {
     return formatMessage;
   }
   module.exports = namespace();
-})(formatMessage);
+})(formatMessage$1);
 
-(function (module, exports) {
-  var ArgumentType = argumentType;
-  var BlockType = blockType;
-  var Cast = cast;
-  var Hub = hub;
-  var Color = color;
-  var setupTranslations = setupTranslations_1;
-  var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAUKADAAQAAAABAAAAUAAAAAAx4ExPAAAEl0lEQVR4Ae2bT0jUQRTHZ9xV1/4cMio0aUUqyoQKuniooLBO0amgoi55icLASwpWYkZ2KZKii12KDJSg6JYUVAePGtQSFZLiHzCyQ5pbrk7zdnfW3WXmN7PO+ts/vQX5zW/em3m/99nvvPntz11C8IUEkAASQAJIAAkgASSABJAAEkACSAAJIAEk4B4BahrqzQvCZL77j5DwHDq7bGw+9BXkQxKZzEGpQJWi3L5YoXC345rGQwWaklL4eRX9se59tbGmq423/a6GW3IwVOCS0UUGahWYK0ow5fCtdqf0bqKy/71yP3CaGxXoRMfApqUu3jG/v8ZgOnuX4eEP4UmSFcGOHSsaGfvaRgg7wxgri49EKZ0ghD7ctHHzFdrb+zfeJtrDtbs+MsKqxbnsSAkN+PsHd8hsqr6cUSDAY2zhUjI8SAz6wBYBrEiVkl6FZbGbkp7FE7OWtgaaTeOGFzsDUTas9xNfyeqEgLOzv8jk5DDvC/s0JRjFiYf2kBC76inwsIqKbVxs0cXHGBkd/cTmF+Yp8VA9ZDFf9JgzChTXLd0BhNHh6H83EIAlCqCCwZmYJ7ShL7x8uU/MYNiwroGiZhnGi7mpaqqYD+qabLnGJliGhkktTQ6btUvYbXgAJhKTQS2FU3kpAEvcK20Ak3fNuBgJTbGrJ3RKTmS1TuKW1i6jWpoUMWtrYPJGkXTdy3JaEt2cUlF/1gJcFkLLMCkCtISKABGgJQHL4ahABGhJwHI4KhABWhKwHJ62TyKmnzAsrzfrhuMStnxLrBWoeqpieV05MzxrFQgf7N1+iZiRx1pm0a0VaBYmda/IE+bUx6VjBDxMEDVd95QpaxWYDhBuzJF1CsyWmiqejOveBFSgjpDGjgA1gHRmBKgjpLEjQA0gnRkB6ghp7Mr/C7fceLzU/2FrQuamub35lJQVKtDy/dTeB34eeG4ZIreHb9191DEBVKAjHr1Rq0D9FLntcaez0yiB9ma5GypQzsW4V6lA/nWvaf6NzlXeQh8JzQWNJ8w1x4sNDcpLhtyrag7zn2LRaZWTkwI/wqCSVWtVY/O+Py73MAtZwk4Au2DAuooaVuAplI3N6z7IGXKPJhlmIUtYenMIjvyhIr1ys7uPfwP2YCgUZN9HP9DZ6R95vZwhb1i2oDyA5/X6+MNp8qrt0sk63hAwwS32UtdAPuD67aeng3+Cj/hEB8sq98QG/SeNMDxfse+0Ch5wUCpQQAorsePJWX5ez/92wMYibPl4jG4YUPO62ppOPHCCB/lrAZpAaul4fJf/mvj8yhXFrG5vNd1YXiodNjY+RfreBdjM7z/8Osm99qZTF6SOKXZmMr5yCaeSg7eqsDE0FNrOwRx49nKQVW8po9Vby0npmohYp35Ok8DncRL4MsEFzDg8+tpb5W1MJYaTbybjp0WBkFxrT09RaGjuFi+153i1le7uPNgCx3cfEm49flz6iyInUE62TMVPG0CR3OWObvipVD1X2iFeITZF+tkIV91L3u661nRSeU8l5rA5Zjq+zbXjWCSABJAAEkACSAAJIAEkgASQABJAAkgACSABHYF/doZ0OkkMt+gAAAAASUVORK5CYII=';
-  var BLESendInterval = 100;
-  var waitPromise = function waitPromise() {
-    return new Promise(function (resolve) {
-      return window.setTimeout(resolve, BLESendInterval);
-    });
-  };
-  var formatMessage$1 = formatMessage.exports;
-  var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/duplotrain.mjs';
-  var Sound = {
-    BRAKE: 3,
-    DEPARTURE: 5,
-    REFILL: 7,
-    HORN: 9,
-    STEAM: 10
-  };
-  var PortId = {
-    MOTOR: 0x00,
-    SPEAKER: 0x01,
-    RGB_LIGHT: 0x11,
-    COLOR_SENSOR: 0x12,
-    SPEEDOMETER: 0x13
-  };
-  var Scratch3DuploTrainBlocks = /*#__PURE__*/function () {
-    function Scratch3DuploTrainBlocks(runtime) {
-      _classCallCheck(this, Scratch3DuploTrainBlocks);
-      this._peripheral = new Hub(runtime, Scratch3DuploTrainBlocks.EXTENSION_ID, 0x20);
-      if (runtime.formatMessage) {
-        // Replace 'formatMessage' to a formatter which is used in the runtime.
-        formatMessage$1 = runtime.formatMessage;
-      }
+var ArgumentType = argumentType;
+var BlockType = blockType;
+var Cast = cast;
+var Hub = hub;
+var Color = color;
+var setupTranslations = setupTranslations_1;
+var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAUKADAAQAAAABAAAAUAAAAAAx4ExPAAAEl0lEQVR4Ae2bT0jUQRTHZ9xV1/4cMio0aUUqyoQKuniooLBO0amgoi55icLASwpWYkZ2KZKii12KDJSg6JYUVAePGtQSFZLiHzCyQ5pbrk7zdnfW3WXmN7PO+ts/vQX5zW/em3m/99nvvPntz11C8IUEkAASQAJIAAkgASSABJAAEkACSAAJIAEk4B4BahrqzQvCZL77j5DwHDq7bGw+9BXkQxKZzEGpQJWi3L5YoXC345rGQwWaklL4eRX9se59tbGmq423/a6GW3IwVOCS0UUGahWYK0ow5fCtdqf0bqKy/71yP3CaGxXoRMfApqUu3jG/v8ZgOnuX4eEP4UmSFcGOHSsaGfvaRgg7wxgri49EKZ0ghD7ctHHzFdrb+zfeJtrDtbs+MsKqxbnsSAkN+PsHd8hsqr6cUSDAY2zhUjI8SAz6wBYBrEiVkl6FZbGbkp7FE7OWtgaaTeOGFzsDUTas9xNfyeqEgLOzv8jk5DDvC/s0JRjFiYf2kBC76inwsIqKbVxs0cXHGBkd/cTmF+Yp8VA9ZDFf9JgzChTXLd0BhNHh6H83EIAlCqCCwZmYJ7ShL7x8uU/MYNiwroGiZhnGi7mpaqqYD+qabLnGJliGhkktTQ6btUvYbXgAJhKTQS2FU3kpAEvcK20Ak3fNuBgJTbGrJ3RKTmS1TuKW1i6jWpoUMWtrYPJGkXTdy3JaEt2cUlF/1gJcFkLLMCkCtISKABGgJQHL4ahABGhJwHI4KhABWhKwHJ62TyKmnzAsrzfrhuMStnxLrBWoeqpieV05MzxrFQgf7N1+iZiRx1pm0a0VaBYmda/IE+bUx6VjBDxMEDVd95QpaxWYDhBuzJF1CsyWmiqejOveBFSgjpDGjgA1gHRmBKgjpLEjQA0gnRkB6ghp7Mr/C7fceLzU/2FrQuamub35lJQVKtDy/dTeB34eeG4ZIreHb9191DEBVKAjHr1Rq0D9FLntcaez0yiB9ma5GypQzsW4V6lA/nWvaf6NzlXeQh8JzQWNJ8w1x4sNDcpLhtyrag7zn2LRaZWTkwI/wqCSVWtVY/O+Py73MAtZwk4Au2DAuooaVuAplI3N6z7IGXKPJhlmIUtYenMIjvyhIr1ys7uPfwP2YCgUZN9HP9DZ6R95vZwhb1i2oDyA5/X6+MNp8qrt0sk63hAwwS32UtdAPuD67aeng3+Cj/hEB8sq98QG/SeNMDxfse+0Ch5wUCpQQAorsePJWX5ez/92wMYibPl4jG4YUPO62ppOPHCCB/lrAZpAaul4fJf/mvj8yhXFrG5vNd1YXiodNjY+RfreBdjM7z/8Osm99qZTF6SOKXZmMr5yCaeSg7eqsDE0FNrOwRx49nKQVW8po9Vby0npmohYp35Ok8DncRL4MsEFzDg8+tpb5W1MJYaTbybjp0WBkFxrT09RaGjuFi+153i1le7uPNgCx3cfEm49flz6iyInUE62TMVPG0CR3OWObvipVD1X2iFeITZF+tkIV91L3u661nRSeU8l5rA5Zjq+zbXjWCSABJAAEkACSAAJIAEkgASQABJAAkgACSABHYF/doZ0OkkMt+gAAAAASUVORK5CYII=';
+var BLESendInterval = 100;
+var waitPromise = function waitPromise() {
+  return new Promise(function (resolve) {
+    return window.setTimeout(resolve, BLESendInterval);
+  });
+};
+var formatMessage = formatMessage$1.exports;
+var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/duplotrain.mjs';
+var Sound = {
+  BRAKE: 3,
+  DEPARTURE: 5,
+  REFILL: 7,
+  HORN: 9,
+  STEAM: 10
+};
+var PortId = {
+  MOTOR: 0x00,
+  SPEAKER: 0x01,
+  RGB_LIGHT: 0x11,
+  COLOR_SENSOR: 0x12,
+  SPEEDOMETER: 0x13
+};
+var Scratch3DuploTrainBlocks = /*#__PURE__*/function () {
+  function Scratch3DuploTrainBlocks(runtime) {
+    _classCallCheck(this, Scratch3DuploTrainBlocks);
+    this._peripheral = new Hub(runtime, Scratch3DuploTrainBlocks.EXTENSION_ID, 0x20);
+    if (runtime.formatMessage) {
+      // Replace 'formatMessage' to a formatter which is used in the runtime.
+      formatMessage = runtime.formatMessage;
     }
-    _createClass(Scratch3DuploTrainBlocks, [{
-      key: "getInfo",
-      value: function getInfo() {
-        this._setupTranslations();
-        return {
-          id: Scratch3DuploTrainBlocks.EXTENSION_ID,
-          name: 'DUPLO Train',
-          extensionURL: Scratch3DuploTrainBlocks.extensionURL,
-          blockIconURI: blockIconURI,
-          showStatusButton: true,
-          blocks: [{
-            opcode: 'motorPWM',
-            text: formatMessage$1({
-              id: 'duplotrain.motorPWM',
-              default: 'run [DIRECTION] at [POWER] % power'
-            }),
-            blockType: BlockType.COMMAND,
-            arguments: {
-              DIRECTION: {
-                type: ArgumentType.NUMBER,
-                menu: 'DIRECTION',
-                defaultValue: 1
-              },
-              POWER: {
-                type: ArgumentType.NUMBER,
-                defaultValue: 50
-              }
+  }
+  _createClass(Scratch3DuploTrainBlocks, [{
+    key: "getInfo",
+    value: function getInfo() {
+      this._setupTranslations();
+      return {
+        id: Scratch3DuploTrainBlocks.EXTENSION_ID,
+        name: 'DUPLO Train',
+        extensionURL: Scratch3DuploTrainBlocks.extensionURL,
+        blockIconURI: blockIconURI,
+        showStatusButton: true,
+        blocks: [{
+          opcode: 'motorPWM',
+          text: formatMessage({
+            id: 'duplotrain.motorPWM',
+            default: 'run [DIRECTION] at [POWER] % power'
+          }),
+          blockType: BlockType.COMMAND,
+          arguments: {
+            DIRECTION: {
+              type: ArgumentType.NUMBER,
+              menu: 'DIRECTION',
+              defaultValue: 1
+            },
+            POWER: {
+              type: ArgumentType.NUMBER,
+              defaultValue: 50
             }
-          }, {
-            opcode: 'motorStop',
-            text: formatMessage$1({
-              id: 'duplotrain.motorStop',
-              default: 'stop'
-            }),
-            blockType: BlockType.COMMAND
-          }, '---', {
-            opcode: 'playSound',
-            text: formatMessage$1({
-              id: 'duplotrain.playSound',
-              default: 'play [SOUND] sound'
-            }),
-            blockType: BlockType.COMMAND,
-            arguments: {
-              SOUND: {
-                type: ArgumentType.NUMBER,
-                menu: 'SOUND',
-                defaultValue: Sound.BRAKE
-              }
+          }
+        }, {
+          opcode: 'motorStop',
+          text: formatMessage({
+            id: 'duplotrain.motorStop',
+            default: 'stop'
+          }),
+          blockType: BlockType.COMMAND
+        }, '---', {
+          opcode: 'playSound',
+          text: formatMessage({
+            id: 'duplotrain.playSound',
+            default: 'play [SOUND] sound'
+          }),
+          blockType: BlockType.COMMAND,
+          arguments: {
+            SOUND: {
+              type: ArgumentType.NUMBER,
+              menu: 'SOUND',
+              defaultValue: Sound.BRAKE
             }
-          }, {
-            opcode: 'setHubLEDColor',
-            text: formatMessage$1({
-              id: 'duplotrain.setHubLEDColor',
-              default: 'set light color to [COLOR]'
-            }),
-            blockType: BlockType.COMMAND,
-            arguments: {
-              COLOR: {
-                type: ArgumentType.NUMBER,
-                menu: 'LED_COLOR',
-                defaultValue: Color.BLUE
-              }
+          }
+        }, {
+          opcode: 'setHubLEDColor',
+          text: formatMessage({
+            id: 'duplotrain.setHubLEDColor',
+            default: 'set light color to [COLOR]'
+          }),
+          blockType: BlockType.COMMAND,
+          arguments: {
+            COLOR: {
+              type: ArgumentType.NUMBER,
+              menu: 'LED_COLOR',
+              defaultValue: Color.BLUE
             }
-          }, '---', {
-            opcode: 'whenColor',
-            text: formatMessage$1({
-              id: 'duplotrain.whenColor',
-              default: 'when passing over [SENSOR_COLOR] action block'
-            }),
-            blockType: BlockType.HAT,
-            arguments: {
-              SENSOR_COLOR: {
-                type: ArgumentType.NUMBER,
-                menu: 'SENSOR_COLOR',
-                defaultValue: Color.BLUE
-              }
+          }
+        }, '---', {
+          opcode: 'whenColor',
+          text: formatMessage({
+            id: 'duplotrain.whenColor',
+            default: 'when passing over [SENSOR_COLOR] action block'
+          }),
+          blockType: BlockType.HAT,
+          arguments: {
+            SENSOR_COLOR: {
+              type: ArgumentType.NUMBER,
+              menu: 'SENSOR_COLOR',
+              defaultValue: Color.BLUE
             }
-          },
-          /*
-          {
-              opcode: 'isColor',
-              text: formatMessage({
-                  id: 'duplotrain.isColor',
-                  default: 'ground color is [SENSOR_COLOR] ?'
-              }),
-              blockType: BlockType.BOOLEAN,
-              arguments: {
-                  SENSOR_COLOR: {
-                      type: ArgumentType.NUMBER,
-                      menu: 'SENSOR_COLOR',
-                      defaultValue: Color.BLUE
-                  }
-              }
-          },
-          {
-              opcode: 'getColor',
-              text: formatMessage({
-                  id: 'duplotrain.getColor',
-                  default: 'ground color'
-              }),
-              blockType: BlockType.REPORTER
-          },
-          */
-          {
-            opcode: 'getDrivingDistance',
-            text: formatMessage$1({
-              id: 'duplotrain.getDrivingDistance',
-              default: 'driving distance'
+          }
+        },
+        /*
+        {
+            opcode: 'isColor',
+            text: formatMessage({
+                id: 'duplotrain.isColor',
+                default: 'ground color is [SENSOR_COLOR] ?'
+            }),
+            blockType: BlockType.BOOLEAN,
+            arguments: {
+                SENSOR_COLOR: {
+                    type: ArgumentType.NUMBER,
+                    menu: 'SENSOR_COLOR',
+                    defaultValue: Color.BLUE
+                }
+            }
+        },
+        {
+            opcode: 'getColor',
+            text: formatMessage({
+                id: 'duplotrain.getColor',
+                default: 'ground color'
             }),
             blockType: BlockType.REPORTER
-          }],
-          menus: {
-            DIRECTION: {
-              acceptReporters: false,
-              items: [{
-                text: '⬆︎',
-                value: '1'
-              }, {
-                text: '⬇',
-                value: '-1'
-              }]
-            },
-            SOUND: {
-              acceptReporters: false,
-              items: [{
-                text: formatMessage$1({
-                  id: 'duplotrain.brake',
-                  default: 'brake'
-                }),
-                value: String(Sound.BRAKE)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.departure',
-                  default: 'departure'
-                }),
-                value: String(Sound.DEPARTURE)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.refill',
-                  default: 'refill'
-                }),
-                value: String(Sound.REFILL)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.horn',
-                  default: 'horn'
-                }),
-                value: String(Sound.HORN)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.steam',
-                  default: 'steam'
-                }),
-                value: String(Sound.STEAM)
-              }]
-            },
-            LED_COLOR: {
-              acceptReporters: true,
-              items: [{
-                text: formatMessage$1({
-                  id: 'legobluetooth.black',
-                  default: '(0) Black'
-                }),
-                value: String(Color.BLACK)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.pink',
-                  default: '(1) Pink'
-                }),
-                value: String(Color.PINK)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.purple',
-                  default: '(2) Purple'
-                }),
-                value: String(Color.PURPLE)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.blue',
-                  default: '(3) Blue'
-                }),
-                value: String(Color.BLUE)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.lightBlue',
-                  default: '(4) Light blue'
-                }),
-                value: String(Color.LIGHT_BLUE)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.lightGreen',
-                  default: '(5) Light green'
-                }),
-                value: String(Color.LIGHT_GREEN)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.green',
-                  default: '(6) Green'
-                }),
-                value: String(Color.GREEN)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.yellow',
-                  default: '(7) Yellow'
-                }),
-                value: String(Color.YELLOW)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.orange',
-                  default: '(8) Orange'
-                }),
-                value: String(Color.ORANGE)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.red',
-                  default: '(9) Red'
-                }),
-                value: String(Color.RED)
-              }, {
-                text: formatMessage$1({
-                  id: 'legobluetooth.white',
-                  default: '(10) White'
-                }),
-                value: String(Color.WHITE)
-              }]
-            },
-            SENSOR_COLOR: {
-              acceptReporters: false,
-              items: [{
-                text: formatMessage$1({
-                  id: 'duplotrain.blue',
-                  default: 'Blue'
-                }),
-                value: String(Color.BLUE)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.lightGreen',
-                  default: 'Green'
-                }),
-                value: String(Color.LIGHT_GREEN)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.yellow',
-                  default: 'Yellow'
-                }),
-                value: String(Color.YELLOW)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.red',
-                  default: 'Red'
-                }),
-                value: String(Color.RED)
-              }, {
-                text: formatMessage$1({
-                  id: 'duplotrain.white',
-                  default: 'White'
-                }),
-                value: String(Color.WHITE)
-              }]
-            }
-          }
-        };
-      }
-    }, {
-      key: "motorPWM",
-      value: function motorPWM(args) {
-        var power = Cast.toNumber(args.POWER);
-        var direction = args.DIRECTION;
-        return this._peripheral.motorPWM(PortId.MOTOR, power * direction).then(waitPromise);
-      }
-    }, {
-      key: "motorStop",
-      value: function motorStop() {
-        return this._peripheral.motorPWM(PortId.MOTOR, 0).then(waitPromise);
-      }
-    }, {
-      key: "playSound",
-      value: function playSound(args) {
-        var sound = args.SOUND;
-        return this._peripheral.sendOutputCommand(PortId.SPEAKER, 0x51, [0x01, sound]).then(waitPromise);
-      }
-    }, {
-      key: "setHubLEDColor",
-      value: function setHubLEDColor(args) {
-        var color = Cast.toNumber(args.COLOR);
-        return this._peripheral.setLEDColor(color).then(waitPromise);
-      }
-    }, {
-      key: "whenColor",
-      value: function whenColor(args) {
-        return this.getColor() == args.SENSOR_COLOR;
-      }
-    }, {
-      key: "isColor",
-      value: function isColor(args) {
-        return this.getColor() == args.SENSOR_COLOR;
-      }
-    }, {
-      key: "getColor",
-      value: function getColor() {
-        return this._getSensorValue(PortId.COLOR_SENSOR, 'color', -1);
-      }
-    }, {
-      key: "getDrivingDistance",
-      value: function getDrivingDistance() {
-        return this._getSensorValue(PortId.SPEEDOMETER, 'drivingDistance', 0);
-      }
-    }, {
-      key: "_getSensorValue",
-      value: function _getSensorValue(portId, key, defaultValue) {
-        var value = this._peripheral.inputValue(portId, key);
-        return value != null ? value : defaultValue;
-      }
-    }, {
-      key: "_setupTranslations",
-      value: function _setupTranslations() {
-        setupTranslations(formatMessage$1, {
-          'en': {
-            'duplotrain.motorPWM': 'run [DIRECTION] at [POWER] % power',
-            'duplotrain.motorStop': 'stop',
-            'duplotrain.playSound': 'play [SOUND] sound',
-            'duplotrain.setHubLEDColor': 'set light color to [COLOR]',
-            'duplotrain.whenColor': 'when passing over [SENSOR_COLOR] action block',
-            'duplotrain.isColor': 'ground color is [SENSOR_COLOR] ?',
-            'duplotrain.getColor': 'ground color',
-            'duplotrain.getDrivingDistance': 'driving distance',
-            'duplotrain.brake': 'brake',
-            'duplotrain.departure': 'departure',
-            'duplotrain.refill': 'refill',
-            'duplotrain.horn': 'horn',
-            'duplotrain.steam': 'steam',
-            'duplotrain.blue': 'Blue',
-            'duplotrain.lightGreen': 'Green',
-            'duplotrain.yellow': 'Yellow',
-            'duplotrain.red': 'Red',
-            'duplotrain.white': 'White'
+        },
+        */
+        {
+          opcode: 'getDrivingDistance',
+          text: formatMessage({
+            id: 'duplotrain.getDrivingDistance',
+            default: 'driving distance'
+          }),
+          blockType: BlockType.REPORTER
+        }],
+        menus: {
+          DIRECTION: {
+            acceptReporters: false,
+            items: [{
+              text: '⬆︎',
+              value: '1'
+            }, {
+              text: '⬇',
+              value: '-1'
+            }]
           },
-          'ja': {
-            'duplotrain.motorPWM': '[DIRECTION] 方向に [POWER] %のパワーで走る',
-            'duplotrain.motorStop': '止まる',
-            'duplotrain.playSound': '[SOUND] の音を鳴らす',
-            'duplotrain.setHubLEDColor': 'ライトの色を [COLOR] にする',
-            'duplotrain.whenColor': '[SENSOR_COLOR] のアクションブロックを通ったら',
-            'duplotrain.isColor': '地面の色が [SENSOR_COLOR]',
-            'duplotrain.getColor': '地面の色',
-            'duplotrain.getDrivingDistance': '走行距離',
-            'duplotrain.brake': 'ブレーキ',
-            'duplotrain.departure': '到着',
-            'duplotrain.refill': '給水',
-            'duplotrain.horn': '汽笛',
-            'duplotrain.steam': '蒸気',
-            'duplotrain.blue': '青',
-            'duplotrain.lightGreen': '緑',
-            'duplotrain.yellow': '黄色',
-            'duplotrain.red': '赤',
-            'duplotrain.white': '白'
+          SOUND: {
+            acceptReporters: false,
+            items: [{
+              text: formatMessage({
+                id: 'duplotrain.brake',
+                default: 'brake'
+              }),
+              value: String(Sound.BRAKE)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.departure',
+                default: 'departure'
+              }),
+              value: String(Sound.DEPARTURE)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.refill',
+                default: 'refill'
+              }),
+              value: String(Sound.REFILL)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.horn',
+                default: 'horn'
+              }),
+              value: String(Sound.HORN)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.steam',
+                default: 'steam'
+              }),
+              value: String(Sound.STEAM)
+            }]
           },
-          'ja-Hira': {
-            'duplotrain.motorPWM': '[DIRECTION] ほうこうに [POWER] %のパワーではしる',
-            'duplotrain.motorStop': 'とまる',
-            'duplotrain.playSound': '[SOUND] のおとをならす',
-            'duplotrain.setHubLEDColor': 'ライトのいろを [COLOR] にする',
-            'duplotrain.whenColor': '[SENSOR_COLOR] のアクションブロックをとおったら',
-            'duplotrain.isColor': 'じめんのいろが [SENSOR_COLOR]',
-            'duplotrain.getColor': 'じめんのいろ',
-            'duplotrain.getDrivingDistance': 'そうこうきょり',
-            'duplotrain.brake': 'ブレーキ',
-            'duplotrain.departure': 'とうちゃく',
-            'duplotrain.refill': 'きゅうすい',
-            'duplotrain.horn': 'きてき',
-            'duplotrain.steam': 'じょうき',
-            'duplotrain.blue': 'あお',
-            'duplotrain.lightGreen': 'みどり',
-            'duplotrain.yellow': 'きいろ',
-            'duplotrain.red': 'あか',
-            'duplotrain.white': 'しろ'
+          LED_COLOR: {
+            acceptReporters: true,
+            items: [{
+              text: formatMessage({
+                id: 'legobluetooth.black',
+                default: '(0) Black'
+              }),
+              value: String(Color.BLACK)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.pink',
+                default: '(1) Pink'
+              }),
+              value: String(Color.PINK)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.purple',
+                default: '(2) Purple'
+              }),
+              value: String(Color.PURPLE)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.blue',
+                default: '(3) Blue'
+              }),
+              value: String(Color.BLUE)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.lightBlue',
+                default: '(4) Light blue'
+              }),
+              value: String(Color.LIGHT_BLUE)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.lightGreen',
+                default: '(5) Light green'
+              }),
+              value: String(Color.LIGHT_GREEN)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.green',
+                default: '(6) Green'
+              }),
+              value: String(Color.GREEN)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.yellow',
+                default: '(7) Yellow'
+              }),
+              value: String(Color.YELLOW)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.orange',
+                default: '(8) Orange'
+              }),
+              value: String(Color.ORANGE)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.red',
+                default: '(9) Red'
+              }),
+              value: String(Color.RED)
+            }, {
+              text: formatMessage({
+                id: 'legobluetooth.white',
+                default: '(10) White'
+              }),
+              value: String(Color.WHITE)
+            }]
+          },
+          SENSOR_COLOR: {
+            acceptReporters: false,
+            items: [{
+              text: formatMessage({
+                id: 'duplotrain.blue',
+                default: 'Blue'
+              }),
+              value: String(Color.BLUE)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.lightGreen',
+                default: 'Green'
+              }),
+              value: String(Color.LIGHT_GREEN)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.yellow',
+                default: 'Yellow'
+              }),
+              value: String(Color.YELLOW)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.red',
+                default: 'Red'
+              }),
+              value: String(Color.RED)
+            }, {
+              text: formatMessage({
+                id: 'duplotrain.white',
+                default: 'White'
+              }),
+              value: String(Color.WHITE)
+            }]
           }
-        });
-      }
-    }], [{
-      key: "EXTENSION_ID",
-      get: function get() {
-        return 'duplotrain';
-      }
-    }, {
-      key: "extensionURL",
-      get: function get() {
-        return extensionURL;
-      },
-      set: function set(url) {
-        extensionURL = url;
-      }
-    }]);
-    return Scratch3DuploTrainBlocks;
-  }();
-  exports.blockClass = Scratch3DuploTrainBlocks;
-  module.exports = Scratch3DuploTrainBlocks;
-})(_duplotrain, _duplotrain.exports);
+        }
+      };
+    }
+  }, {
+    key: "motorPWM",
+    value: function motorPWM(args) {
+      var power = Cast.toNumber(args.POWER);
+      var direction = args.DIRECTION;
+      return this._peripheral.motorPWM(PortId.MOTOR, power * direction).then(waitPromise);
+    }
+  }, {
+    key: "motorStop",
+    value: function motorStop() {
+      return this._peripheral.motorPWM(PortId.MOTOR, 0).then(waitPromise);
+    }
+  }, {
+    key: "playSound",
+    value: function playSound(args) {
+      var sound = args.SOUND;
+      return this._peripheral.sendOutputCommand(PortId.SPEAKER, 0x51, [0x01, sound]).then(waitPromise);
+    }
+  }, {
+    key: "setHubLEDColor",
+    value: function setHubLEDColor(args) {
+      var color = Cast.toNumber(args.COLOR);
+      return this._peripheral.setLEDColor(color).then(waitPromise);
+    }
+  }, {
+    key: "whenColor",
+    value: function whenColor(args) {
+      return this.getColor() == args.SENSOR_COLOR;
+    }
+  }, {
+    key: "isColor",
+    value: function isColor(args) {
+      return this.getColor() == args.SENSOR_COLOR;
+    }
+  }, {
+    key: "getColor",
+    value: function getColor() {
+      return this._getSensorValue(PortId.COLOR_SENSOR, 'color', -1);
+    }
+  }, {
+    key: "getDrivingDistance",
+    value: function getDrivingDistance() {
+      return this._getSensorValue(PortId.SPEEDOMETER, 'drivingDistance', 0);
+    }
+  }, {
+    key: "_getSensorValue",
+    value: function _getSensorValue(portId, key, defaultValue) {
+      var value = this._peripheral.inputValue(portId, key);
+      return value != null ? value : defaultValue;
+    }
+  }, {
+    key: "_setupTranslations",
+    value: function _setupTranslations() {
+      setupTranslations(formatMessage, {
+        'en': {
+          'duplotrain.motorPWM': 'run [DIRECTION] at [POWER] % power',
+          'duplotrain.motorStop': 'stop',
+          'duplotrain.playSound': 'play [SOUND] sound',
+          'duplotrain.setHubLEDColor': 'set light color to [COLOR]',
+          'duplotrain.whenColor': 'when passing over [SENSOR_COLOR] action block',
+          'duplotrain.isColor': 'ground color is [SENSOR_COLOR] ?',
+          'duplotrain.getColor': 'ground color',
+          'duplotrain.getDrivingDistance': 'driving distance',
+          'duplotrain.brake': 'brake',
+          'duplotrain.departure': 'departure',
+          'duplotrain.refill': 'refill',
+          'duplotrain.horn': 'horn',
+          'duplotrain.steam': 'steam',
+          'duplotrain.blue': 'Blue',
+          'duplotrain.lightGreen': 'Green',
+          'duplotrain.yellow': 'Yellow',
+          'duplotrain.red': 'Red',
+          'duplotrain.white': 'White'
+        },
+        'ja': {
+          'duplotrain.motorPWM': '[DIRECTION] 方向に [POWER] %のパワーで走る',
+          'duplotrain.motorStop': '止まる',
+          'duplotrain.playSound': '[SOUND] の音を鳴らす',
+          'duplotrain.setHubLEDColor': 'ライトの色を [COLOR] にする',
+          'duplotrain.whenColor': '[SENSOR_COLOR] のアクションブロックを通ったら',
+          'duplotrain.isColor': '地面の色が [SENSOR_COLOR]',
+          'duplotrain.getColor': '地面の色',
+          'duplotrain.getDrivingDistance': '走行距離',
+          'duplotrain.brake': 'ブレーキ',
+          'duplotrain.departure': '到着',
+          'duplotrain.refill': '給水',
+          'duplotrain.horn': '汽笛',
+          'duplotrain.steam': '蒸気',
+          'duplotrain.blue': '青',
+          'duplotrain.lightGreen': '緑',
+          'duplotrain.yellow': '黄色',
+          'duplotrain.red': '赤',
+          'duplotrain.white': '白'
+        },
+        'ja-Hira': {
+          'duplotrain.motorPWM': '[DIRECTION] ほうこうに [POWER] %のパワーではしる',
+          'duplotrain.motorStop': 'とまる',
+          'duplotrain.playSound': '[SOUND] のおとをならす',
+          'duplotrain.setHubLEDColor': 'ライトのいろを [COLOR] にする',
+          'duplotrain.whenColor': '[SENSOR_COLOR] のアクションブロックをとおったら',
+          'duplotrain.isColor': 'じめんのいろが [SENSOR_COLOR]',
+          'duplotrain.getColor': 'じめんのいろ',
+          'duplotrain.getDrivingDistance': 'そうこうきょり',
+          'duplotrain.brake': 'ブレーキ',
+          'duplotrain.departure': 'とうちゃく',
+          'duplotrain.refill': 'きゅうすい',
+          'duplotrain.horn': 'きてき',
+          'duplotrain.steam': 'じょうき',
+          'duplotrain.blue': 'あお',
+          'duplotrain.lightGreen': 'みどり',
+          'duplotrain.yellow': 'きいろ',
+          'duplotrain.red': 'あか',
+          'duplotrain.white': 'しろ'
+        }
+      });
+    }
+  }], [{
+    key: "EXTENSION_ID",
+    get: function get() {
+      return 'duplotrain';
+    }
+  }, {
+    key: "extensionURL",
+    get: function get() {
+      return extensionURL;
+    },
+    set: function set(url) {
+      extensionURL = url;
+    }
+  }]);
+  return Scratch3DuploTrainBlocks;
+}();
+exports.blockClass = Scratch3DuploTrainBlocks;
 
 export { entry };

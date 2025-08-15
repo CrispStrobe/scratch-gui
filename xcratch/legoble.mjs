@@ -6695,7 +6695,7 @@ function formatPlural(config, state, value) {
   }
   return 'other';
 }
-function formatMessage$1(config, state) {
+function formatMessage$2(config, state) {
   var messageDescriptor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var values = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
   var locale = config.locale,
@@ -6763,7 +6763,7 @@ function formatHTMLMessage(config, state, messageDescriptor) {
     escaped[name] = typeof value === 'string' ? escape(value) : value;
     return escaped;
   }, {});
-  return formatMessage$1(config, state, messageDescriptor, escapedValues);
+  return formatMessage$2(config, state, messageDescriptor, escapedValues);
 }
 var format = Object.freeze({
   formatDate: formatDate,
@@ -6771,7 +6771,7 @@ var format = Object.freeze({
   formatRelative: formatRelative,
   formatNumber: formatNumber,
   formatPlural: formatPlural,
-  formatMessage: formatMessage$1,
+  formatMessage: formatMessage$2,
   formatHTMLMessage: formatHTMLMessage
 });
 
@@ -7325,7 +7325,7 @@ var defaultFormatMessage = function defaultFormatMessage(descriptor, values) {
   if (process.env.NODE_ENV !== 'production') {
     console.error('[React Intl] Could not find required `intl` object. <IntlProvider> needs to exist in the component ancestry. Using default message as fallback.');
   }
-  return formatMessage$1({}, {
+  return formatMessage$2({}, {
     getMessageFormat: memoizeFormatConstructor(IntlMessageFormat)
   }, descriptor, values);
 };
@@ -7681,8 +7681,6 @@ function _inherits(subClass, superClass) {
   });
   if (superClass) _setPrototypeOf(subClass, superClass);
 }
-
-var _legoble = {exports: {}};
 
 /**
  * Block argument types
@@ -8452,7 +8450,7 @@ var waitPromise = function waitPromise() {
     return window.setTimeout(resolve, BLESendInterval);
   });
 };
-var BleBaseBlocks = /*#__PURE__*/function () {
+var BleBaseBlocks$1 = /*#__PURE__*/function () {
   function BleBaseBlocks(peripheral) {
     _classCallCheck(this, BleBaseBlocks);
     this._peripheral = peripheral;
@@ -9031,7 +9029,7 @@ var BleBaseBlocks = /*#__PURE__*/function () {
   }]);
   return BleBaseBlocks;
 }();
-var bleBaseBlocks = BleBaseBlocks;
+var bleBaseBlocks = BleBaseBlocks$1;
 
 function _arrayWithHoles(arr) {
   if (Array.isArray(arr)) return arr;
@@ -12002,7 +12000,7 @@ var numberToInt16Array = function numberToInt16Array(number) {
   dataview.setInt16(0, number);
   return [dataview.getUint8(1), dataview.getUint8(0)];
 };
-var Hub = /*#__PURE__*/function () {
+var Hub$1 = /*#__PURE__*/function () {
   function Hub(runtime, extensionId) {
     var hubType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     _classCallCheck(this, Hub);
@@ -12458,9 +12456,9 @@ var Hub = /*#__PURE__*/function () {
   }]);
   return Hub;
 }();
-var hub = Hub;
+var hub = Hub$1;
 
-var formatMessage = {exports: {}};
+var formatMessage$1 = {exports: {}};
 
 var formatMessageParse = {exports: {}};
 
@@ -14217,65 +14215,62 @@ var plurals = {
     return formatMessage;
   }
   module.exports = namespace();
-})(formatMessage);
+})(formatMessage$1);
 
 function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
 function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
-(function (module, exports) {
-  var BleBaseBlocks = bleBaseBlocks;
-  var Hub = hub;
-  var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAUKADAAQAAAABAAAAUAAAAAAx4ExPAAAC2ElEQVR4Ae3avW4TQRDA8TuDJcvCjQtLuEQiTXqgtngCoEwHCGh4AUv+kvwMgEQ63oIQWa6Agi5l6DAP4Ciy5eKYOXGR45Vud/DZ6OB/Rc7end3b+d36EjkTRRwIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIILBbgTh0+iRJ4tFo9EzOT2XMoZxvhY4tQ1wcxxeyzjM5H/d6vfdyTkLWHQQ4Ho9vr1arD4LWCZm07DGCd1qtVo+63e5PXy43fQG684bDYYrXaDSSe/cfxO12O6rX676hpeq/vLyMZrNZ9PXL52Q+n3d+b5iHvp14w5dlpVJ5LoivFe/R4ydxq9WK5O74hpWuX3NqNpvR3YOD+Pv5ebJcLu9Mp9Mfk8nkW14ylbxO7RM8feZFuvNqtZq+/KcPzVFz1SSz3PMS9gLK4EOdQD+2/8uxlmuae17eIc/A9Lft5jPv3ds3efOWru/Fy1dXa85ylR3o/UsjZAdeTcwLVwBA18TUAqCJyw0G0DUxtQBo4nKDAXRNTC0AmrjcYABdE1MLgCYuNxhA18TUAqCJyw0G0DUxtQBo4nKDAXRNTC0AmrjcYABdE1MLgCYuN9j7jbQ7JL9l/Zvd/Mi/01v0N+nswC3vI4AAbimw5fDCn4Gb6yn6mbM5v+/9rp/JfIR9d8DT792BUhtyof8f1dqR7P+lOmfIndUxeugcg8Ggkb7Z0w+53ryIdfuWG7IDz3QSLbyxHmtj0jms47eM38u6vYCye441Ea1aWiwWwTlprI7RAdkcwYMLCMyuuet1e+sD5WOg5W0ncu6ElLdtlIlJHvFpv9/3lokVYHZtin2tO+QZmEiB5ZHWy2nd3KeTj9cWmvMmxdNCRXkRVO2ZM5e5S6+5j3V7d2C2cr2jISW+svA/KpXNrlP0uazrLtqB+RBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBAor8Av1TQfBCyGec4AAAAASUVORK5CYII=';
-  var formatMessage$1 = formatMessage.exports;
-  var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/legoble.mjs';
-  var Scratch3LegoBleBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
-    _inherits(Scratch3LegoBleBlocks, _BleBaseBlocks);
-    function Scratch3LegoBleBlocks(runtime) {
-      var _this;
-      _classCallCheck(this, Scratch3LegoBleBlocks);
-      _this = _callSuper(this, Scratch3LegoBleBlocks, [new Hub(runtime, Scratch3LegoBleBlocks.EXTENSION_ID)]);
-      if (runtime.formatMessage) {
-        // Replace 'formatMessage' to a formatter which is used in the runtime.
-        formatMessage$1 = runtime.formatMessage;
-      }
-      return _this;
+var BleBaseBlocks = bleBaseBlocks;
+var Hub = hub;
+var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAUKADAAQAAAABAAAAUAAAAAAx4ExPAAAC2ElEQVR4Ae3avW4TQRDA8TuDJcvCjQtLuEQiTXqgtngCoEwHCGh4AUv+kvwMgEQ63oIQWa6Agi5l6DAP4Ciy5eKYOXGR45Vud/DZ6OB/Rc7end3b+d36EjkTRRwIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIILBbgTh0+iRJ4tFo9EzOT2XMoZxvhY4tQ1wcxxeyzjM5H/d6vfdyTkLWHQQ4Ho9vr1arD4LWCZm07DGCd1qtVo+63e5PXy43fQG684bDYYrXaDSSe/cfxO12O6rX676hpeq/vLyMZrNZ9PXL52Q+n3d+b5iHvp14w5dlpVJ5LoivFe/R4ydxq9WK5O74hpWuX3NqNpvR3YOD+Pv5ebJcLu9Mp9Mfk8nkW14ylbxO7RM8feZFuvNqtZq+/KcPzVFz1SSz3PMS9gLK4EOdQD+2/8uxlmuae17eIc/A9Lft5jPv3ds3efOWru/Fy1dXa85ylR3o/UsjZAdeTcwLVwBA18TUAqCJyw0G0DUxtQBo4nKDAXRNTC0AmrjcYABdE1MLgCYuNxhA18TUAqCJyw0G0DUxtQBo4nKDAXRNTC0AmrjcYABdE1MLgCYuN9j7jbQ7JL9l/Zvd/Mi/01v0N+nswC3vI4AAbimw5fDCn4Gb6yn6mbM5v+/9rp/JfIR9d8DT792BUhtyof8f1dqR7P+lOmfIndUxeugcg8Ggkb7Z0w+53ryIdfuWG7IDz3QSLbyxHmtj0jms47eM38u6vYCye441Ea1aWiwWwTlprI7RAdkcwYMLCMyuuet1e+sD5WOg5W0ncu6ElLdtlIlJHvFpv9/3lokVYHZtin2tO+QZmEiB5ZHWy2nd3KeTj9cWmvMmxdNCRXkRVO2ZM5e5S6+5j3V7d2C2cr2jISW+svA/KpXNrlP0uazrLtqB+RBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBAor8Av1TQfBCyGec4AAAAASUVORK5CYII=';
+var formatMessage = formatMessage$1.exports;
+var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/legoble.mjs';
+var Scratch3LegoBleBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
+  _inherits(Scratch3LegoBleBlocks, _BleBaseBlocks);
+  function Scratch3LegoBleBlocks(runtime) {
+    var _this;
+    _classCallCheck(this, Scratch3LegoBleBlocks);
+    _this = _callSuper(this, Scratch3LegoBleBlocks, [new Hub(runtime, Scratch3LegoBleBlocks.EXTENSION_ID)]);
+    if (runtime.formatMessage) {
+      // Replace 'formatMessage' to a formatter which is used in the runtime.
+      formatMessage = runtime.formatMessage;
     }
-    _createClass(Scratch3LegoBleBlocks, [{
-      key: "hasAdvancedBlocks",
-      get: function get() {
-        return true;
-      }
-    }, {
-      key: "getInfo",
-      value: function getInfo() {
-        this.setupTranslations(formatMessage$1);
-        return {
-          id: Scratch3LegoBleBlocks.EXTENSION_ID,
-          name: 'LEGO BLE',
-          extensionURL: Scratch3LegoBleBlocks.extensionURL,
-          blockIconURI: blockIconURI,
-          showStatusButton: true,
-          blocks: this.getBlocks(formatMessage$1),
-          menus: this.getMenus(formatMessage$1)
-        };
-      }
-    }], [{
-      key: "EXTENSION_ID",
-      get: function get() {
-        return 'legoble';
-      }
-    }, {
-      key: "extensionURL",
-      get: function get() {
-        return extensionURL;
-      },
-      set: function set(url) {
-        extensionURL = url;
-      }
-    }]);
-    return Scratch3LegoBleBlocks;
-  }(BleBaseBlocks);
-  exports.blockClass = Scratch3LegoBleBlocks;
-  module.exports = Scratch3LegoBleBlocks;
-})(_legoble, _legoble.exports);
+    return _this;
+  }
+  _createClass(Scratch3LegoBleBlocks, [{
+    key: "hasAdvancedBlocks",
+    get: function get() {
+      return true;
+    }
+  }, {
+    key: "getInfo",
+    value: function getInfo() {
+      this.setupTranslations(formatMessage);
+      return {
+        id: Scratch3LegoBleBlocks.EXTENSION_ID,
+        name: 'LEGO BLE',
+        extensionURL: Scratch3LegoBleBlocks.extensionURL,
+        blockIconURI: blockIconURI,
+        showStatusButton: true,
+        blocks: this.getBlocks(formatMessage),
+        menus: this.getMenus(formatMessage)
+      };
+    }
+  }], [{
+    key: "EXTENSION_ID",
+    get: function get() {
+      return 'legoble';
+    }
+  }, {
+    key: "extensionURL",
+    get: function get() {
+      return extensionURL;
+    },
+    set: function set(url) {
+      extensionURL = url;
+    }
+  }]);
+  return Scratch3LegoBleBlocks;
+}(BleBaseBlocks);
+exports.blockClass = Scratch3LegoBleBlocks;
 
 export { entry };
