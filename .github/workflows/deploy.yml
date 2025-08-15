@@ -3,33 +3,29 @@ on:
   push:
     branches:
       - lego-bluetooth-extensions
-    tags:
-      - "!*"
   workflow_dispatch:
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          repository: CrispStrobe/scratch-gui
-          ref: lego-bluetooth-extensions
-          path: ./scratch-gui
+          node-version-file: '.nvmrc'
+          cache: 'npm'
       
-      - uses: actions/setup-node@v4.0.2
-        with:
-          node-version-file: ./scratch-gui/.nvmrc
-          cache: npm
-          cache-dependency-path: ./scratch-gui/package-lock.json
+      - name: Install dependencies
+        run: npm ci
       
-      - run: npm ci
-        working-directory: ./scratch-gui
+      - name: Build
+        run: npm run build
       
-      - run: npm run build
-        working-directory: ./scratch-gui
-      
-      - uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./scratch-gui/build
+          publish_dir: ./build
