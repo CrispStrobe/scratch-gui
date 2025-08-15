@@ -6695,7 +6695,7 @@ function formatPlural(config, state, value) {
   }
   return 'other';
 }
-function formatMessage$2(config, state) {
+function formatMessage$1(config, state) {
   var messageDescriptor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var values = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
   var locale = config.locale,
@@ -6763,7 +6763,7 @@ function formatHTMLMessage(config, state, messageDescriptor) {
     escaped[name] = typeof value === 'string' ? escape(value) : value;
     return escaped;
   }, {});
-  return formatMessage$2(config, state, messageDescriptor, escapedValues);
+  return formatMessage$1(config, state, messageDescriptor, escapedValues);
 }
 var format = Object.freeze({
   formatDate: formatDate,
@@ -6771,7 +6771,7 @@ var format = Object.freeze({
   formatRelative: formatRelative,
   formatNumber: formatNumber,
   formatPlural: formatPlural,
-  formatMessage: formatMessage$2,
+  formatMessage: formatMessage$1,
   formatHTMLMessage: formatHTMLMessage
 });
 
@@ -7325,7 +7325,7 @@ var defaultFormatMessage = function defaultFormatMessage(descriptor, values) {
   if (process.env.NODE_ENV !== 'production') {
     console.error('[React Intl] Could not find required `intl` object. <IntlProvider> needs to exist in the component ancestry. Using default message as fallback.');
   }
-  return formatMessage$2({}, {
+  return formatMessage$1({}, {
     getMessageFormat: memoizeFormatConstructor(IntlMessageFormat)
   }, descriptor, values);
 };
@@ -7709,6 +7709,8 @@ function _inherits(subClass, superClass) {
   });
   if (superClass) _setPrototypeOf(subClass, superClass);
 }
+
+var _spikeessential = {exports: {}};
 
 /**
  * Block argument types
@@ -8478,7 +8480,7 @@ var waitPromise = function waitPromise() {
     return window.setTimeout(resolve, BLESendInterval);
   });
 };
-var BleBaseBlocks$1 = /*#__PURE__*/function () {
+var BleBaseBlocks = /*#__PURE__*/function () {
   function BleBaseBlocks(peripheral) {
     _classCallCheck(this, BleBaseBlocks);
     this._peripheral = peripheral;
@@ -9057,7 +9059,7 @@ var BleBaseBlocks$1 = /*#__PURE__*/function () {
   }]);
   return BleBaseBlocks;
 }();
-var bleBaseBlocks = BleBaseBlocks$1;
+var bleBaseBlocks = BleBaseBlocks;
 
 function _arrayWithHoles(arr) {
   if (Array.isArray(arr)) return arr;
@@ -12028,7 +12030,7 @@ var numberToInt16Array = function numberToInt16Array(number) {
   dataview.setInt16(0, number);
   return [dataview.getUint8(1), dataview.getUint8(0)];
 };
-var Hub$1 = /*#__PURE__*/function () {
+var Hub = /*#__PURE__*/function () {
   function Hub(runtime, extensionId) {
     var hubType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     _classCallCheck(this, Hub);
@@ -12484,9 +12486,9 @@ var Hub$1 = /*#__PURE__*/function () {
   }]);
   return Hub;
 }();
-var hub = Hub$1;
+var hub = Hub;
 
-var formatMessage$1 = {exports: {}};
+var formatMessage = {exports: {}};
 
 var formatMessageParse = {exports: {}};
 
@@ -14243,74 +14245,76 @@ var plurals = {
     return formatMessage;
   }
   module.exports = namespace();
-})(formatMessage$1);
+})(formatMessage);
 
 function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
 function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
-var BleBaseBlocks = bleBaseBlocks;
-var Hub = hub;
-var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAUKADAAQAAAABAAAAUAAAAAAx4ExPAAADMElEQVR4Ae3bT2gTQRQG8LetpI1GK4iUKhRSoQhVMfRealAEr4J40It/ToLgSVFEPHjoqSdv6kVBQXoVBIk2IHjRQjUVBKkKKh7VaBrFrvttM5ApSX3TyHYSvoGwmc2b2X2/ziS7dEeEhQIUoAAFKEABClCAAhSgAAUoQAEKUIACFKAABSiQhEDgepAwDIMrE/dORduTUduRUMKMax8+xQcSlKPzKQVBcPPq+aM3om3ocn5OgNcmpwYq1eodCcO8y0HaJjYICumenmOXzh3+rD3nddpAjLzLE3djvL5N6+XgvpxkB/sls6FX24WXceUfCzL/4Ys8fDwjX7/9zGOARLnu147Ebm1WYXrn6ajjs8A7c+KQbB/YIqmU2l97mMTjkEP/1s2S2z0ks3PvpFr9nZ1+Wvo4/WjqheZkujRBiKl958UjL92b0jZrmzjkhFmFYnLVnLwaMOpsBB1i2nZqqcstzlWTpxrQ/Nq2+3feSigmN5PrSrHmMzWgacCtLUBA28O5RkBnMrsBAW0P5xoBncnsBgS0PZxrBHQmsxsQ0PZwrhHQmcxuQEDbw7lGQGcyuwEBbQ/nGgGdyewGBLQ9nGsEdCazGxDQ9nCuEdCZzG7gzX+F/iwuSqE4KzOv5uV7uWKfZa22MZOW3K6s5Mf2SHeXH397bwCBV3w21xDO7ASsiTkwvtfsXtOtN4AYeSjHj4zL8NC2hihv3n6S2/efxKPUF0A/5kHEZaZtMzyIDu9YgjWxDZUT3ukNYMJ5/7fDEbBFSgISsEWBFptzBHYKIC6SUXCp0qyYz0xss7gk93tzHYg7DFwk4zrvXwWxvhRvAHF7hqK9lSPgMgHc2+LuAq+xi8+XfbpULV4Ybbh/LXfyR6RFfTVg7Wl2wTPFSZW+wVHBK6licjO5ao6rBow6K6FDPJDdqaUutzhXTZ5qQKyjQId4mr2y8EvTd1vFICfkhmJy1SSgBsQilKjnQrQUQK7feiAvX79PdDprkllNDKYtckFOyA05xrkqO+NCm3qoVSy0cQLEsaIlAFzqVY/O9xSgAAUoQAEKUIACFKAABShAAQpQgAIUoAAFKECBRAT+AigB5y5rdsAFAAAAAElFTkSuQmCC';
-var formatMessage = formatMessage$1.exports;
-var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/spikeessential.mjs';
-var Scratch3SpikeEssentialBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
-  _inherits(Scratch3SpikeEssentialBlocks, _BleBaseBlocks);
-  function Scratch3SpikeEssentialBlocks(runtime) {
-    var _this;
-    _classCallCheck(this, Scratch3SpikeEssentialBlocks);
-    _this = _callSuper(this, Scratch3SpikeEssentialBlocks, [new Hub(runtime, Scratch3SpikeEssentialBlocks.EXTENSION_ID, 0x83)]);
-    if (runtime.formatMessage) {
-      // Replace 'formatMessage' to a formatter which is used in the runtime.
-      formatMessage = runtime.formatMessage;
+(function (module, exports) {
+  var BleBaseBlocks = bleBaseBlocks;
+  var Hub = hub;
+  var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAUKADAAQAAAABAAAAUAAAAAAx4ExPAAADMElEQVR4Ae3bT2gTQRQG8LetpI1GK4iUKhRSoQhVMfRealAEr4J40It/ToLgSVFEPHjoqSdv6kVBQXoVBIk2IHjRQjUVBKkKKh7VaBrFrvttM5ApSX3TyHYSvoGwmc2b2X2/ziS7dEeEhQIUoAAFKEABClCAAhSgAAUoQAEKUIACFKAABSiQhEDgepAwDIMrE/dORduTUduRUMKMax8+xQcSlKPzKQVBcPPq+aM3om3ocn5OgNcmpwYq1eodCcO8y0HaJjYICumenmOXzh3+rD3nddpAjLzLE3djvL5N6+XgvpxkB/sls6FX24WXceUfCzL/4Ys8fDwjX7/9zGOARLnu147Ebm1WYXrn6ajjs8A7c+KQbB/YIqmU2l97mMTjkEP/1s2S2z0ks3PvpFr9nZ1+Wvo4/WjqheZkujRBiKl958UjL92b0jZrmzjkhFmFYnLVnLwaMOpsBB1i2nZqqcstzlWTpxrQ/Nq2+3feSigmN5PrSrHmMzWgacCtLUBA28O5RkBnMrsBAW0P5xoBncnsBgS0PZxrBHQmsxsQ0PZwrhHQmcxuQEDbw7lGQGcyuwEBbQ/nGgGdyewGBLQ9nGsEdCazGxDQ9nCuEdCZzG7gzX+F/iwuSqE4KzOv5uV7uWKfZa22MZOW3K6s5Mf2SHeXH397bwCBV3w21xDO7ASsiTkwvtfsXtOtN4AYeSjHj4zL8NC2hihv3n6S2/efxKPUF0A/5kHEZaZtMzyIDu9YgjWxDZUT3ukNYMJ5/7fDEbBFSgISsEWBFptzBHYKIC6SUXCp0qyYz0xss7gk93tzHYg7DFwk4zrvXwWxvhRvAHF7hqK9lSPgMgHc2+LuAq+xi8+XfbpULV4Ybbh/LXfyR6RFfTVg7Wl2wTPFSZW+wVHBK6licjO5ao6rBow6K6FDPJDdqaUutzhXTZ5qQKyjQId4mr2y8EvTd1vFICfkhmJy1SSgBsQilKjnQrQUQK7feiAvX79PdDprkllNDKYtckFOyA05xrkqO+NCm3qoVSy0cQLEsaIlAFzqVY/O9xSgAAUoQAEKUIACFKAABShAAQpQgAIUoAAFKECBRAT+AigB5y5rdsAFAAAAAElFTkSuQmCC';
+  var formatMessage$1 = formatMessage.exports;
+  var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/spikeessential.mjs';
+  var Scratch3SpikeEssentialBlocks = /*#__PURE__*/function (_BleBaseBlocks) {
+    _inherits(Scratch3SpikeEssentialBlocks, _BleBaseBlocks);
+    function Scratch3SpikeEssentialBlocks(runtime) {
+      var _this;
+      _classCallCheck(this, Scratch3SpikeEssentialBlocks);
+      _this = _callSuper(this, Scratch3SpikeEssentialBlocks, [new Hub(runtime, Scratch3SpikeEssentialBlocks.EXTENSION_ID, 0x83)]);
+      if (runtime.formatMessage) {
+        // Replace 'formatMessage' to a formatter which is used in the runtime.
+        formatMessage$1 = runtime.formatMessage;
+      }
+      return _this;
     }
-    return _this;
-  }
-  _createClass(Scratch3SpikeEssentialBlocks, [{
-    key: "externalPorts",
-    get: function get() {
-      return ['A', 'B'];
-    }
-  }, {
-    key: "multipleExternalPorts",
-    get: function get() {
-      return ['A', 'B', 'A+B'];
-    }
-  }, {
-    key: "getInfo",
-    value: function getInfo() {
-      this.setupTranslations(formatMessage);
-      return {
-        id: Scratch3SpikeEssentialBlocks.EXTENSION_ID,
-        name: 'SPIKE Essential',
-        extensionURL: Scratch3SpikeEssentialBlocks.extensionURL,
-        blockIconURI: blockIconURI,
-        showStatusButton: true,
-        blocks: this.getBlocks(formatMessage),
-        menus: this.getMenus(formatMessage)
-      };
-    }
-  }, {
-    key: "getHubTilt",
-    value: function getHubTilt(args) {
-      var value = _get(_getPrototypeOf(Scratch3SpikeEssentialBlocks.prototype), "getHubTilt", this).call(this, args);
-      return value != null ? value / 10 : 0;
-    }
-  }], [{
-    key: "EXTENSION_ID",
-    get: function get() {
-      return 'spikeessential';
-    }
-  }, {
-    key: "extensionURL",
-    get: function get() {
-      return extensionURL;
-    },
-    set: function set(url) {
-      extensionURL = url;
-    }
-  }]);
-  return Scratch3SpikeEssentialBlocks;
-}(BleBaseBlocks);
-var blockClass = Scratch3SpikeEssentialBlocks;
-blockClass = Scratch3SpikeEssentialBlocks;
+    _createClass(Scratch3SpikeEssentialBlocks, [{
+      key: "externalPorts",
+      get: function get() {
+        return ['A', 'B'];
+      }
+    }, {
+      key: "multipleExternalPorts",
+      get: function get() {
+        return ['A', 'B', 'A+B'];
+      }
+    }, {
+      key: "getInfo",
+      value: function getInfo() {
+        this.setupTranslations(formatMessage$1);
+        return {
+          id: Scratch3SpikeEssentialBlocks.EXTENSION_ID,
+          name: 'SPIKE Essential',
+          extensionURL: Scratch3SpikeEssentialBlocks.extensionURL,
+          blockIconURI: blockIconURI,
+          showStatusButton: true,
+          blocks: this.getBlocks(formatMessage$1),
+          menus: this.getMenus(formatMessage$1)
+        };
+      }
+    }, {
+      key: "getHubTilt",
+      value: function getHubTilt(args) {
+        var value = _get(_getPrototypeOf(Scratch3SpikeEssentialBlocks.prototype), "getHubTilt", this).call(this, args);
+        return value != null ? value / 10 : 0;
+      }
+    }], [{
+      key: "EXTENSION_ID",
+      get: function get() {
+        return 'spikeessential';
+      }
+    }, {
+      key: "extensionURL",
+      get: function get() {
+        return extensionURL;
+      },
+      set: function set(url) {
+        extensionURL = url;
+      }
+    }]);
+    return Scratch3SpikeEssentialBlocks;
+  }(BleBaseBlocks);
+  exports.blockClass = Scratch3SpikeEssentialBlocks;
+  module.exports = Scratch3SpikeEssentialBlocks;
+})(_spikeessential, _spikeessential.exports);
 
-export { blockClass, entry };
+export { entry };

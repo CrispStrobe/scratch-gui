@@ -6695,7 +6695,7 @@ function formatPlural(config, state, value) {
   }
   return 'other';
 }
-function formatMessage$2(config, state) {
+function formatMessage$1(config, state) {
   var messageDescriptor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var values = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
   var locale = config.locale,
@@ -6763,7 +6763,7 @@ function formatHTMLMessage(config, state, messageDescriptor) {
     escaped[name] = typeof value === 'string' ? escape(value) : value;
     return escaped;
   }, {});
-  return formatMessage$2(config, state, messageDescriptor, escapedValues);
+  return formatMessage$1(config, state, messageDescriptor, escapedValues);
 }
 var format = Object.freeze({
   formatDate: formatDate,
@@ -6771,7 +6771,7 @@ var format = Object.freeze({
   formatRelative: formatRelative,
   formatNumber: formatNumber,
   formatPlural: formatPlural,
-  formatMessage: formatMessage$2,
+  formatMessage: formatMessage$1,
   formatHTMLMessage: formatHTMLMessage
 });
 
@@ -7325,7 +7325,7 @@ var defaultFormatMessage = function defaultFormatMessage(descriptor, values) {
   if (process.env.NODE_ENV !== 'production') {
     console.error('[React Intl] Could not find required `intl` object. <IntlProvider> needs to exist in the component ancestry. Using default message as fallback.');
   }
-  return formatMessage$2({}, {
+  return formatMessage$1({}, {
     getMessageFormat: memoizeFormatConstructor(IntlMessageFormat)
   }, descriptor, values);
 };
@@ -7637,11 +7637,13 @@ function _createClass(Constructor, protoProps, staticProps) {
   return Constructor;
 }
 
+var _legoremote = {exports: {}};
+
 /**
  * Block argument types
  * @enum {string}
  */
-var ArgumentType$1 = {
+var ArgumentType = {
   /**
    * Numeric value with angle picker
    */
@@ -7675,13 +7677,13 @@ var ArgumentType$1 = {
    */
   IMAGE: 'image'
 };
-var argumentType = ArgumentType$1;
+var argumentType = ArgumentType;
 
 /**
  * Types of block
  * @enum {string}
  */
-var BlockType$1 = {
+var BlockType = {
   /**
    * Boolean reporter with hexagonal shape
    */
@@ -7718,9 +7720,9 @@ var BlockType$1 = {
    */
   REPORTER: 'reporter'
 };
-var blockType = BlockType$1;
+var blockType = BlockType;
 
-var Color$3 = /*#__PURE__*/function () {
+var Color$2 = /*#__PURE__*/function () {
   function Color() {
     _classCallCheck(this, Color);
   }
@@ -7964,9 +7966,9 @@ var Color$3 = /*#__PURE__*/function () {
   }]);
   return Color;
 }();
-var color$1 = Color$3;
+var color$1 = Color$2;
 
-var Color$2 = color$1;
+var Color$1 = color$1;
 
 /**
  * @fileoverview
@@ -7978,7 +7980,7 @@ var Color$2 = color$1;
  * In JavaScript, 1 + Number("hello" + "world") would give you NaN.
  * Use when coercing a value before computation.
  */
-var Cast$1 = /*#__PURE__*/function () {
+var Cast = /*#__PURE__*/function () {
   function Cast() {
     _classCallCheck(this, Cast);
   }
@@ -8071,7 +8073,7 @@ var Cast$1 = /*#__PURE__*/function () {
     value: function toRgbColorObject(value) {
       var color;
       if (typeof value === 'string' && value.substring(0, 1) === '#') {
-        color = Color$2.hexToRgb(value);
+        color = Color$1.hexToRgb(value);
 
         // If the color wasn't *actually* a hex color, cast to black
         if (!color) color = {
@@ -8081,7 +8083,7 @@ var Cast$1 = /*#__PURE__*/function () {
           a: 255
         };
       } else {
-        color = Color$2.decimalToRgb(Cast.toNumber(value));
+        color = Color$1.decimalToRgb(Cast.toNumber(value));
       }
       return color;
     }
@@ -8208,7 +8210,7 @@ var Cast$1 = /*#__PURE__*/function () {
   }]);
   return Cast;
 }();
-var cast = Cast$1;
+var cast = Cast;
 
 function _arrayWithHoles(arr) {
   if (Array.isArray(arr)) return arr;
@@ -11227,7 +11229,7 @@ var numberToInt16Array = function numberToInt16Array(number) {
   dataview.setInt16(0, number);
   return [dataview.getUint8(1), dataview.getUint8(0)];
 };
-var Hub$1 = /*#__PURE__*/function () {
+var Hub = /*#__PURE__*/function () {
   function Hub(runtime, extensionId) {
     var hubType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     _classCallCheck(this, Hub);
@@ -11683,9 +11685,9 @@ var Hub$1 = /*#__PURE__*/function () {
   }]);
   return Hub;
 }();
-var hub = Hub$1;
+var hub = Hub;
 
-var Color$1 = {
+var Color = {
   BLACK: 0,
   PINK: 1,
   PURPLE: 2,
@@ -11699,9 +11701,9 @@ var Color$1 = {
   WHITE: 10,
   NONE: -1
 };
-var color = Color$1;
+var color = Color;
 
-var setupTranslations$1 = function setupTranslations(formatMessage) {
+var setupTranslations = function setupTranslations(formatMessage) {
   var extTranslations = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var localeSetup = formatMessage.setup();
   var translations = {
@@ -11867,9 +11869,9 @@ var setupTranslations$1 = function setupTranslations(formatMessage) {
     Object.assign(localeSetup.translations[locale], translations[locale]);
   }
 };
-var setupTranslations_1 = setupTranslations$1;
+var setupTranslations_1 = setupTranslations;
 
-var formatMessage$1 = {exports: {}};
+var formatMessage = {exports: {}};
 
 var formatMessageParse = {exports: {}};
 
@@ -13626,329 +13628,331 @@ var plurals = {
     return formatMessage;
   }
   module.exports = namespace();
-})(formatMessage$1);
+})(formatMessage);
 
-var ArgumentType = argumentType;
-var BlockType = blockType;
-var Cast = cast;
-var Hub = hub;
-var Color = color;
-var setupTranslations = setupTranslations_1;
-var blockIconURI = 'data:image/png;base64,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';
-var BLESendInterval = 100;
-var waitPromise = function waitPromise() {
-  return new Promise(function (resolve) {
-    return window.setTimeout(resolve, BLESendInterval);
-  });
-};
-var formatMessage = formatMessage$1.exports;
-var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/legoremote.mjs';
-var PortId = {
-  BUTTON_A: 0x00,
-  BUTTON_B: 0x01
-};
-var Button = {
-  NONE: 0,
-  PLUS: 1,
-  MINUS: -1,
-  STOP: 127,
-  ANY: 255
-};
-var Scratch3LegoRemoteBlocks = /*#__PURE__*/function () {
-  function Scratch3LegoRemoteBlocks(runtime) {
-    _classCallCheck(this, Scratch3LegoRemoteBlocks);
-    this._peripheral = new Hub(runtime, Scratch3LegoRemoteBlocks.EXTENSION_ID, 0x42);
-    if (runtime.formatMessage) {
-      // Replace 'formatMessage' to a formatter which is used in the runtime.
-      formatMessage = runtime.formatMessage;
-    }
-  }
-  _createClass(Scratch3LegoRemoteBlocks, [{
-    key: "getInfo",
-    value: function getInfo() {
-      this._setupTranslations();
-      return {
-        id: Scratch3LegoRemoteBlocks.EXTENSION_ID,
-        name: 'LEGO Remote',
-        extensionURL: Scratch3LegoRemoteBlocks.extensionURL,
-        blockIconURI: blockIconURI,
-        showStatusButton: true,
-        blocks: [{
-          opcode: 'whenButton',
-          text: formatMessage({
-            id: 'legoremote.whenButton',
-            default: '[PORT] when [BUTTON] button pressed'
-          }),
-          blockType: BlockType.HAT,
-          arguments: {
-            PORT: {
-              type: ArgumentType.STRING,
-              menu: 'PORT',
-              defaultValue: 'A'
-            },
-            BUTTON: {
-              type: ArgumentType.NUMBER,
-              menu: 'BUTTON',
-              defaultValue: Button.PLUS
-            }
-          }
-        }, {
-          opcode: 'isButton',
-          text: formatMessage({
-            id: 'legoremote.isButton',
-            default: '[PORT] [BUTTON] button pressed?'
-          }),
-          blockType: BlockType.BOOLEAN,
-          arguments: {
-            PORT: {
-              type: ArgumentType.STRING,
-              menu: 'PORT',
-              defaultValue: 'A'
-            },
-            BUTTON: {
-              type: ArgumentType.NUMBER,
-              menu: 'BUTTON',
-              defaultValue: Button.PLUS
-            }
-          }
-        }, '---', {
-          opcode: 'getButtonA',
-          text: formatMessage({
-            id: 'legoremote.getButtonA',
-            default: 'button A'
-          }),
-          blockType: BlockType.REPORTER
-        }, {
-          opcode: 'getButtonB',
-          text: formatMessage({
-            id: 'legoremote.getButtonB',
-            default: 'button B'
-          }),
-          blockType: BlockType.REPORTER
-        }, '---', {
-          opcode: 'setHubLEDColor',
-          text: formatMessage({
-            id: 'legoremote.setHubLEDColor',
-            default: 'set LED color to [COLOR]'
-          }),
-          blockType: BlockType.COMMAND,
-          arguments: {
-            COLOR: {
-              type: ArgumentType.NUMBER,
-              menu: 'LED_COLOR',
-              defaultValue: Color.BLUE
-            }
-          }
-        }],
-        menus: {
-          PORT: {
-            acceptReporters: true,
-            items: ['A', 'B']
-          },
-          LED_COLOR: {
-            acceptReporters: true,
-            items: [{
-              text: formatMessage({
-                id: 'legobluetooth.black',
-                default: '(0) Black'
-              }),
-              value: String(Color.BLACK)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.pink',
-                default: '(1) Pink'
-              }),
-              value: String(Color.PINK)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.purple',
-                default: '(2) Purple'
-              }),
-              value: String(Color.PURPLE)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.blue',
-                default: '(3) Blue'
-              }),
-              value: String(Color.BLUE)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.lightBlue',
-                default: '(4) Light blue'
-              }),
-              value: String(Color.LIGHT_BLUE)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.lightGreen',
-                default: '(5) Light green'
-              }),
-              value: String(Color.LIGHT_GREEN)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.green',
-                default: '(6) Green'
-              }),
-              value: String(Color.GREEN)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.yellow',
-                default: '(7) Yellow'
-              }),
-              value: String(Color.YELLOW)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.orange',
-                default: '(8) Orange'
-              }),
-              value: String(Color.ORANGE)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.red',
-                default: '(9) Red'
-              }),
-              value: String(Color.RED)
-            }, {
-              text: formatMessage({
-                id: 'legobluetooth.white',
-                default: '(10) White'
-              }),
-              value: String(Color.WHITE)
-            }]
-          },
-          BUTTON: {
-            acceptReporters: false,
-            items: [{
-              text: formatMessage({
-                id: 'legoremote.button.plus',
-                default: 'plus'
-              }),
-              value: String(Button.PLUS)
-            }, {
-              text: formatMessage({
-                id: 'legoremote.button.minus',
-                default: 'minus'
-              }),
-              value: String(Button.MINUS)
-            }, {
-              text: formatMessage({
-                id: 'legoremote.button.stop',
-                default: 'red'
-              }),
-              value: String(Button.STOP)
-            }, {
-              text: formatMessage({
-                id: 'legoremote.button.any',
-                default: 'any'
-              }),
-              value: String(Button.ANY)
-            }]
-          }
-        }
-      };
-    }
-  }, {
-    key: "_validatePorts",
-    value: function _validatePorts(text) {
-      return text.toUpperCase().replace(/[^AB]/g, '').split('').filter(function (x, i, self) {
-        return self.indexOf(x) === i;
-      }).sort();
-    }
-  }, {
-    key: "setHubLEDColor",
-    value: function setHubLEDColor(args) {
-      var color = Cast.toNumber(args.COLOR);
-      return this._peripheral.setLEDColor(color).then(waitPromise);
-    }
-  }, {
-    key: "whenButton",
-    value: function whenButton(args) {
-      return this.isButton(args);
-    }
-  }, {
-    key: "isButton",
-    value: function isButton(args) {
-      var port = this._validatePorts(Cast.toString(args.PORT)).shift();
-      var portId = ['A', 'B'].indexOf(port);
-      var button = Cast.toNumber(args.BUTTON);
-      var value = this._getSensorValue(portId, 'button', Button.NONE);
-      if (button == Button.ANY) {
-        return value != Button.NONE;
-      } else {
-        return value == button;
+(function (module, exports) {
+  var ArgumentType = argumentType;
+  var BlockType = blockType;
+  var Cast = cast;
+  var Hub = hub;
+  var Color = color;
+  var setupTranslations = setupTranslations_1;
+  var blockIconURI = 'data:image/png;base64,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';
+  var BLESendInterval = 100;
+  var waitPromise = function waitPromise() {
+    return new Promise(function (resolve) {
+      return window.setTimeout(resolve, BLESendInterval);
+    });
+  };
+  var formatMessage$1 = formatMessage.exports;
+  var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/legoremote.mjs';
+  var PortId = {
+    BUTTON_A: 0x00,
+    BUTTON_B: 0x01
+  };
+  var Button = {
+    NONE: 0,
+    PLUS: 1,
+    MINUS: -1,
+    STOP: 127,
+    ANY: 255
+  };
+  var Scratch3LegoRemoteBlocks = /*#__PURE__*/function () {
+    function Scratch3LegoRemoteBlocks(runtime) {
+      _classCallCheck(this, Scratch3LegoRemoteBlocks);
+      this._peripheral = new Hub(runtime, Scratch3LegoRemoteBlocks.EXTENSION_ID, 0x42);
+      if (runtime.formatMessage) {
+        // Replace 'formatMessage' to a formatter which is used in the runtime.
+        formatMessage$1 = runtime.formatMessage;
       }
     }
-  }, {
-    key: "getButtonA",
-    value: function getButtonA() {
-      return this._getSensorValue(PortId.BUTTON_A, 'button', Button.NONE);
-    }
-  }, {
-    key: "getButtonB",
-    value: function getButtonB() {
-      return this._getSensorValue(PortId.BUTTON_B, 'button', Button.NONE);
-    }
-  }, {
-    key: "_getSensorValue",
-    value: function _getSensorValue(portId, key, defaultValue) {
-      var value = this._peripheral.inputValue(portId, key);
-      return value != null ? value : defaultValue;
-    }
-  }, {
-    key: "_setupTranslations",
-    value: function _setupTranslations() {
-      setupTranslations(formatMessage, {
-        'en': {
-          'legoremote.whenButton': '[PORT] when [BUTTON] button pressed',
-          'legoremote.isButton': '[PORT] [BUTTON] button pressed?',
-          'legoremote.getButtonA': 'button A',
-          'legoremote.getButtonB': 'button B',
-          'legoremote.setHubLEDColor': 'set LED color to [COLOR]',
-          'legoremote.button.plus': 'plus',
-          'legoremote.button.minus': 'minus',
-          'legoremote.button.stop': 'red',
-          'legoremote.button.any': 'any'
-        },
-        'ja': {
-          'legoremote.whenButton': '[PORT] [BUTTON] ボタンが押されたとき',
-          'legoremote.isButton': '[PORT] [BUTTON] ボタンが押された',
-          'legoremote.getButtonA': 'ボタン A',
-          'legoremote.getButtonB': 'ボタン B',
-          'legoremote.setHubLEDColor': 'LEDの色を [COLOR] にする',
-          'legoremote.button.plus': 'プラス',
-          'legoremote.button.minus': 'マイナス',
-          'legoremote.button.stop': '赤い',
-          'legoremote.button.any': 'どれかの'
-        },
-        'ja-Hira': {
-          'legoremote.whenButton': '[PORT] [BUTTON] ボタンがおされたとき',
-          'legoremote.isButton': '[PORT] [BUTTON] ボタンがおされた',
-          'legoremote.getButtonA': 'ボタン A',
-          'legoremote.getButtonB': 'ボタン B',
-          'legoremote.setHubLEDColor': 'LEDのいろを [COLOR] にする',
-          'legoremote.button.plus': 'プラス',
-          'legoremote.button.minus': 'マイナス',
-          'legoremote.button.stop': 'あかい',
-          'legoremote.button.any': 'どれかの'
+    _createClass(Scratch3LegoRemoteBlocks, [{
+      key: "getInfo",
+      value: function getInfo() {
+        this._setupTranslations();
+        return {
+          id: Scratch3LegoRemoteBlocks.EXTENSION_ID,
+          name: 'LEGO Remote',
+          extensionURL: Scratch3LegoRemoteBlocks.extensionURL,
+          blockIconURI: blockIconURI,
+          showStatusButton: true,
+          blocks: [{
+            opcode: 'whenButton',
+            text: formatMessage$1({
+              id: 'legoremote.whenButton',
+              default: '[PORT] when [BUTTON] button pressed'
+            }),
+            blockType: BlockType.HAT,
+            arguments: {
+              PORT: {
+                type: ArgumentType.STRING,
+                menu: 'PORT',
+                defaultValue: 'A'
+              },
+              BUTTON: {
+                type: ArgumentType.NUMBER,
+                menu: 'BUTTON',
+                defaultValue: Button.PLUS
+              }
+            }
+          }, {
+            opcode: 'isButton',
+            text: formatMessage$1({
+              id: 'legoremote.isButton',
+              default: '[PORT] [BUTTON] button pressed?'
+            }),
+            blockType: BlockType.BOOLEAN,
+            arguments: {
+              PORT: {
+                type: ArgumentType.STRING,
+                menu: 'PORT',
+                defaultValue: 'A'
+              },
+              BUTTON: {
+                type: ArgumentType.NUMBER,
+                menu: 'BUTTON',
+                defaultValue: Button.PLUS
+              }
+            }
+          }, '---', {
+            opcode: 'getButtonA',
+            text: formatMessage$1({
+              id: 'legoremote.getButtonA',
+              default: 'button A'
+            }),
+            blockType: BlockType.REPORTER
+          }, {
+            opcode: 'getButtonB',
+            text: formatMessage$1({
+              id: 'legoremote.getButtonB',
+              default: 'button B'
+            }),
+            blockType: BlockType.REPORTER
+          }, '---', {
+            opcode: 'setHubLEDColor',
+            text: formatMessage$1({
+              id: 'legoremote.setHubLEDColor',
+              default: 'set LED color to [COLOR]'
+            }),
+            blockType: BlockType.COMMAND,
+            arguments: {
+              COLOR: {
+                type: ArgumentType.NUMBER,
+                menu: 'LED_COLOR',
+                defaultValue: Color.BLUE
+              }
+            }
+          }],
+          menus: {
+            PORT: {
+              acceptReporters: true,
+              items: ['A', 'B']
+            },
+            LED_COLOR: {
+              acceptReporters: true,
+              items: [{
+                text: formatMessage$1({
+                  id: 'legobluetooth.black',
+                  default: '(0) Black'
+                }),
+                value: String(Color.BLACK)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.pink',
+                  default: '(1) Pink'
+                }),
+                value: String(Color.PINK)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.purple',
+                  default: '(2) Purple'
+                }),
+                value: String(Color.PURPLE)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.blue',
+                  default: '(3) Blue'
+                }),
+                value: String(Color.BLUE)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.lightBlue',
+                  default: '(4) Light blue'
+                }),
+                value: String(Color.LIGHT_BLUE)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.lightGreen',
+                  default: '(5) Light green'
+                }),
+                value: String(Color.LIGHT_GREEN)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.green',
+                  default: '(6) Green'
+                }),
+                value: String(Color.GREEN)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.yellow',
+                  default: '(7) Yellow'
+                }),
+                value: String(Color.YELLOW)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.orange',
+                  default: '(8) Orange'
+                }),
+                value: String(Color.ORANGE)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.red',
+                  default: '(9) Red'
+                }),
+                value: String(Color.RED)
+              }, {
+                text: formatMessage$1({
+                  id: 'legobluetooth.white',
+                  default: '(10) White'
+                }),
+                value: String(Color.WHITE)
+              }]
+            },
+            BUTTON: {
+              acceptReporters: false,
+              items: [{
+                text: formatMessage$1({
+                  id: 'legoremote.button.plus',
+                  default: 'plus'
+                }),
+                value: String(Button.PLUS)
+              }, {
+                text: formatMessage$1({
+                  id: 'legoremote.button.minus',
+                  default: 'minus'
+                }),
+                value: String(Button.MINUS)
+              }, {
+                text: formatMessage$1({
+                  id: 'legoremote.button.stop',
+                  default: 'red'
+                }),
+                value: String(Button.STOP)
+              }, {
+                text: formatMessage$1({
+                  id: 'legoremote.button.any',
+                  default: 'any'
+                }),
+                value: String(Button.ANY)
+              }]
+            }
+          }
+        };
+      }
+    }, {
+      key: "_validatePorts",
+      value: function _validatePorts(text) {
+        return text.toUpperCase().replace(/[^AB]/g, '').split('').filter(function (x, i, self) {
+          return self.indexOf(x) === i;
+        }).sort();
+      }
+    }, {
+      key: "setHubLEDColor",
+      value: function setHubLEDColor(args) {
+        var color = Cast.toNumber(args.COLOR);
+        return this._peripheral.setLEDColor(color).then(waitPromise);
+      }
+    }, {
+      key: "whenButton",
+      value: function whenButton(args) {
+        return this.isButton(args);
+      }
+    }, {
+      key: "isButton",
+      value: function isButton(args) {
+        var port = this._validatePorts(Cast.toString(args.PORT)).shift();
+        var portId = ['A', 'B'].indexOf(port);
+        var button = Cast.toNumber(args.BUTTON);
+        var value = this._getSensorValue(portId, 'button', Button.NONE);
+        if (button == Button.ANY) {
+          return value != Button.NONE;
+        } else {
+          return value == button;
         }
-      });
-    }
-  }], [{
-    key: "EXTENSION_ID",
-    get: function get() {
-      return 'legoremote';
-    }
-  }, {
-    key: "extensionURL",
-    get: function get() {
-      return extensionURL;
-    },
-    set: function set(url) {
-      extensionURL = url;
-    }
-  }]);
-  return Scratch3LegoRemoteBlocks;
-}();
-var blockClass = Scratch3LegoRemoteBlocks;
-blockClass = Scratch3LegoRemoteBlocks;
+      }
+    }, {
+      key: "getButtonA",
+      value: function getButtonA() {
+        return this._getSensorValue(PortId.BUTTON_A, 'button', Button.NONE);
+      }
+    }, {
+      key: "getButtonB",
+      value: function getButtonB() {
+        return this._getSensorValue(PortId.BUTTON_B, 'button', Button.NONE);
+      }
+    }, {
+      key: "_getSensorValue",
+      value: function _getSensorValue(portId, key, defaultValue) {
+        var value = this._peripheral.inputValue(portId, key);
+        return value != null ? value : defaultValue;
+      }
+    }, {
+      key: "_setupTranslations",
+      value: function _setupTranslations() {
+        setupTranslations(formatMessage$1, {
+          'en': {
+            'legoremote.whenButton': '[PORT] when [BUTTON] button pressed',
+            'legoremote.isButton': '[PORT] [BUTTON] button pressed?',
+            'legoremote.getButtonA': 'button A',
+            'legoremote.getButtonB': 'button B',
+            'legoremote.setHubLEDColor': 'set LED color to [COLOR]',
+            'legoremote.button.plus': 'plus',
+            'legoremote.button.minus': 'minus',
+            'legoremote.button.stop': 'red',
+            'legoremote.button.any': 'any'
+          },
+          'ja': {
+            'legoremote.whenButton': '[PORT] [BUTTON] ボタンが押されたとき',
+            'legoremote.isButton': '[PORT] [BUTTON] ボタンが押された',
+            'legoremote.getButtonA': 'ボタン A',
+            'legoremote.getButtonB': 'ボタン B',
+            'legoremote.setHubLEDColor': 'LEDの色を [COLOR] にする',
+            'legoremote.button.plus': 'プラス',
+            'legoremote.button.minus': 'マイナス',
+            'legoremote.button.stop': '赤い',
+            'legoremote.button.any': 'どれかの'
+          },
+          'ja-Hira': {
+            'legoremote.whenButton': '[PORT] [BUTTON] ボタンがおされたとき',
+            'legoremote.isButton': '[PORT] [BUTTON] ボタンがおされた',
+            'legoremote.getButtonA': 'ボタン A',
+            'legoremote.getButtonB': 'ボタン B',
+            'legoremote.setHubLEDColor': 'LEDのいろを [COLOR] にする',
+            'legoremote.button.plus': 'プラス',
+            'legoremote.button.minus': 'マイナス',
+            'legoremote.button.stop': 'あかい',
+            'legoremote.button.any': 'どれかの'
+          }
+        });
+      }
+    }], [{
+      key: "EXTENSION_ID",
+      get: function get() {
+        return 'legoremote';
+      }
+    }, {
+      key: "extensionURL",
+      get: function get() {
+        return extensionURL;
+      },
+      set: function set(url) {
+        extensionURL = url;
+      }
+    }]);
+    return Scratch3LegoRemoteBlocks;
+  }();
+  exports.blockClass = Scratch3LegoRemoteBlocks;
+  module.exports = Scratch3LegoRemoteBlocks;
+})(_legoremote, _legoremote.exports);
 
-export { blockClass, entry };
+export { entry };

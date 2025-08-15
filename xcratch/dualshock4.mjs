@@ -8736,6 +8736,6 @@ var Scratch3GamepadBlocks = /*#__PURE__*/function () {
   }]);
   return Scratch3GamepadBlocks;
 }();
-exports.blockClass = Scratch3GamepadBlocks;
+module.exports = Scratch3GamepadBlocks;
 
 export { entry };

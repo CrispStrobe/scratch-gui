@@ -6695,7 +6695,7 @@ function formatPlural(config, state, value) {
   }
   return 'other';
 }
-function formatMessage$2(config, state) {
+function formatMessage$1(config, state) {
   var messageDescriptor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var values = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
   var locale = config.locale,
@@ -6763,7 +6763,7 @@ function formatHTMLMessage(config, state, messageDescriptor) {
     escaped[name] = typeof value === 'string' ? escape(value) : value;
     return escaped;
   }, {});
-  return formatMessage$2(config, state, messageDescriptor, escapedValues);
+  return formatMessage$1(config, state, messageDescriptor, escapedValues);
 }
 var format = Object.freeze({
   formatDate: formatDate,
@@ -6771,7 +6771,7 @@ var format = Object.freeze({
   formatRelative: formatRelative,
   formatNumber: formatNumber,
   formatPlural: formatPlural,
-  formatMessage: formatMessage$2,
+  formatMessage: formatMessage$1,
   formatHTMLMessage: formatHTMLMessage
 });
 
@@ -7325,7 +7325,7 @@ var defaultFormatMessage = function defaultFormatMessage(descriptor, values) {
   if (process.env.NODE_ENV !== 'production') {
     console.error('[React Intl] Could not find required `intl` object. <IntlProvider> needs to exist in the component ancestry. Using default message as fallback.');
   }
-  return formatMessage$2({}, {
+  return formatMessage$1({}, {
     getMessageFormat: memoizeFormatConstructor(IntlMessageFormat)
   }, descriptor, values);
 };
@@ -7684,6 +7684,8 @@ function _inherits(subClass, superClass) {
   });
   if (superClass) _setPrototypeOf(subClass, superClass);
 }
+
+var _legopeach = {exports: {}};
 
 /**
  * Block argument types
@@ -8468,7 +8470,7 @@ var PortId = {
   COLOR_BARCODE: 0x01,
   PANTS: 0x02
 };
-var MarioBaseBlocks$1 = /*#__PURE__*/function () {
+var MarioBaseBlocks = /*#__PURE__*/function () {
   function MarioBaseBlocks(peripheral) {
     _classCallCheck(this, MarioBaseBlocks);
     this._peripheral = peripheral;
@@ -8952,7 +8954,7 @@ var MarioBaseBlocks$1 = /*#__PURE__*/function () {
   }]);
   return MarioBaseBlocks;
 }();
-var marioBaseBlocks = MarioBaseBlocks$1;
+var marioBaseBlocks = MarioBaseBlocks;
 
 function _arrayWithHoles(arr) {
   if (Array.isArray(arr)) return arr;
@@ -11923,7 +11925,7 @@ var numberToInt16Array = function numberToInt16Array(number) {
   dataview.setInt16(0, number);
   return [dataview.getUint8(1), dataview.getUint8(0)];
 };
-var Hub$1 = /*#__PURE__*/function () {
+var Hub = /*#__PURE__*/function () {
   function Hub(runtime, extensionId) {
     var hubType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     _classCallCheck(this, Hub);
@@ -12379,9 +12381,9 @@ var Hub$1 = /*#__PURE__*/function () {
   }]);
   return Hub;
 }();
-var hub = Hub$1;
+var hub = Hub;
 
-var formatMessage$1 = {exports: {}};
+var formatMessage = {exports: {}};
 
 var formatMessageParse = {exports: {}};
 
@@ -14138,58 +14140,60 @@ var plurals = {
     return formatMessage;
   }
   module.exports = namespace();
-})(formatMessage$1);
+})(formatMessage);
 
 function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
 function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
-var MarioBaseBlocks = marioBaseBlocks;
-var Hub = hub;
-var blockIconURI = 'data:image/png;base64,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';
-var formatMessage = formatMessage$1.exports;
-var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/legopeach.mjs';
-var Scratch3LegoPeachBlocks = /*#__PURE__*/function (_MarioBaseBlocks) {
-  _inherits(Scratch3LegoPeachBlocks, _MarioBaseBlocks);
-  function Scratch3LegoPeachBlocks(runtime) {
-    var _this;
-    _classCallCheck(this, Scratch3LegoPeachBlocks);
-    _this = _callSuper(this, Scratch3LegoPeachBlocks, [new Hub(runtime, Scratch3LegoPeachBlocks.EXTENSION_ID, 0x45)]);
-    if (runtime.formatMessage) {
-      // Replace 'formatMessage' to a formatter which is used in the runtime.
-      formatMessage = runtime.formatMessage;
+(function (module, exports) {
+  var MarioBaseBlocks = marioBaseBlocks;
+  var Hub = hub;
+  var blockIconURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAUKADAAQAAAABAAAAUAAAAAAx4ExPAAAGf0lEQVR4Ae2dy2tcVRzHz+9OJ6WRvKbFpMViKUqKRWol7aILwaAIQrowOnYliJu6aDbWv8K6aRe6EcFVjYmLBARRunCRRVt8IC0dlFKNpKm0kxc2NHHu8fc915k5k5n7vtN53HMg5Nzzuuf3ub97zj2v35BooVufv75ve1Mel7YYtYQYlVKMChIjQsg+IUWfIOpT1ZNyg8M3hKANDl8mEgVbiAJZopDdQz/1T4zdb5UY9DhvLKcX96zIu69ISeMMYpyhPC/5Ik4diEhyWb9yWVfYe2WI9n9P+YObccoMkzdW5YPcCIBWv7r2kl2id1iz3pRC9AfJFzUNC7TOmjpjZeQXg2+d+EEBjlpYgHxNAyi/+W33ysbau9KWH7KKHA5Ql8STkKDbZNFHQ30Dn9Przz5K/AZcYOIA8ZoW5fJZbtfOs8YdaEalw5dJS9xeXsjRyKdJv96JAix+eXWCO4KL/HcovJDNz8Gdzx3+m8q9fXI+qbslAnBl9senS1uli6xxp5OqWHPLoTkrQ+dy+bE/494nNsD7l6++wW3NZ9xZDMatzOPMz53LKrfN7+07c/LrOPeNDFBO3+hZsR9esKU8F6cCrc5rEV0asnrPU/7oVpS6RAK4Nn0j96/9cJ617lSUm7ZbHtbGhV1W78RA/mgxbN1CA3ww+8tTYvvRt9xRPBf2Zu2cnjuXmyK7+7W9k8f+ClPPUADXp6+NbtviO9a8g2Fu0ilpWRMXs5Z4tT9/ohC0zoEBOpq3tdCt8MrAAFFke04F1UQew/s7tHnOa9udmqcTUArCTZSSWY9w8fsCRG/rdBjd1ea58FDBaN+VzCy7VzrE+QLEp0q39LZ+MPR4yAzZ9bBGfs82EB/JPFU02yhjasJITHp9bLsCxPDM3i79zE+io0YYST9YjFh4RueY27DP9RXG2Dbt8PAwwMAuyUtuD6YhQMyqdM7EgJtoSYbL0w6T+jLrAGI+D1NS9UnTHQImYLOTQh3Aon3vfU58aGfCtF+DCSaKd3Ko6UQwDf9gbfV2+8wk76xuq69pae/A4GF9eaBGA7GGYeB5PSR5wGFUTVMByL0NYQGoGmV8jQioRTJtKbYCEEuPrVo9a1TRdg0DI7Aq168C0Fm3LQeb/14EdFaqE1FLkaW7y81e9PaqVCfFMbT1XGb/CJZIlQaq7RZN3jHQSYD86gpFAzOkUwC5TRz3y2TiawmUmTltIDb6GBeOwP/MSG0x+0f+jc+YcCWkOzXP0sjsE/TkLrU/z8ALrQ1QuO1NcdySNh0JndtkUAScjaFSjhoeEQlIcYR3NvC2WuMiEQA79MLDkXKbTCAwzAB5Q7dxEQnIPotX3QzAiPjAzqocJYhaSJrz8TEMZySSZggxZedXmA+xGBeNALPjVxgngIyLRIDZ8SvMx6eMi0iAAFDci5jbZONzexavdwbejWmI1RLgkUgBbeCt2mBzFZQAToxaODIaNINJV0sA7Cyct8XkYG2UufIjoCZUmZ2lDivjvK1x4QgwM7BzRiJ8WDlcbpMaB7xBQQHESW+DJByBMjMFUB2TVye9wxWS1tRYWAczyO9ooLIxQDNpBRJebpopH9x22kCQZBsD4QtKZw6dVWUtGMt0xcvXfzc7tLyVAnYYcmfGnil/+lU0EAEw0OCd3cSCURkeaFQA4gLWLXh2Zgl+4xoRoCWHUTWuBiD2/sK6RTXa+HQCYKPvj0ZcDUAEKNMgbN0CfuOqBHjm5Q7YVEMcXx1AdM+ceGpnwrRfg0n500VnUQcQkY5dFZrTE6bbT3NutmYaAgSsTE9minub1XSD4y6VGcDGjBsHV4BDky/+AbsqbhnTEg4Gbic1wcAVICJxThZ2VeBPo4PsXmeFwcQTIBIoozRsVwX+NDl+dRcgu5/MvgBh0QdGabgXuulXWLfEQ1YlcwBrRr4AAUVZ9GGjNPxUFrsFkpscSkaWNagVo0AAcTPYUYFRmm6GCNkgY1CbMeBSmY3BRRBnTD/VUgoNENmN8bEqxMCvcDWL0ybmrN6Xu+ETBzJAlqBtns4B/kgaqBeSdgOMkTRQB6g+trOZF/hZdNDYmeZgC8bvI1mX080fWwP1go0RWp1GRL86e6wsf8gP2sf+AptBJvo4Zw1/0mhKKqKoKluiGqhXxBji1mnE8GO1z5iCjwFQz4rX2/wYgU4kpr/6cxh8YpQPPfIgHuf2+OiZx89h8JZktauWiH8OQ95q9c9h/AcKQoSkVjyr4gAAAABJRU5ErkJggg==';
+  var formatMessage$1 = formatMessage.exports;
+  var extensionURL = 'https://bricklife.com/scratch-gui/xcratch/legopeach.mjs';
+  var Scratch3LegoPeachBlocks = /*#__PURE__*/function (_MarioBaseBlocks) {
+    _inherits(Scratch3LegoPeachBlocks, _MarioBaseBlocks);
+    function Scratch3LegoPeachBlocks(runtime) {
+      var _this;
+      _classCallCheck(this, Scratch3LegoPeachBlocks);
+      _this = _callSuper(this, Scratch3LegoPeachBlocks, [new Hub(runtime, Scratch3LegoPeachBlocks.EXTENSION_ID, 0x45)]);
+      if (runtime.formatMessage) {
+        // Replace 'formatMessage' to a formatter which is used in the runtime.
+        formatMessage$1 = runtime.formatMessage;
+      }
+      return _this;
     }
-    return _this;
-  }
-  _createClass(Scratch3LegoPeachBlocks, [{
-    key: "getInfo",
-    value: function getInfo() {
-      this.setupTranslations(formatMessage);
-      return {
-        id: Scratch3LegoPeachBlocks.EXTENSION_ID,
-        name: 'LEGO Peach',
-        extensionURL: Scratch3LegoPeachBlocks.extensionURL,
-        blockIconURI: blockIconURI,
-        showStatusButton: true,
-        blocks: this.getBlocks(formatMessage),
-        menus: this.getMenus(formatMessage)
-      };
-    }
-  }], [{
-    key: "EXTENSION_ID",
-    get: function get() {
-      return 'legopeach';
-    }
-  }, {
-    key: "extensionURL",
-    get: function get() {
-      return extensionURL;
-    },
-    set: function set(url) {
-      extensionURL = url;
-    }
-  }]);
-  return Scratch3LegoPeachBlocks;
-}(MarioBaseBlocks);
-var blockClass = Scratch3LegoPeachBlocks;
-blockClass = Scratch3LegoPeachBlocks;
+    _createClass(Scratch3LegoPeachBlocks, [{
+      key: "getInfo",
+      value: function getInfo() {
+        this.setupTranslations(formatMessage$1);
+        return {
+          id: Scratch3LegoPeachBlocks.EXTENSION_ID,
+          name: 'LEGO Peach',
+          extensionURL: Scratch3LegoPeachBlocks.extensionURL,
+          blockIconURI: blockIconURI,
+          showStatusButton: true,
+          blocks: this.getBlocks(formatMessage$1),
+          menus: this.getMenus(formatMessage$1)
+        };
+      }
+    }], [{
+      key: "EXTENSION_ID",
+      get: function get() {
+        return 'legopeach';
+      }
+    }, {
+      key: "extensionURL",
+      get: function get() {
+        return extensionURL;
+      },
+      set: function set(url) {
+        extensionURL = url;
+      }
+    }]);
+    return Scratch3LegoPeachBlocks;
+  }(MarioBaseBlocks);
+  exports.blockClass = Scratch3LegoPeachBlocks;
+  module.exports = Scratch3LegoPeachBlocks;
+})(_legopeach, _legopeach.exports);
 
-export { blockClass, entry };
+export { entry };
