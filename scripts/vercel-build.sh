@@ -4,7 +4,7 @@ set -e
 # Print each command to the console before executing it.
 set -x
 
-echo "--- [STEP 1/7] Vercel Build Script Started ---"
+echo "--- [STEP 1/7] Vercel Build Script for xcratch with Lego extensions Started ---"
 echo "Initial working directory: $(pwd)"
 
 # The `register` script in the extensions repo expects the GUI to be in a folder named `../scratch-gui`.
