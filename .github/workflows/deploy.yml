@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
         with:
-          repository: CrispStrobe/scratch-gui  # Updated to your fork
+          repository: CrispStrobe/scratch-gui
           ref: lego-bluetooth-extensions
           path: ./scratch-gui
       
@@ -28,7 +28,7 @@ jobs:
       
       - uses: actions/checkout@v4.1.1
         with:
-          repository: bricklife/scratch-lego-bluetooth-extensions  # Keep this if it's the source
+          repository: bricklife/scratch-lego-bluetooth-extensions
           ref: master
           path: ./scratch-lego-bluetooth-extensions
       

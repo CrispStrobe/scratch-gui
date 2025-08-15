@@ -201,7 +201,8 @@ jobs:
               run: npx --no -- semantic-release
     deploy-gh-pages:
         needs: [test-integration, test-unit]
-        if: (!(startsWith(github.ref, 'refs/heads/dependabot/') || startsWith(github.ref, 'refs/heads/renovate/')))
+        if: false
+        # if: (!(startsWith(github.ref, 'refs/heads/dependabot/') || startsWith(github.ref, 'refs/heads/renovate/')))
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
