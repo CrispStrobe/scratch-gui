@@ -60,6 +60,7 @@ npm install rollup
 npm install "@babel/core"
 npm install "@rollup/plugin-babel"
 npm install "@rollup/plugin-commonjs"
+npm install "@rollup/plugin-node-resolve"
 
 echo "Running 'npm run register'..."
 npm run register
