@@ -61,6 +61,7 @@ npm install "@babel/core"
 npm install "@rollup/plugin-babel"
 npm install "@rollup/plugin-commonjs"
 npm install "@rollup/plugin-node-resolve"
+npm install --save-dev @babel/plugin-transform-react-jsx @babel/plugin-transform-runtime @babel/preset-env @babel/preset-react @babel/runtime
 
 echo "Running 'npm run register'..."
 npm run register
