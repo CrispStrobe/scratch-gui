@@ -54,6 +54,9 @@ npm install
 #npm ci --include=dev
 
 #echo "Explicitly installing required build tools..."
+npm config list
+
+echo "Explicitly installing required build tools..."
 npm install command-line-args
 npm install fs-extra
 npm install rollup
@@ -61,7 +64,7 @@ npm install "@babel/core"
 npm install "@rollup/plugin-babel"
 npm install "@rollup/plugin-commonjs"
 npm install "@rollup/plugin-node-resolve"
-npm install --save-dev @babel/plugin-transform-react-jsx @babel/plugin-transform-runtime @babel/preset-env @babel/preset-react @babel/runtime
+npm install @babel/plugin-transform-react-jsx @babel/plugin-transform-runtime @babel/preset-env @babel/preset-react @babel/runtime
 
 echo "Running 'npm run register'..."
 npm run register
