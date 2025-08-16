@@ -56,6 +56,7 @@ npm install
 #echo "Explicitly installing required build tools..."
 npm install command-line-args
 npm install fs-extra
+npm install rollup
 
 echo "Running 'npm run register'..."
 npm run register
