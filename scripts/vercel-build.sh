@@ -46,9 +46,12 @@ cd ../scratch-lego-bluetooth-extensions
 echo "Changed directory to: $(pwd)"
 
 # Use 'npm ci --include=dev' to force installation of devDependencies
-# This is the critical fix for the NODE_ENV=production environment.
+# (fix for the NODE_ENV=production environment)
 echo "Running 'npm ci --include=dev' for extensions..."
 npm ci --include=dev
+
+echo "Explicitly installing required build tool..."
+npm install command-line-args
 
 echo "Running 'npm run register'..."
 npm run register
