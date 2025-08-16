@@ -54,8 +54,8 @@ npm install
 #npm ci --include=dev
 
 #echo "Explicitly installing required build tools..."
-#npm install command-line-args
-#npm install fs-extra
+npm install command-line-args
+npm install fs-extra
 
 echo "Running 'npm run register'..."
 npm run register
