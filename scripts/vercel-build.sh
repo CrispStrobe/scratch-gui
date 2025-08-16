@@ -47,12 +47,15 @@ echo "Changed directory to: $(pwd)"
 
 # Use 'npm ci --include=dev' to force installation of devDependencies
 # (fix for the NODE_ENV=production environment)
-echo "Running 'npm ci --include=dev' for extensions..."
-npm ci --include=dev
+echo "Running 'npm install... fingers crossed..."
+npm install
 
-echo "Explicitly installing required build tools..."
-npm install command-line-args
-npm install fs-extra
+#echo "Running 'npm ci --include=dev' for extensions..."
+#npm ci --include=dev
+
+#echo "Explicitly installing required build tools..."
+#npm install command-line-args
+#npm install fs-extra
 
 echo "Running 'npm run register'..."
 npm run register
