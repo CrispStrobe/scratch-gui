@@ -59,6 +59,7 @@ npm install fs-extra
 npm install rollup
 npm install "@babel/core"
 npm install "@rollup/plugin-babel"
+npm install "@rollup/plugin-commonjs"
 
 echo "Running 'npm run register'..."
 npm run register
