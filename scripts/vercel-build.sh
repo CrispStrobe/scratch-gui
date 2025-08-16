@@ -57,6 +57,8 @@ npm install
 npm install command-line-args
 npm install fs-extra
 npm install rollup
+npm install "@babel/core"
+npm install "@rollup/plugin-babel"
 
 echo "Running 'npm run register'..."
 npm run register

@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@microbit/microbit-universal-hex": "^0.2.2",
+    "@rollup/plugin-babel": "^6.0.4",
     "arraybuffer-loader": "^1.0.6",
     "autoprefixer": "^9.0.1",
     "balance-text": "^3.3.1",
@@ -110,7 +111,7 @@
   },
   "devDependencies": {
     "@babel/cli": "7.14.8",
-    "@babel/core": "7.14.8",
+    "@babel/core": "^7.14.8",
     "@babel/eslint-parser": "7.23.10",
     "@babel/plugin-proposal-object-rest-spread": "7.14.7",
     "@babel/plugin-syntax-dynamic-import": "7.2.0",
