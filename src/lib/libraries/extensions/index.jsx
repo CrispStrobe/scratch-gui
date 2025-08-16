@@ -367,3 +367,15 @@ extensions.unshift(dualshock4);
 // Injected for extra extension legoboost
 import legoboost from './legoboost/index.jsx';
 extensions.unshift(legoboost);
+
+// Injected for extra extension spikeprimeble
+import spikeprimeble from './spikeprimeble/index.jsx';
+extensions.unshift(spikeprimeble);
+
+// Injected for extra extension spikeprimebtc
+import spikeprimebtc from './spikeprimebtc/index.jsx';
+extensions.unshift(spikeprimebtc);
+
+// Injected for extra extension planetemaths
+import planetemaths from './planetemaths/index.jsx';
+extensions.unshift(planetemaths);

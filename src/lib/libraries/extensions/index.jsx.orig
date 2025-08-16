@@ -363,3 +363,15 @@ extensions.unshift(spikeprime);
 // Injected for extra extension dualshock4
 import dualshock4 from './dualshock4/index.jsx';
 extensions.unshift(dualshock4);
+
+// Injected for extra extension legoboost
+import legoboost from './legoboost/index.jsx';
+extensions.unshift(legoboost);
+
+// Injected for extra extension spikeprimeble
+import spikeprimeble from './spikeprimeble/index.jsx';
+extensions.unshift(spikeprimeble);
+
+// Injected for extra extension spikeprimebtc
+import spikeprimebtc from './spikeprimebtc/index.jsx';
+extensions.unshift(spikeprimebtc);

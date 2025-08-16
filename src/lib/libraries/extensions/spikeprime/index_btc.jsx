@@ -25,7 +25,7 @@ const entry = {
     get description () {
         return formatMessage({
             id: 'gui.extension.spikeprime.description',
-            default: 'Build with SPIKE Prime or Robot Inventor (v. 3 firmware with BLE). Supports motors, sensors, lights, and displays.',
+            default: 'Build with SPIKE Prime or Robot Inventor (legacy v. 2 firmware with bluetooth classic). Supports motors, sensors, lights, and displays.',
             description: 'Description for the SPIKE Prime extension'
         });
     },
@@ -40,7 +40,7 @@ const entry = {
     get connectingMessage () {
         return formatMessage({
             id: 'gui.extension.spikeprime.connectingMessage',
-            default: 'Connecting to SPIKE Prime (over BLE)...',
+            default: 'Connecting to SPIKE Prime (over bluetooth classic SPP)...',
             description: 'Message shown when connecting to SPIKE Prime'
         });
     },
