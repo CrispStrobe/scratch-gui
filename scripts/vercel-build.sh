@@ -45,26 +45,10 @@ log_step "5/8: SETTING UP EXTENSIONS (INSTALL, REGISTER, BUILD)"
 cd ../scratch-lego-bluetooth-extensions
 echo "Changed directory to: $(pwd)"
 
-# Use 'npm ci --include=dev' to force installation of devDependencies
-# (fix for the NODE_ENV=production environment)
-echo "Running 'npm install... fingers crossed..."
-npm install
-
-#echo "Running 'npm ci --include=dev' for extensions..."
-#npm ci --include=dev
-
-#echo "Explicitly installing required build tools..."
-npm config list
-
-echo "Explicitly installing required build tools..."
-npm install command-line-args
-npm install fs-extra
-npm install rollup
-npm install "@babel/core"
-npm install "@rollup/plugin-babel"
-npm install "@rollup/plugin-commonjs"
-npm install "@rollup/plugin-node-resolve"
-npm install @babel/plugin-transform-react-jsx @babel/plugin-transform-runtime @babel/preset-env @babel/preset-react @babel/runtime
+# Use 'npm ci' for a clean, reliable installation based on the lockfile.
+# This is the standard for CI/CD environments.
+echo "Running 'npm ci' for extensions..."
+npm ci
 
 echo "Running 'npm run register'..."
 npm run register
