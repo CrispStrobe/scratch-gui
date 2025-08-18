@@ -21,12 +21,13 @@ log_step "2/5: CLONING LEGO EXTENSIONS REPOSITORY"
 git clone https://github.com/CrispStrobe/scratch-lego-bluetooth-extensions.git ../scratch-lego-bluetooth-extensions
 
 log_step "3/5: INSTALLING EXTENSION DEPENDENCIES"
-# Use 'npm ci' which is the standard for CI. It's fast and reliable,
-# and will now work correctly with the regenerated package-lock.json.
-(cd ../scratch-lego-bluetooth-extensions && npm ci)
+# THIS IS THE FIX:
+# Force npm to install ALL dependencies by setting NODE_ENV for this command only.
+# This overrides Vercel's "production" default and ensures build tools are installed.
+(cd ../scratch-lego-bluetooth-extensions && NODE_ENV=development npm install)
 
 log_step "4/5: BUILDING AND REGISTERING EXTENSIONS"
-# With dependencies installed, run the register and build scripts.
+# With dependencies now correctly installed, run the register and build scripts.
 (cd ../scratch-lego-bluetooth-extensions && npm run register && npm run build)
 
 log_step "5/5: BUILDING MAIN 'scratch-gui' APPLICATION"
