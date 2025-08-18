@@ -14,7 +14,6 @@ log_step() {
 }
 
 # --- Build Process ---
-
 log_step "1/8: INITIALIZING BUILD PROCESS"
 echo "Build for xcratch started at: $(date)"
 
@@ -26,6 +25,7 @@ git clone https://github.com/CrispStrobe/scratch-lego-bluetooth-extensions.git .
 
 log_step "4/8: TARGETED CLEANING OF LEGO-SPECIFIC EXTENSIONS"
 LEGO_EXTENSIONS=( "legoble" "spikeessential" "legoremote" "controlplus" "poweredup" "duplotrain" "legopeach" "legoluigi" "legomario" "spikeprime" "dualshock4" )
+
 echo "Checking for and removing specific extension directories to prevent conflicts..."
 for ext in "${LEGO_EXTENSIONS[@]}"; do
     gui_ext_path="./src/lib/libraries/extensions/${ext}"
@@ -33,6 +33,7 @@ for ext in "${LEGO_EXTENSIONS[@]}"; do
         echo "Removing existing item: ${gui_ext_path}"
         rm -rf "${gui_ext_path}"
     fi
+    
     vm_ext_path="./node_modules/scratch-vm/src/extensions/scratch3_${ext}"
     if [ -e "${vm_ext_path}" ]; then
         echo "Removing existing item: ${vm_ext_path}"
@@ -45,35 +46,31 @@ log_step "5/8: SETTING UP EXTENSIONS (INSTALL, REGISTER, BUILD)"
 cd ../scratch-lego-bluetooth-extensions
 echo "Changed directory to: $(pwd)"
 
-# Use 'npm ci --include=dev' to force installation of devDependencies
-# (fix for the NODE_ENV=production environment)
-echo "Running 'npm install as in development environment... fingers crossed..."
+# Clean install with proper dependency resolution
+echo "Removing any existing node_modules and package-lock.json..."
+rm -rf node_modules package-lock.json
+
+echo "Installing dependencies with npm ci equivalent..."
+# First install normally to generate package-lock.json if missing
 NODE_ENV=development npm install
 
-#echo "Running 'npm ci --include=dev' for extensions..."
-#npm ci --include=dev
+# Verify critical dependencies are installed
+echo "Verifying critical dependencies..."
+npm list fs-extra || echo "fs-extra not found in dependency tree"
 
-#echo "Explicitly installing required build tools..."
-npm config list
+# Force reinstall critical dependencies
+echo "Force installing critical build dependencies..."
+npm install --save-dev fs-extra command-line-args
+npm install --save-dev rollup @babel/core @rollup/plugin-babel @rollup/plugin-commonjs @rollup/plugin-node-resolve
+npm install --save-dev @babel/plugin-transform-react-jsx @babel/plugin-transform-runtime @babel/preset-env @babel/preset-react @babel/runtime
 
-echo "Debug infos: Our working directory is:"
-pwd
+# Debug: Check if fs-extra is actually available
+echo "Checking if fs-extra is accessible..."
+node -e "console.log('fs-extra test:', typeof require('fs-extra'))" || echo "fs-extra require failed"
 
-echo "Our package.json is:"
-cat package.json
-
-echo "Our package-lock.json is:"
-cat package-lock.json
-
-echo "Explicitly installing required build tools..."
-npm install command-line-args
-npm install fs-extra
-npm install rollup
-npm install "@babel/core"
-npm install "@rollup/plugin-babel"
-npm install "@rollup/plugin-commonjs"
-npm install "@rollup/plugin-node-resolve"
-npm install @babel/plugin-transform-react-jsx @babel/plugin-transform-runtime @babel/preset-env @babel/preset-react @babel/runtime
+# Debug: List installed packages
+echo "Installed packages:"
+npm list --depth=0
 
 echo "Running 'npm run register'..."
 npm run register
