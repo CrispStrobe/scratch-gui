@@ -4,7 +4,6 @@ set -euo pipefail
 # --- Logging Helpers ---
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 NC='\033[0m'
 
 log_step() {
@@ -15,58 +14,25 @@ log_step() {
 
 # --- Build Process ---
 
-log_step "1/8: INITIALIZING BUILD PROCESS"
+log_step "1/5: INITIALIZING BUILD PROCESS"
 echo "Build for xcratch started at: $(date)"
 
-log_step "2/8: CREATING COMPATIBILITY SYMLINK FOR 'scratch-gui'"
-ln -s "$(pwd)" ../scratch-gui
-
-log_step "3/8: CLONING LEGO EXTENSIONS REPOSITORY"
+log_step "2/5: CLONING LEGO EXTENSIONS REPOSITORY"
 git clone https://github.com/CrispStrobe/scratch-lego-bluetooth-extensions.git ../scratch-lego-bluetooth-extensions
 
-log_step "4/8: TARGETED CLEANING OF LEGO-SPECIFIC EXTENSIONS"
-LEGO_EXTENSIONS=( "legoble" "spikeessential" "legoremote" "controlplus" "poweredup" "duplotrain" "legopeach" "legoluigi" "legomario" "spikeprime" "dualshock4" )
-echo "Checking for and removing specific extension directories to prevent conflicts..."
-for ext in "${LEGO_EXTENSIONS[@]}"; do
-    gui_ext_path="./src/lib/libraries/extensions/${ext}"
-    if [ -e "${gui_ext_path}" ]; then
-        echo "Removing existing item: ${gui_ext_path}"
-        rm -rf "${gui_ext_path}"
-    fi
-    vm_ext_path="./node_modules/scratch-vm/src/extensions/scratch3_${ext}"
-    if [ -e "${vm_ext_path}" ]; then
-        echo "Removing existing item: ${vm_ext_path}"
-        rm -rf "${vm_ext_path}"
-    fi
-done
-echo "Targeted cleaning complete."
+log_step "3/5: SETTING UP EXTENSIONS (REGISTER & BUILD)"
+# Dependencies are already installed in the root.
+# We can directly run the scripts from the extensions directory using a subshell.
+echo "Running extension registration and build scripts..."
+(cd ../scratch-lego-bluetooth-extensions && npm run register && npm run build)
 
-log_step "5/8: SETTING UP EXTENSIONS (INSTALL, REGISTER, BUILD)"
-cd ../scratch-lego-bluetooth-extensions
-echo "Changed directory to: $(pwd)"
-
-# Force a clean slate for dependencies to resolve module caching issues in the CI.
-echo "Forcing a clean install by removing existing node_modules and package-lock.json..."
-rm -rf node_modules package-lock.json
-
-# Now run a fresh install. This will install devDependencies from package.json.
-echo "Running 'npm install' to fetch all dependencies..."
-npm install
-
-echo "Running 'npm run register'..."
-npm run register
-
-echo "Running 'npm run build'..."
-npm run build
-
-log_step "6/8: BUILDING MAIN 'scratch-gui' APPLICATION"
+log_step "4/5: BUILDING MAIN 'scratch-gui' APPLICATION"
+# Ensure we are in the correct directory before building
 cd ../scratch-gui
-echo "Changed directory back to: $(pwd)"
 npm run build
 
-log_step "7/8: COPYING BUILT EXTENSIONS TO FINAL DESTINATION"
+log_step "5/5: COPYING BUILT EXTENSIONS TO FINAL DESTINATION"
 mkdir -p build/xcratch
 cp -r ../scratch-lego-bluetooth-extensions/dist/* build/xcratch/
 
-log_step "8/8: BUILD COMPLETE"
-echo -e "${GREEN}✅ Vercel build script finished successfully!${NC}"
+echo -e "\n${GREEN}✅ Vercel build script finished successfully!${NC}"
