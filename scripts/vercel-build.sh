@@ -56,6 +56,15 @@ NODE_ENV=development npm install
 #echo "Explicitly installing required build tools..."
 npm config list
 
+echo "Debug infos: Our working directory is:"
+pwd
+
+echo "Our package.json is:"
+cat package.json
+
+echo "Our package-lock.json is:"
+cat package-lock.json
+
 echo "Explicitly installing required build tools..."
 npm install command-line-args
 npm install fs-extra
