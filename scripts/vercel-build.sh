@@ -45,10 +45,13 @@ log_step "5/8: SETTING UP EXTENSIONS (INSTALL, REGISTER, BUILD)"
 cd ../scratch-lego-bluetooth-extensions
 echo "Changed directory to: $(pwd)"
 
-# Use 'npm ci' for a clean, reliable installation based on the lockfile.
-# This is the standard for CI/CD environments.
-echo "Running 'npm ci' for extensions..."
-npm ci
+# Force a clean slate for dependencies to resolve module caching issues in the CI.
+echo "Forcing a clean install by removing existing node_modules and package-lock.json..."
+rm -rf node_modules package-lock.json
+
+# Now run a fresh install. This will install devDependencies from package.json.
+echo "Running 'npm install' to fetch all dependencies..."
+npm install
 
 echo "Running 'npm run register'..."
 npm run register
