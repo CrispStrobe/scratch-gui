@@ -18,19 +18,24 @@ log_step "1/5: INITIALIZING BUILD PROCESS"
 echo "Build for xcratch started at: $(date)"
 
 log_step "2/5: CLONING LEGO EXTENSIONS REPOSITORY"
+# Clone the extensions project alongside the main GUI project
 git clone https://github.com/CrispStrobe/scratch-lego-bluetooth-extensions.git ../scratch-lego-bluetooth-extensions
 
-log_step "3/5: SETTING UP EXTENSIONS (REGISTER & BUILD)"
-# Dependencies are already installed in the root.
-# We can directly run the scripts from the extensions directory using a subshell.
-echo "Running extension registration and build scripts..."
+log_step "3/5: INSTALLING EXTENSION DEPENDENCIES"
+# Go into the extensions directory and run a full, clean npm install.
+# This is critical and is what was failing before.
+(cd ../scratch-lego-bluetooth-extensions && npm install)
+
+log_step "4/5: BUILDING AND REGISTERING EXTENSIONS"
+# Now that dependencies are installed, run the register and build scripts.
 (cd ../scratch-lego-bluetooth-extensions && npm run register && npm run build)
 
-log_step "4/5: BUILDING MAIN 'scratch-gui' APPLICATION"
-# This command runs from the root of the scratch-gui checkout.
+log_step "5/5: BUILDING MAIN 'scratch-gui' APPLICATION"
+# Build the main GUI application, which now includes the registered extensions
 npm run build
 
-log_step "5/5: COPYING BUILT EXTENSIONS TO FINAL DESTINATION"
+log_step "6/5: FINALIZING BUILD"
+# Copy the built extension modules into the final build directory
 mkdir -p build/xcratch
 cp -r ../scratch-lego-bluetooth-extensions/dist/* build/xcratch/
 
