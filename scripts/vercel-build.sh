@@ -18,24 +18,21 @@ log_step "1/5: INITIALIZING BUILD PROCESS"
 echo "Build for xcratch started at: $(date)"
 
 log_step "2/5: CLONING LEGO EXTENSIONS REPOSITORY"
-# Clone the extensions project alongside the main GUI project
 git clone https://github.com/CrispStrobe/scratch-lego-bluetooth-extensions.git ../scratch-lego-bluetooth-extensions
 
 log_step "3/5: INSTALLING EXTENSION DEPENDENCIES"
-# Go into the extensions directory and run a full, clean npm install.
-# This is critical and is what was failing before.
-(cd ../scratch-lego-bluetooth-extensions && npm install)
+# Use 'npm ci' which is the standard for CI. It's fast and reliable,
+# and will now work correctly with the regenerated package-lock.json.
+(cd ../scratch-lego-bluetooth-extensions && npm ci)
 
 log_step "4/5: BUILDING AND REGISTERING EXTENSIONS"
-# Now that dependencies are installed, run the register and build scripts.
+# With dependencies installed, run the register and build scripts.
 (cd ../scratch-lego-bluetooth-extensions && npm run register && npm run build)
 
 log_step "5/5: BUILDING MAIN 'scratch-gui' APPLICATION"
-# Build the main GUI application, which now includes the registered extensions
 npm run build
 
 log_step "6/5: FINALIZING BUILD"
-# Copy the built extension modules into the final build directory
 mkdir -p build/xcratch
 cp -r ../scratch-lego-bluetooth-extensions/dist/* build/xcratch/
 
