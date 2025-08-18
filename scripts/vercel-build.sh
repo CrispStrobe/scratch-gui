@@ -27,8 +27,7 @@ echo "Running extension registration and build scripts..."
 (cd ../scratch-lego-bluetooth-extensions && npm run register && npm run build)
 
 log_step "4/5: BUILDING MAIN 'scratch-gui' APPLICATION"
-# Ensure we are in the correct directory before building
-cd ../scratch-gui
+# This command runs from the root of the scratch-gui checkout.
 npm run build
 
 log_step "5/5: COPYING BUILT EXTENSIONS TO FINAL DESTINATION"
