@@ -1,7 +1,7 @@
 {
   "name": "scratch-gui",
   "version": "3.6.7",
-  "description": "Graphical User Interface for creating and running Scratch 3.0 projects, plus xcratch",
+  "description": "Graphical User Interface for creating and running Scratch 3.0 projects",
   "author": "Massachusetts Institute of Technology",
   "license": "BSD-3-Clause",
   "homepage": "https://github.com/LLK/scratch-gui#readme",
@@ -11,8 +11,8 @@
   },
   "main": "./dist/scratch-gui.js",
   "scripts": {
-    "build": "echo '>>> Running: build (clean and webpack)' && npm run clean && webpack --colors --bail",
-    "clean": "echo '>>> Running: clean (rimraf build and dist dirs)' && rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
+    "build": "npm run clean && webpack --colors --bail",
+    "clean": "rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
     "deploy": "touch build/.nojekyll && gh-pages -t -d build -m \"[skip ci] Build for $(git log --pretty=format:%H -n1)\"",
     "prepublish": "node scripts/prepublish.mjs",
     "prune": "./prune-gh-pages.sh",
@@ -24,7 +24,6 @@
     "test:lint": "eslint . --ext .js,.jsx",
     "test:unit": "jest test[\\\\/]unit",
     "test:smoke": "jest --runInBand test[\\\\/]smoke",
-    "test:vercel-build": "echo '>>> Simulating Vercel build process locally...' && rimraf ../scratch-lego-bluetooth-extensions && rimraf ./build && bash ./scripts/vercel-build.sh",
     "watch": "webpack --colors --watch"
   },
   "config": {
@@ -48,7 +47,6 @@
     "css-loader": "^1.0.0",
     "dapjs": "^2.3.0",
     "es6-object-assign": "^1.1.0",
-    "format-message": "^6.2.1",
     "get-float-time-domain-data": "^0.1.0",
     "get-user-media-promise": "^1.1.4",
     "immutable": "^3.8.2",
@@ -157,9 +155,9 @@
       "src/test.js"
     ],
     "moduleNameMapper": {
-      "\\\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
-      "\\\\.(css|less)$": "<rootDir>/test/__mocks__/styleMock.js",
-      "editor-msgs(\\\\.js)?$": "<rootDir>/test/__mocks__/editor-msgs-mock.js"
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
+      "\\.(css|less)$": "<rootDir>/test/__mocks__/styleMock.js",
+      "editor-msgs(\\.js)?$": "<rootDir>/test/__mocks__/editor-msgs-mock.js"
     }
   }
 }

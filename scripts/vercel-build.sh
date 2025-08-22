@@ -18,6 +18,9 @@ log_step() {
 log_step "1/8: INITIALIZING BUILD PROCESS"
 echo "Build for xcratch started at: $(date)"
 
+echo "Running npm ci to make sure we lock in to the correct packages..."
+npm ci --include=dev
+
 log_step "2/8: CREATING COMPATIBILITY SYMLINK FOR 'scratch-gui'"
 ln -s "$(pwd)" ../scratch-gui
 
@@ -25,7 +28,7 @@ log_step "3/8: CLONING LEGO EXTENSIONS REPOSITORY"
 git clone https://github.com/CrispStrobe/scratch-lego-bluetooth-extensions.git ../scratch-lego-bluetooth-extensions
 
 log_step "4/8: TARGETED CLEANING OF LEGO-SPECIFIC EXTENSIONS"
-LEGO_EXTENSIONS=( "legoble" "spikeessential" "legoremote" "controlplus" "poweredup" "duplotrain" "legopeach" "legoluigi" "legomario" "spikeprime" "dualshock4" )
+LEGO_EXTENSIONS=( "legoble" "spikeessential" "legoremote" "controlplus" "poweredup" "duplotrain" "legopeach" "legoluigi" "legomario" "spikeprimeble" "spikeprimebtc" "pm" "dualshock4" )
 echo "Checking for and removing specific extension directories to prevent conflicts..."
 for ext in "${LEGO_EXTENSIONS[@]}"; do
     gui_ext_path="./src/lib/libraries/extensions/${ext}"
