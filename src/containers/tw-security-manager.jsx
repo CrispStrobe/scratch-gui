@@ -30,6 +30,9 @@ const isTrustedExtension = url => (
     // For development.
     url.startsWith('http://localhost:8000/') ||
 
+    // Trust OUR GitHub Pages (Domain level encompasses all)
+    url.startsWith('https://crispstrobe.github.io/') ||
+
     extensionsTrustedByUser.has(url)
 );
 
