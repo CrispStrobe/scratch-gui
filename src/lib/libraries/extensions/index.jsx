@@ -440,7 +440,7 @@ export const galleryLoading = {
             }}
         />
     ),
-    href: 'https://crispstrobe.github.io/extensions/extensions/',
+    href: 'https://crispstrobe.github.io/extensions/',
     extensionId: 'gallery',
     iconURL: galleryIcon,
     description: (
@@ -466,7 +466,7 @@ export const galleryMore = {
             }}
         />
     ),
-    href: 'https://crispstrobe.github.io/extensions/extensions/',
+    href: 'https://crispstrobe.github.io/extensions/',
     extensionId: 'gallery',
     iconURL: galleryIcon,
     description: (
@@ -492,7 +492,7 @@ export const galleryError = {
             }}
         />
     ),
-    href: 'https://crispstrobe.github.io/extensions/extensions/',
+    href: 'https://crispstrobe.github.io/extensions/',
     extensionId: 'gallery',
     iconURL: galleryIcon,
     description: (
