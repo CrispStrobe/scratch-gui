@@ -4,7 +4,7 @@
   "description": "Graphical User Interface for creating and running Scratch 3.0 projects",
   "author": "Massachusetts Institute of Technology",
   "license": "GPL-3.0",
-  "homepage": "https://github.com/LLK/scratch-gui#readme",
+  "homepage": "https://crispstrobe.github.io/scratch-gui",
   "repository": {
     "type": "git",
     "url": "https://github.com/LLK/scratch-gui.git"
@@ -12,8 +12,9 @@
   "main": "./dist/scratch-gui.js",
   "scripts": {
     "build": "npm run clean && webpack --colors --bail",
+    "postinstall": "patch-package",
     "clean": "rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
-    "deploy": "touch build/.nojekyll && gh-pages -t -d build -m \"[skip ci] Build for $(git log --pretty=format:%H -n1)\"",
+    "deploy": "gh-pages -d build",
     "prepublish": "node scripts/prepublish.mjs",
     "prune": "./prune-gh-pages.sh",
     "i18n:push": "tx-push-src scratch-editor interface translations/en.json",
