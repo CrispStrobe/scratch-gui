@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/LLK/scratch-gui.git"
   },
-  "main": "./dist/scratch-gui.js",
+  "main": "./dist/js/scratch-gui.js",
   "scripts": {
     "build": "npm run clean && webpack --colors --bail",
     "postinstall": "patch-package",
