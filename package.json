@@ -7,7 +7,7 @@
   "homepage": "https://crispstrobe.github.io/scratch-gui",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LLK/scratch-gui.git"
+    "url": "https://github.com/crispstrobe/scratch-gui.git"
   },
   "main": "./dist/js/scratch-gui.js",
   "scripts": {

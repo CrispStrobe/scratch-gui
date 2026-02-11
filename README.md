@@ -1,3 +1,149 @@
+
+# LEGO Scratch GUI (Web Version)
+
+This is a modified version of the [Scratch GUI](https://github.com/LLK/scratch-gui) (based on TurboWarp) configured to run custom, unsandboxed LEGO hardware extensions directly in the browser.
+
+It includes patches to allow Web Bluetooth and Web Serial access for LEGO EV3, NXT, Spike Prime, and WeDo 2.0.
+
+**[🚀 Live Demo](https://crispstrobe.github.io/scratch-gui/)**
+
+---
+
+## 🛠️ Setup & Development
+
+### Prerequisites
+* **Node.js**: v16 or v20 (Recommended)
+* **Git**
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/CrispStrobe/scratch-gui.git](https://github.com/CrispStrobe/scratch-gui.git)
+    cd scratch-gui
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    # Use --ignore-scripts if the upstream micro:bit download fails
+    npm install --ignore-scripts
+    ```
+
+3.  **Start the Development Server:**
+    ```bash
+    npm start
+    ```
+    Open [http://localhost:8601](http://localhost:8601) in your browser.
+
+---
+
+## 🧩 Adding Custom Extensions
+
+To load unsandboxed extensions (required for Bluetooth/Serial), you must register your extension gallery and "trust" the hosting domain.
+
+### 1. Register the Extension Gallery
+Edit `src/lib/libraries/extensions/index.jsx` to add your gallery button:
+
+```javascript
+export const galleryLoading = {
+    name: 'My Extension Gallery',
+    // ...
+    href: '[https://crispstrobe.github.io/extensions/](https://crispstrobe.github.io/extensions/)', // <--- Your Gallery URL
+    // ...
+};
+
+```
+
+### 2. Configure Security (Crucial)
+
+Unsandboxed extensions allow direct hardware access. By default, TurboWarp only trusts `extensions.turbowarp.org`. You must whitelist your domain.
+
+Edit `src/containers/tw-security-manager.jsx`:
+
+```javascript
+const isTrustedExtension = url => (
+    // ... existing checks ...
+
+    // Trust MY extensions (Replace with your actual GitHub Pages URL)
+    url.startsWith('[https://crispstrobe.github.io/](https://crispstrobe.github.io/)') || 
+
+    extensionsTrustedByUser.has(url)
+);
+
+```
+
+### 3. Extension Metadata & Headers
+
+If hosting your own extensions, ensure every `.js` file has the correct headers so the gallery can parse them:
+
+```javascript
+// Name: LEGO NXT Universal
+// ID: legonxt_transpile_universal
+// Description: Control NXT via Bluetooth or compile NXC code.
+// By: CrispStrobe [https://github.com/CrispStrobe](https://github.com/CrispStrobe)
+// License: MPL-2.0
+
+```
+
+---
+
+## 📦 Deployment & Building
+
+### Build for Web (GitHub Pages)
+
+This generates the static website version.
+
+1. **Clean & Build:**
+```bash
+rm -rf build
+NODE_ENV=production npm run build
+
+```
+
+
+2. **Deploy:**
+Copy the contents of `build/` to your `gh-pages` branch.
+
+### Build for Desktop App (Library Mode)
+
+If you are building the **TurboWarp Desktop** app, you need the UMD library, not the website.
+
+1. **Build Library:**
+```bash
+# This generates dist/scratch-gui.js
+BUILD_MODE=dist npm run build
+
+```
+
+
+2. **Fix Folder Structure:**
+Webpack puts the file in `dist/js/`, but the Desktop builder expects it in `dist/`.
+```bash
+mv dist/js/* dist/
+rmdir dist/js
+
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### "ECONNRESET" during install
+
+The upstream `scratch-gui` tries to download micro:bit firmware from a URL that frequently times out.
+**Fix:** Run `npm install --ignore-scripts` or patch `scripts/prepublish.mjs` with a working URL:
+
+```javascript
+const url = '[https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip](https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip)';
+
+```
+
+### "Cannot read properties of null (reading 'store')"
+
+If you integrate scratch-gui into the Desktop app, or other downstream contexts, and see this, it likely means you have **duplicate React versions**. Ensure you remove the nested `node_modules` inside `scratch-gui` before compiling the Desktop app.
+
+<!--
+
 scratch-gui modified for use in [TurboWarp](https://turbowarp.org/)
 
 ## Setup
@@ -5,10 +151,14 @@ scratch-gui modified for use in [TurboWarp](https://turbowarp.org/)
 See https://docs.turbowarp.org/development/getting-started to setup the complete TurboWarp environment.
 
 If you just want to play with the GUI then it's the same process as upstream scratch-gui.
+-->
 
-## License
 
-TurboWarp's modifications to Scratch are licensed under the GNU General Public License v3.0. See LICENSE or https://www.gnu.org/licenses/ for details.
+---
+
+## 📜 License
+
+This project, as well as TurboWarp's modifications to Scratch, are licensed under the GNU General Public License v3.0. See LICENSE or https://www.gnu.org/licenses/ for details.
 
 The following is the original license for scratch-gui, which we are required to retain. This is NOT the license of this project.
 
