@@ -68,6 +68,8 @@ a:active, a:focus {
 }
 
 .button {
+    -webkit-appearance: none;
+    appearance: none;
     color: inherit;
     background: $ui-secondary;
     border: 1px solid $ui-black-transparent;
@@ -81,6 +83,7 @@ a:active, a:focus {
     transition-property: background;
     display: flex;
     align-items: center;
+    cursor: pointer;
 }
 .button:hover {
     background: $ui-tertiary;

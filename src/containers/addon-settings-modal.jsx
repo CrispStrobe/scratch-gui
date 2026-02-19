@@ -26,6 +26,7 @@ const AddonSettingsModal = ({onRequestClose}) => (
         <div style={{overflow: 'auto', flex: 1}}>
             <React.Suspense fallback={<div style={{padding: '20px', textAlign: 'center'}}>Loading...</div>}>
                 <LazyAddonSettings
+                    onClose={onRequestClose}
                     onExportSettings={handleExportSettings}
                 />
             </React.Suspense>
