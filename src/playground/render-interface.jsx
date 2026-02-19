@@ -42,12 +42,14 @@ import {loadServiceWorker} from './load-service-worker';
 import runAddons from '../addons/entry';
 import InvalidEmbed from '../components/tw-invalid-embed/invalid-embed.jsx';
 import {APP_NAME} from '../lib/brand.js';
+import {isCapacitor} from '../lib/tw-platform';
+import {openAddonSettingsModal} from '../reducers/modals';
 
 import styles from './interface.css';
 
 const isInvalidEmbed = window.parent !== window;
 
-const handleClickAddonSettings = addonId => {
+const handleClickAddonSettingsPopup = addonId => {
     // addonId might be a string of the addon to focus on, undefined, or an event (treat like undefined)
     const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
     const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
@@ -237,7 +239,7 @@ class Interface extends React.Component {
                             canManageFiles
                             canChangeTheme
                             enableSeeInside
-                            onClickAddonSettings={handleClickAddonSettings}
+                            onClickAddonSettings={this.props.onClickAddonSettings}
                         />
                     </div>
                 ) : null}
@@ -249,7 +251,7 @@ class Interface extends React.Component {
                     }) : null}
                 >
                     <GUI
-                        onClickAddonSettings={handleClickAddonSettings}
+                        onClickAddonSettings={this.props.onClickAddonSettings}
                         onUpdateProjectTitle={this.handleUpdateProjectTitle}
                         backpackVisible
                         backpackHost="_local_"
@@ -353,6 +355,7 @@ class Interface extends React.Component {
 Interface.propTypes = {
     intl: intlShape,
     hasCloudVariables: PropTypes.bool,
+    onClickAddonSettings: PropTypes.func,
     customStageSize: PropTypes.shape({
         width: PropTypes.number,
         height: PropTypes.number
@@ -379,7 +382,11 @@ const mapStateToProps = state => ({
     projectId: state.scratchGui.projectState.projectId
 });
 
-const mapDispatchToProps = () => ({});
+const mapDispatchToProps = dispatch => ({
+    onClickAddonSettings: isCapacitor() ?
+        () => dispatch(openAddonSettingsModal()) :
+        handleClickAddonSettingsPopup
+});
 
 const ConnectedInterface = injectIntl(connect(
     mapStateToProps,

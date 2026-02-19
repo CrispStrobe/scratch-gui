@@ -6,6 +6,8 @@ import {connect} from 'react-redux';
 import log from '../lib/log';
 import sharedMessages from './shared-messages';
 import {setFileHandle, setProjectError} from '../reducers/tw';
+import {isCapacitor} from './tw-platform';
+import {openFile as capacitorOpenFile, base64ToArrayBuffer} from './tw-capacitor-file-bridge';
 
 import {
     LoadingStates,
@@ -72,6 +74,29 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             // create fileReader
             this.fileReader = new FileReader();
             this.fileReader.onload = this.onload;
+            // tw: Use native Capacitor file picker on Android
+            if (isCapacitor()) {
+                (async () => {
+                    try {
+                        const result = await capacitorOpenFile({mimeType: '*/*'});
+                        const arrayBuffer = base64ToArrayBuffer(result.data);
+                        const blob = new Blob([arrayBuffer]);
+                        const file = new File([blob], result.name || 'project.sb3');
+                        this.handleChange({
+                            target: {
+                                files: [file],
+                                handle: null
+                            }
+                        });
+                    } catch (err) {
+                        if (err && err.code === 'CANCELLED') {
+                            return;
+                        }
+                        log.error(err);
+                    }
+                })();
+                return;
+            }
             // tw: Use FS API when available
             if (this.props.showOpenFilePicker) {
                 (async () => {

@@ -38,6 +38,7 @@ import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
 import TWWindChimeSubmitter from '../../containers/tw-windchime-submitter.jsx';
+import AddonSettingsModal from '../../containers/addon-settings-modal.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
 import {resolveStageSize} from '../../lib/screen-utils';
@@ -159,6 +160,7 @@ const GUIComponent = props => {
         fontsModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
+        addonSettingsModalVisible,
         vm,
         ...componentProps
     } = omit(props, 'dispatch');
@@ -194,6 +196,7 @@ const GUIComponent = props => {
                 {fontsModalVisible && <TWFontsModal />}
                 {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
                 {invalidProjectModalVisible && <TWInvalidProjectModal />}
+                {addonSettingsModalVisible && <AddonSettingsModal />}
             </React.Fragment>
         );
 
@@ -542,6 +545,7 @@ GUIComponent.propTypes = {
     fontsModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,
     invalidProjectModalVisible: PropTypes.bool,
+    addonSettingsModalVisible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 GUIComponent.defaultProps = {

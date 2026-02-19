@@ -4,6 +4,8 @@ import React from 'react';
 import {connect} from 'react-redux';
 import {projectTitleInitialState, setProjectTitle} from '../reducers/project-title';
 import downloadBlob from '../lib/download-blob';
+import {isCapacitor} from '../lib/tw-platform';
+import {saveFile as capacitorSaveFile} from '../lib/tw-capacitor-file-bridge';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {showStandardAlert, showAlertWithTimeout} from '../reducers/alerts';
 import {setFileHandle} from '../reducers/tw';
@@ -87,6 +89,18 @@ class SB3Downloader extends React.Component {
         }
         this.startedSaving();
         this.props.saveProjectSb3().then(content => {
+            if (isCapacitor()) {
+                capacitorSaveFile(
+                    content,
+                    this.props.projectFilename,
+                    'application/octet-stream'
+                ).then(() => {
+                    this.finishedSaving();
+                }).catch(e => {
+                    this.handleSaveError(e);
+                });
+                return;
+            }
             this.finishedSaving();
             downloadBlob(this.props.projectFilename, content);
         });
@@ -237,8 +251,8 @@ class SB3Downloader extends React.Component {
         });
     }
     handleSaveError (e) {
-        // AbortError can happen when someone cancels the file selector dialog
-        if (e && e.name === 'AbortError') {
+        // AbortError: FS API cancel; CANCELLED: Capacitor native dialog cancel
+        if ((e && e.name === 'AbortError') || (e && e.code === 'CANCELLED')) {
             return;
         }
         log.error(e);

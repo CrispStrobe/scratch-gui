@@ -1086,6 +1086,15 @@ class AddonSettingsComponent extends React.Component {
             <div className={styles.container}>
                 <div className={styles.header}>
                     <div className={styles.section}>
+                        {this.props.onClose && (
+                            <button
+                                className={styles.button}
+                                onClick={this.props.onClose}
+                                style={{marginRight: '8px', flexShrink: 0}}
+                            >
+                                {'← Back'}
+                            </button>
+                        )}
                         <div className={styles.searchContainer}>
                             <input
                                 className={styles.searchInput}
@@ -1171,6 +1180,7 @@ class AddonSettingsComponent extends React.Component {
     }
 }
 AddonSettingsComponent.propTypes = {
+    onClose: PropTypes.func,
     onExportSettings: PropTypes.func
 };
 

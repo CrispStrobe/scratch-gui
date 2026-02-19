@@ -4,6 +4,7 @@ import React from 'react';
 import {connect} from 'react-redux';
 
 import ModalComponent from '../components/modal/modal.jsx';
+import {isCapacitor} from '../lib/tw-platform';
 
 class Modal extends React.Component {
     constructor (props) {
@@ -12,8 +13,10 @@ class Modal extends React.Component {
             'addEventListeners',
             'removeEventListeners',
             'handlePopState',
+            'handleCapacitorBackButton',
             'pushHistory'
         ]);
+        this.backButtonListener = null;
         this.addEventListeners();
     }
     componentDidMount () {
@@ -26,13 +29,30 @@ class Modal extends React.Component {
     }
     addEventListeners () {
         window.addEventListener('popstate', this.handlePopState);
+        if (isCapacitor() && window.Capacitor.Plugins.App) {
+            // Capacitor 4+: addListener() returns the PluginListenerHandle directly, not a Promise.
+            this.backButtonListener = window.Capacitor.Plugins.App.addListener(
+                'backButton',
+                this.handleCapacitorBackButton
+            );
+        }
     }
     removeEventListeners () {
         window.removeEventListener('popstate', this.handlePopState);
+        if (this.backButtonListener) {
+            this.backButtonListener.remove();
+            this.backButtonListener = null;
+        }
     }
     handlePopState () {
         // Whenever someone navigates, we want to be closed
         this.props.onRequestClose();
+    }
+    handleCapacitorBackButton () {
+        // Navigate back in browser history, which will trigger handlePopState
+        // to close the modal. This also properly pops the history entry pushed
+        // in componentDidMount, preventing orphaned history entries.
+        history.back();
     }
     get id () {
         return `modal-${this.props.id}`;

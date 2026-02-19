@@ -24,8 +24,20 @@ const onExportSettings = settings => {
     downloadBlob('turbowarp-addon-settings.json', blob);
 };
 
+// When this page is opened via window.open() from the editor, window.opener is set
+// and window.close() returns to the opener tab. When navigated to directly (or inside
+// a Capacitor WebView where window.open navigates in-place), history.back() is used.
+const onClose = () => {
+    if (window.opener) {
+        window.close();
+    } else {
+        history.back();
+    }
+};
+
 render((
     <Settings
+        onClose={onClose}
         onExportSettings={onExportSettings}
     />
 ));
