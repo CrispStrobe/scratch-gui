@@ -1,166 +1,172 @@
+# scratch-gui (LEGO/TurboWarp fork)
 
-# LEGO Scratch GUI (Web Version)
+A TurboWarp/Scratch editor build configured to load custom **unsandboxed**
+LEGO hardware extensions directly in the browser — Web Bluetooth and Web
+Serial for EV3, NXT, Spike Prime, WeDo 2.0, Boost, and more.
 
-This is a modified version of the [Scratch GUI](https://github.com/LLK/scratch-gui) (based on TurboWarp) configured to run custom, unsandboxed LEGO hardware extensions directly in the browser.
+**Live demos:**
+- <https://crispstrobe.github.io/scratch-gui/>
+- <https://scratch-gui-three.vercel.app/editor.html>
 
-It includes patches to allow Web Bluetooth and Web Serial access for LEGO EV3, NXT, Spike Prime, and WeDo 2.0.
+## How this fits with the other repos
 
-**[🚀 Live Demo](https://crispstrobe.github.io/scratch-gui/)**
+This is the editor UI. It loads extensions from a separate gallery repo and
+talks to physical bricks either directly (Web BT / Web Serial) or via a local
+or on-brick Python bridge.
 
----
+| Repo | Role |
+|------|------|
+| **`scratch-gui` (this)** | The editor UI. Lists extensions, lets users drag them into projects. |
+| [`CrispStrobe/extensions`](https://github.com/CrispStrobe/extensions) | The extension gallery (`.js` files + `extensions-v0.json` metadata). Hosted on GitHub Pages; the editor `fetch`es it. |
+| [`CrispStrobe/turbowarp-lego`](https://github.com/CrispStrobe/turbowarp-lego) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, ...) used by the bridge-mode extensions. |
+| [`CrispStrobe/legacy-lego-compiler`](https://github.com/CrispStrobe/legacy-lego-compiler) | Hosted REST API that compiles NXC → `.rxe` and lmsasm → EV3 bytecode. |
+| [`CrispStrobe/turbowarp-desktop`](https://github.com/CrispStrobe/turbowarp-desktop) | Electron build of this editor. |
+| [`CrispStrobe/turbowarp-android`](https://github.com/CrispStrobe/turbowarp-android) | Android wrapper (Capacitor) with native Bluetooth bridges. |
+| [`CrispStrobe/turbowarp-ios`](https://github.com/CrispStrobe/turbowarp-ios) | iOS wrapper (WKWebView) with native Bluetooth bridges. |
 
-## 🛠️ Setup & Development
+## Setup and development
 
 ### Prerequisites
-* **Node.js**: v16 or v20 (Recommended)
-* **Git**
 
-### Installation
+- Node.js v16, v18, or v20 (v24 has known issues — see Troubleshooting).
+- Git.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/CrispStrobe/scratch-gui.git](https://github.com/CrispStrobe/scratch-gui.git)
-    cd scratch-gui
-    ```
+### Install and run
 
-2.  **Install dependencies:**
-    ```bash
-    # Use --ignore-scripts if the upstream micro:bit download fails
-    npm install --ignore-scripts
-    ```
+```bash
+git clone https://github.com/CrispStrobe/scratch-gui.git
+cd scratch-gui
 
-3.  **Start the Development Server:**
-    ```bash
-    npm start
-    ```
-    Open [http://localhost:8601](http://localhost:8601) in your browser.
+# --ignore-scripts skips the upstream micro:bit firmware download that
+# frequently times out.
+npm install --ignore-scripts
 
----
+npm start
+# → http://localhost:8601
+```
 
-## 🧩 Adding Custom Extensions
+## Loading custom extensions
 
-To load unsandboxed extensions (required for Bluetooth/Serial), you must register your extension gallery and "trust" the hosting domain.
+To run unsandboxed extensions (required for Bluetooth / Serial), you need to
+register your gallery and trust its hosting domain.
 
-### 1. Register the Extension Gallery
-Edit `src/lib/libraries/extensions/index.jsx` to add your gallery button:
+### 1. Register the gallery
+
+Edit `src/lib/libraries/extensions/index.jsx`. The `galleryLoading`,
+`galleryMore`, and `galleryError` entries each have an `href` — point them at
+your GitHub Pages URL:
 
 ```javascript
 export const galleryLoading = {
     name: 'My Extension Gallery',
     // ...
-    href: '[https://crispstrobe.github.io/extensions/](https://crispstrobe.github.io/extensions/)', // <--- Your Gallery URL
+    href: 'https://crispstrobe.github.io/extensions/',
     // ...
 };
-
 ```
 
-### 2. Configure Security (Crucial)
-
-Unsandboxed extensions allow direct hardware access. By default, TurboWarp only trusts `extensions.turbowarp.org`. You must whitelist your domain.
+### 2. Trust the hosting domain
 
 Edit `src/containers/tw-security-manager.jsx`:
 
 ```javascript
 const isTrustedExtension = url => (
-    // ... existing checks ...
-
-    // Trust MY extensions (Replace with your actual GitHub Pages URL)
-    url.startsWith('[https://crispstrobe.github.io/](https://crispstrobe.github.io/)') || 
-
+    url.startsWith('https://extensions.turbowarp.org/') ||
+    url.startsWith('https://crispstrobe.github.io/') ||  // ← add yours
     extensionsTrustedByUser.has(url)
 );
-
 ```
 
-### 3. Extension Metadata & Headers
+### 3. Extension headers
 
-If hosting your own extensions, ensure every `.js` file has the correct headers so the gallery can parse them:
+Each `.js` extension file in the gallery needs a header block so the gallery
+build can index it:
 
 ```javascript
 // Name: LEGO NXT Universal
 // ID: legonxt_transpile_universal
 // Description: Control NXT via Bluetooth or compile NXC code.
-// By: CrispStrobe [https://github.com/CrispStrobe](https://github.com/CrispStrobe)
+// By: CrispStrobe <https://github.com/CrispStrobe>
 // License: MPL-2.0
-
 ```
 
----
+## Building / deploying
 
-## 📦 Deployment & Building
+### Web build (GitHub Pages / Vercel)
 
-### Build for Web (GitHub Pages)
+Static editor for any static host:
 
-This generates the static website version.
-
-1. **Clean & Build:**
 ```bash
 rm -rf build
 NODE_ENV=production npm run build
-
+# → contents of build/ → push to gh-pages branch (or use `npm run deploy`)
 ```
 
+### Library build (for TurboWarp Desktop / Android / iOS)
 
-2. **Deploy:**
-Copy the contents of `build/` to your `gh-pages` branch.
+Native shells consume `dist/scratch-gui.js` (UMD) instead of a static site.
+Build in **library mode**:
 
-### Build for Desktop App (Library Mode)
-
-If you are building the **TurboWarp Desktop** app, you need the UMD library, not the website.
-
-1. **Build Library:**
 ```bash
-# This generates dist/scratch-gui.js
 BUILD_MODE=dist npm run build
 
-```
-
-
-2. **Fix Folder Structure:**
-Webpack puts the file in `dist/js/`, but the Desktop builder expects it in `dist/`.
-```bash
+# Webpack outputs to dist/js/, but the consumers expect dist/. Fix it:
 mv dist/js/* dist/
 rmdir dist/js
-
 ```
 
----
+`dist/scratch-gui.js` is then linked into `turbowarp-desktop`, copied into the
+Android app's web assets, etc. See the per-shell READMEs for the exact wiring.
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
-### "ECONNRESET" during install
+### `ECONNRESET` during `npm install`
 
-The upstream `scratch-gui` tries to download micro:bit firmware from a URL that frequently times out.
-**Fix:** Run `npm install --ignore-scripts` or patch `scripts/prepublish.mjs` with a working URL:
+The upstream `scripts/prepublish.mjs` tries to download the micro:bit firmware
+from a URL that frequently times out. Workarounds:
+
+- Run `npm install --ignore-scripts` (skips the download entirely; the
+  micro:bit extension just won't have its hex bundled).
+- Or patch `scripts/prepublish.mjs` to point at a working mirror:
 
 ```javascript
-const url = '[https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip](https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip)';
-
+const url = 'https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip';
 ```
 
-### "Cannot read properties of null (reading 'store')"
+### `Cannot read properties of null (reading 'store')`
 
-If you integrate scratch-gui into the Desktop app, or other downstream contexts, and see this, it likely means you have **duplicate React versions**. Ensure you remove the nested `node_modules` inside `scratch-gui` before compiling the Desktop app.
+Seen when integrating this `scratch-gui` into TurboWarp Desktop or other
+downstream Electron / native shells. Cause: duplicate React versions — the
+nested `node_modules/react` inside `scratch-gui/node_modules/` clashes with
+the host app's React. Remove the nested copies before linking. See the
+[turbowarp-desktop README](https://github.com/CrispStrobe/turbowarp-desktop)
+for the full "brain transplant" recipe.
 
-<!--
+### Node v24: `ERR_MODULE_NOT_FOUND`
 
-scratch-gui modified for use in [TurboWarp](https://turbowarp.org/)
+The build chain isn't yet compatible with Node 24. Use Node v18 or v20.
 
-## Setup
+### Missing optional deps / chokidar warnings
 
-See https://docs.turbowarp.org/development/getting-started to setup the complete TurboWarp environment.
+```bash
+npm install --no-optional
+```
 
-If you just want to play with the GUI then it's the same process as upstream scratch-gui.
--->
+These are macOS-only `fsevents` bindings and similar — safe to skip on Linux/Windows.
 
+## Branches
 
----
+- **`develop`** — main published branch; backs the GitHub Pages / Vercel demos.
+- **`lego-bluetooth-extensions`** — work-in-progress branch with additional
+  LEGO Bluetooth changes.
 
-## 📜 License
+## License
 
-This project, as well as TurboWarp's modifications to Scratch, are licensed under the GNU General Public License v3.0. See LICENSE or https://www.gnu.org/licenses/ for details.
+This project, like TurboWarp's modifications to Scratch, is licensed under
+**GPL-3.0**. See [`LICENSE`](LICENSE) and <https://www.gnu.org/licenses/>.
 
-The following is the original license for scratch-gui, which we are required to retain. This is NOT the license of this project.
+The original `scratch-gui` upstream license is included below as required.
+This is **not** the license of this project.
 
 ```
 Copyright (c) 2016, Massachusetts Institute of Technology
@@ -177,273 +183,4 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-src/lib/default-project/dango.svg is based on [Twemoji](https://twemoji.twitter.com/) and is licensed under CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
-
-<!--
-
-# scratch-gui
-#### Scratch GUI is a set of React components that comprise the interface for creating and running Scratch 3.0 projects
-
-## Installation
-This requires you to have Git and Node.js installed.
-
-In your own node environment/application:
-```bash
-npm install https://github.com/LLK/scratch-gui.git
-```
-If you want to edit/play yourself:
-```bash
-git clone https://github.com/LLK/scratch-gui.git
-cd scratch-gui
-npm install
-```
-
-**You may want to add `--depth=1` to the `git clone` command because there are some [large files in the git repository history](https://github.com/LLK/scratch-gui/issues/5140).**
-
-## Getting started
-Running the project requires Node.js to be installed.
-
-## Running
-Open a Command Prompt or Terminal in the repository and run:
-```bash
-npm start
-```
-Then go to [http://localhost:8601/](http://localhost:8601/) - the playground outputs the default GUI component
-
-## Developing alongside other Scratch repositories
-
-### Getting another repo to point to this code
-
-
-If you wish to develop `scratch-gui` alongside other scratch repositories that depend on it, you may wish
-to have the other repositories use your local `scratch-gui` build instead of fetching the current production
-version of the scratch-gui that is found by default using `npm install`.
-
-Here's how to link your local `scratch-gui` code to another project's `node_modules/scratch-gui`.
-
-#### Configuration
-
-1. In your local `scratch-gui` repository's top level:
-    1. Make sure you have run `npm install`
-    2. Build the `dist` directory by running `BUILD_MODE=dist npm run build`
-    3. Establish a link to this repository by running `npm link`
-
-2. From the top level of each repository (such as `scratch-www`) that depends on `scratch-gui`:
-    1. Make sure you have run `npm install`
-    2. Run `npm link scratch-gui`
-    3. Build or run the repository
-
-#### Using `npm run watch`
-
-Instead of `BUILD_MODE=dist npm run build`, you can use `BUILD_MODE=dist npm run watch` instead. This will watch for changes to your `scratch-gui` code, and automatically rebuild when there are changes. Sometimes this has been unreliable; if you are having problems, try going back to `BUILD_MODE=dist npm run build` until you resolve them.
-
-#### Oh no! It didn't work!
-
-If you can't get linking to work right, try:
-* Follow the recipe above step by step and don't change the order. It is especially important to run `npm install` _before_ `npm link` as installing after the linking will reset the linking.
-* Make sure the repositories are siblings on your machine's file tree, like `.../.../MY_SCRATCH_DEV_DIRECTORY/scratch-gui/` and `.../.../MY_SCRATCH_DEV_DIRECTORY/scratch-www/`.
-* Consistent node.js version: If you have multiple Terminal tabs or windows open for the different Scratch repositories, make sure to use the same node version in all of them.
-* If nothing else works, unlink the repositories by running `npm unlink` in both, and start over.
-
-## Testing
-### Documentation
-
-You may want to review the documentation for [Jest](https://facebook.github.io/jest/docs/en/api.html) and [Enzyme](http://airbnb.io/enzyme/docs/api/) as you write your tests.
-
-See [jest cli docs](https://facebook.github.io/jest/docs/en/cli.html#content) for more options.
-
-### Running tests
-
-*NOTE: If you're a Windows user, please run these scripts in Windows `cmd.exe`  instead of Git Bash/MINGW64.*
-
-Before running any tests, make sure you have run `npm install` from this (scratch-gui) repository's top level.
-
-#### Main testing command
-
-To run linter, unit tests, build, and integration tests, all at once:
-```bash
-npm test
-```
-
-#### Running unit tests
-
-To run unit tests in isolation:
-```bash
-npm run test:unit
-```
-
-To run unit tests in watch mode (watches for code changes and continuously runs tests):
-```bash
-npm run test:unit -- --watch
-```
-
-You can run a single file of integration tests (in this example, the `button` tests):
-
-```bash
-$(npm bin)/jest --runInBand test/unit/components/button.test.jsx
-```
-
-#### Running integration tests
-
-Integration tests use a headless browser to manipulate the actual HTML and javascript that the repo
-produces. You will not see this activity (though you can hear it when sounds are played!).
-
-Note that integration tests require you to first create a build that can be loaded in a browser:
-
-```bash
-npm run build
-```
-
-Then, you can run all integration tests:
-
-```bash
-npm run test:integration
-```
-
-Or, you can run a single file of integration tests (in this example, the `backpack` tests):
-
-```bash
-$(npm bin)/jest --runInBand test/integration/backpack.test.js
-```
-
-If you want to watch the browser as it runs the test, rather than running headless, use:
-
-```bash
-USE_HEADLESS=no $(npm bin)/jest --runInBand test/integration/backpack.test.js
-```
-
-_Note: If you are seeing failed tests related to `chromedriver` being incompatible with your version of Chrome, you may need to update `chromedriver` with:_
-
-```bash
-npm install chromedriver@{version}
-```
-
-## Troubleshooting
-
-### Ignoring optional dependencies
-
-When running `npm install`, you can get warnings about optional dependencies:
-
-```
-npm WARN optional Skipping failed optional dependency /chokidar/fsevents:
-npm WARN notsup Not compatible with your operating system or architecture: fsevents@1.2.7
-```
-
-You can suppress them by adding the `no-optional` switch:
-
-```
-npm install --no-optional
-```
-
-Further reading: [Stack Overflow](https://stackoverflow.com/questions/36725181/not-compatible-with-your-operating-system-or-architecture-fsevents1-0-11)
-
-### Resolving dependencies
-
-When installing for the first time, you can get warnings that need to be resolved:
-
-```
-npm WARN eslint-config-scratch@5.0.0 requires a peer of babel-eslint@^8.0.1 but none was installed.
-npm WARN eslint-config-scratch@5.0.0 requires a peer of eslint@^4.0 but none was installed.
-npm WARN scratch-paint@0.2.0-prerelease.20190318170811 requires a peer of react-intl-redux@^0.7 but none was installed.
-npm WARN scratch-paint@0.2.0-prerelease.20190318170811 requires a peer of react-responsive@^4 but none was installed.
-```
-
-You can check which versions are available:
-
-```
-npm view react-intl-redux@0.* version
-```
-
-You will need to install the required version:
-
-```
-npm install  --no-optional --save-dev react-intl-redux@^0.7
-```
-
-The dependency itself might have more missing dependencies, which will show up like this:
-
-```
-user@machine:~/sources/scratch/scratch-gui (491-translatable-library-objects)$ npm install  --no-optional --save-dev react-intl-redux@^0.7
-scratch-gui@0.1.0 /media/cuideigin/Linux/sources/scratch/scratch-gui
-├── react-intl-redux@0.7.0
-└── UNMET PEER DEPENDENCY react-responsive@5.0.0
-```
-
-You will need to install those as well:
-
-```
-npm install  --no-optional --save-dev react-responsive@^5.0.0
-```
-
-Further reading: [Stack Overflow](https://stackoverflow.com/questions/46602286/npm-requires-a-peer-of-but-all-peers-are-in-package-json-and-node-modules)
-
-## Troubleshooting
-
-If you run into npm install errors, try these steps:
-1. run `npm cache clean --force`
-2. Delete the node_modules directory
-3. Delete package-lock.json
-4. run `npm install` again
-
-## Publishing to GitHub Pages
-You can publish the GUI to github.io so that others on the Internet can view it.
-[Read the wiki for a step-by-step guide.](https://github.com/LLK/scratch-gui/wiki/Publishing-to-GitHub-Pages)
-
-## Understanding the project state machine
-
-Since so much code throughout scratch-gui depends on the state of the project, which goes through many different phases of loading, displaying and saving, we created a "finite state machine" to make it clear which state it is in at any moment. This is contained in the file src/reducers/project-state.js .
-
-It can be hard to understand the code in src/reducers/project-state.js . There are several types of data and functions used, which relate to each other:
-
-### Loading states
-
-These include state constant strings like:
-
-* `NOT_LOADED` (the default state),
-* `ERROR`,
-* `FETCHING_WITH_ID`,
-* `LOADING_VM_WITH_ID`,
-* `REMIXING`,
-* `SHOWING_WITH_ID`,
-* `SHOWING_WITHOUT_ID`,
-* etc.
-
-### Transitions
-
-These are names for the action which causes a state change. Some examples are:
-
-* `START_FETCHING_NEW`,
-* `DONE_FETCHING_WITH_ID`,
-* `DONE_LOADING_VM_WITH_ID`,
-* `SET_PROJECT_ID`,
-* `START_AUTO_UPDATING`,
-
-### How transitions relate to loading states
-
-Like this diagram of the project state machine shows, various transition actions can move us from one loading state to another:
-
-![Project state diagram](docs/project_state_diagram.svg)
-
-_Note: for clarity, the diagram above excludes states and transitions relating to error handling._
-
-#### Example
-
-Here's an example of how states transition.
-
-Suppose a user clicks on a project, and the page starts to load with URL https://scratch.mit.edu/projects/123456 .
-
-Here's what will happen in the project state machine:
-
-![Project state example](docs/project_state_example.png)
-
-1. When the app first mounts, the project state is `NOT_LOADED`.
-2. The `SET_PROJECT_ID` redux action is dispatched (from src/lib/project-fetcher-hoc.jsx), with `projectId` set to `123456`. This transitions the state from `NOT_LOADED` to `FETCHING_WITH_ID`.
-3. The `FETCHING_WITH_ID` state. In src/lib/project-fetcher-hoc.jsx, the `projectId` value `123456` is used to request the data for that project from the server.
-4. When the server responds with the data, src/lib/project-fetcher-hoc.jsx dispatches the `DONE_FETCHING_WITH_ID` action, with `projectData` set. This transitions the state from `FETCHING_WITH_ID` to `LOADING_VM_WITH_ID`.
-5. The `LOADING_VM_WITH_ID` state. In src/lib/vm-manager-hoc.jsx, we load the `projectData` into Scratch's virtual machine ("the vm").
-6. When loading is done, src/lib/vm-manager-hoc.jsx dispatches the `DONE_LOADING_VM_WITH_ID` action. This transitions the state from `LOADING_VM_WITH_ID` to `SHOWING_WITH_ID`
-7. The `SHOWING_WITH_ID` state. Now the project appears normally and is playable and editable.
-
-## Donate
-We provide [Scratch](https://scratch.mit.edu) free of charge, and want to keep it that way! Please consider making a [donation](https://www.scratchfoundation.org/donate) to support our continued engineering, design, community, and resource development efforts. Donations of any size are appreciated. Thank you!
--->
+`src/lib/default-project/dango.svg` is based on [Twemoji](https://twemoji.twitter.com/) and is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
