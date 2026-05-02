@@ -4,7 +4,8 @@ A TurboWarp/Scratch editor build configured to load custom **unsandboxed**
 LEGO hardware extensions directly in the browser — Web Bluetooth and Web
 Serial for EV3, NXT, Spike Prime, WeDo 2.0, Boost, and more.
 
-**Live demos:**
+**Live demos** (both land directly in the editor; the TurboWarp player
+splash has been moved to `/player.html`):
 - <https://crispstrobe.github.io/scratch-gui/>
 - <https://scratch-gui-three.vercel.app/editor.html>
 
