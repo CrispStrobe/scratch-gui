@@ -7,16 +7,12 @@ set -e
 # This script remains as a fallback so existing setups don't break.
 
 # Skip the flaky upstream micro:bit firmware download; stub the generated
-# import so webpack can resolve it.
+# import so webpack can resolve it. (vercel.json's installCommand also
+# uses --ignore-scripts so prepublish.mjs never runs in the first place.)
 mkdir -p src/generated
 printf 'module.exports = "";\n' > src/generated/microbit-hex-url.cjs
 
-# Avoid the prepublish download by passing --ignore-scripts (vercel-build.sh
-# is invoked after Vercel's installCommand, but if the project's
-# installCommand still uses plain `npm install`, this re-installs cleanly).
-npm install --ignore-scripts --no-audit --no-fund
-
-CI=true NODE_OPTIONS='--max-old-space-size=8192' npx webpack --bail
+CI=true NODE_OPTIONS='--max-old-space-size=8192' ./node_modules/.bin/webpack --bail
 
 # index.html is now produced as the editor directly (see additional
 # HtmlWebpackPlugin entry in webpack.config.js); no redirect overwrite
