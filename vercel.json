@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install --ignore-scripts --no-audit --no-fund",
+  "buildCommand": "mkdir -p src/generated && printf 'module.exports = \"\";\\n' > src/generated/microbit-hex-url.cjs && CI=true NODE_OPTIONS='--max-old-space-size=8192' npx webpack --bail",
+  "outputDirectory": "build",
+  "framework": null
+}
