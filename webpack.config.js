@@ -40,7 +40,7 @@ const base = {
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
-                {from: /^\/\d+\/?$/, to: '/index.html'},
+                {from: /^\/\d+\/?$/, to: '/player.html'},
                 {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/\d+\/editor\/?$/, to: '/editor.html'},
                 {from: /^\/\d+\/embed\/?$/, to: '/embed.html'},
@@ -190,10 +190,19 @@ module.exports = [
                 isEditor: true,
                 ...htmlWebpackPluginCommon
             }),
+            // Land users on the editor at "/" instead of the TurboWarp splash.
+            new HtmlWebpackPlugin({
+                chunks: ['editor'],
+                template: 'src/playground/index.ejs',
+                filename: 'index.html',
+                title: `${APP_NAME} - Run Scratch projects faster`,
+                isEditor: true,
+                ...htmlWebpackPluginCommon
+            }),
             new HtmlWebpackPlugin({
                 chunks: ['player'],
                 template: 'src/playground/index.ejs',
-                filename: 'index.html',
+                filename: 'player.html',
                 title: `${APP_NAME} - Run Scratch projects faster`,
                 ...htmlWebpackPluginCommon
             }),
