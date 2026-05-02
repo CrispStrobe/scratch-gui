@@ -127,12 +127,26 @@ The upstream `scripts/prepublish.mjs` tries to download the micro:bit firmware
 from a URL that frequently times out. Workarounds:
 
 - Run `npm install --ignore-scripts` (skips the download entirely; the
-  micro:bit extension just won't have its hex bundled).
+  micro:bit extension just won't have its hex bundled). **One catch:**
+  `src/lib/microbit-update.js` still does
+  `import hexUrl from '../generated/microbit-hex-url.cjs'` so the production
+  build will fail with "can't resolve '../generated/microbit-hex-url.cjs'".
+  Create a stub:
+
+  ```bash
+  mkdir -p src/generated
+  printf "module.exports = '';\n" > src/generated/microbit-hex-url.cjs
+  ```
+
+  This makes the import resolve to an empty string. The micro:bit firmware
+  flasher won't function (it's looking for a real `.hex` URL), but every
+  other code path is unaffected.
+
 - Or patch `scripts/prepublish.mjs` to point at a working mirror:
 
-```javascript
-const url = 'https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip';
-```
+  ```javascript
+  const url = 'https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip';
+  ```
 
 ### `Cannot read properties of null (reading 'store')`
 
