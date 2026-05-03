@@ -33,6 +33,12 @@ jobs:
       - name: Install
         run: npm install --ignore-scripts --include=dev --legacy-peer-deps --no-audit --no-fund
 
+      # eslint-config-scratch 9.x requires @babel/eslint-parser but the
+      # project's package.json still pins the older babel-eslint. Install
+      # @babel/eslint-parser on the side so test:lint can resolve.
+      - name: Install ESLint parser missing from package.json
+        run: npm install --no-save --legacy-peer-deps --no-audit --no-fund @babel/eslint-parser
+
       # The micro:bit firmware-flasher imports a generated file that is not
       # produced by --ignore-scripts. Stub it; the flasher path won't function
       # but every other code path is unaffected.
