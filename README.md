@@ -1,201 +1,179 @@
-# scratch-gui (LEGO/TurboWarp fork)
+# scratch-gui (CrispStrobe LEGO/TurboWarp build)
 
-A TurboWarp/Scratch editor build configured to load custom **unsandboxed**
-LEGO hardware extensions directly in the browser — Web Bluetooth and Web
-Serial for EV3, NXT, Spike Prime, WeDo 2.0, Boost, and more.
+A fork of [TurboWarp's `scratch-gui`](https://github.com/TurboWarp/scratch-gui)
+preconfigured to load the
+[CrispStrobe extension gallery](https://github.com/CrispStrobe/extensions) —
+LEGO hardware extensions for **NXT, EV3, Boost, Spike Prime, WeDo 2.0, and
+Powered Up** plus a few utilities (planetemaths, arrays & tensors, gamepad,
+CSP solver). All extensions ship `en` / `de` / `fr` translations.
 
-**Live demos** (both land directly in the editor; the TurboWarp player
-splash has been moved to `/player.html`):
+**Live editors** (both land directly in the editor; the upstream TurboWarp
+player splash has been moved to `/player.html`):
+
 - <https://crispstrobe.github.io/scratch-gui/>
-- <https://scratch-gui-three.vercel.app/editor.html>
+- <https://scratch-gui-three.vercel.app/>
+
+> **Upstream:** for the unforked editor, see
+> <https://github.com/TurboWarp/scratch-gui> (and behind that,
+> <https://github.com/scratchfoundation/scratch-gui>). For Scratch itself, see
+> <https://scratch.mit.edu>. **Not affiliated with Scratch, the Scratch
+> Foundation, TurboWarp, or LEGO.**
+
+## What we changed vs upstream
+
+| Where | Change | Why |
+|-------|--------|-----|
+| `webpack.config.js` | Added a 3rd `HtmlWebpackPlugin` entry that emits `index.html` from the `editor` chunk; renamed the player's `index.html` → `player.html` | so visitors to the bare URL get the editor, not the project-player splash |
+| `src/containers/extension-library.jsx` | Fetches `https://crispstrobe.github.io/extensions/generated-metadata/extensions-v0.json` for the gallery list | swap the upstream `extensions.turbowarp.org` for our gallery |
+| `src/containers/tw-security-manager.jsx` | Allowlist includes `https://crispstrobe.github.io/` | so unsandboxed LEGO extensions can be loaded from our gallery |
+| `src/lib/libraries/extensions/index.jsx` | `galleryLoading` / `galleryMore` / `galleryError` `href` set to our gallery | gallery-info modals link the right place |
+| `vercel.json` (new) | `installCommand` + `buildCommand` + `outputDirectory` for Vercel | so Vercel deploys from `develop` work without dashboard tweaks (see Build) |
+| `scripts/vercel-build.sh` | Runs `npm install --ignore-scripts` + stubs `microbit-hex-url.cjs` + builds | side-step the flaky upstream micro:bit firmware download |
+
+Everything else is upstream TurboWarp/`scratch-gui` behaviour.
 
 ## How this fits with the other repos
 
-This is the editor UI. It loads extensions from a separate gallery repo and
-talks to physical bricks either directly (Web BT / Web Serial) or via a local
-or on-brick Python bridge.
+The editor itself doesn't ship the extensions — it fetches them from the
+gallery URL at runtime, and on iOS/Android the editor is bundled into a
+native shell:
 
 | Repo | Role |
 |------|------|
-| **`scratch-gui` (this)** | The editor UI. Lists extensions, lets users drag them into projects. |
-| [`CrispStrobe/extensions`](https://github.com/CrispStrobe/extensions) | The extension gallery (`.js` files + `extensions-v0.json` metadata). Hosted on GitHub Pages; the editor `fetch`es it. |
-| [`CrispStrobe/turbowarp-lego`](https://github.com/CrispStrobe/turbowarp-lego) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, ...) used by the bridge-mode extensions. |
-| [`CrispStrobe/legacy-lego-compiler`](https://github.com/CrispStrobe/legacy-lego-compiler) | Hosted REST API that compiles NXC → `.rxe` and lmsasm → EV3 bytecode. |
-| [`CrispStrobe/turbowarp-desktop`](https://github.com/CrispStrobe/turbowarp-desktop) | Electron build of this editor. |
-| [`CrispStrobe/turbowarp-android`](https://github.com/CrispStrobe/turbowarp-android) | Android wrapper (Capacitor) with native Bluetooth bridges. |
-| [`CrispStrobe/turbowarp-ios`](https://github.com/CrispStrobe/turbowarp-ios) | iOS wrapper (WKWebView) with native Bluetooth bridges. |
+| **`scratch-gui`** (this) | The editor UI |
+| [`CrispStrobe/extensions`](https://github.com/CrispStrobe/extensions) | The gallery (`.js` files + `extensions-v0.json` metadata). Hosted at <https://crispstrobe.github.io/extensions/>; the editor fetches it. |
+| [`CrispStrobe/turbowarp-lego`](https://github.com/CrispStrobe/turbowarp-lego) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, …) used by the bridge-mode extensions. |
+| [`CrispStrobe/legacy-lego-compiler`](https://github.com/CrispStrobe/legacy-lego-compiler) | Hosted REST API: NXC → `.rxe`, lmsasm → EV3 bytecode. Used by the transpiler extensions. |
+| [`CrispStrobe/turbowarp-desktop`](https://github.com/CrispStrobe/turbowarp-desktop) | Electron build of this editor. Mac / Windows / Linux installers via GitHub Actions. |
+| [`CrispStrobe/turbowarp-android`](https://github.com/CrispStrobe/turbowarp-android) | Capacitor Android wrapper with native Bluetooth bridges. Builds `.apk` + `.ipa`. |
+| [`CrispStrobe/turbowarp-ios`](https://github.com/CrispStrobe/turbowarp-ios) | WKWebView iOS wrapper (CodePM-based) with native Bluetooth bridges. Builds `.ipa`. |
 
-## Setup and development
+## Build & run
 
 ### Prerequisites
 
-- Node.js v16, v18, or v20 (v24 has known issues — see Troubleshooting).
+- Node.js 22+ (TurboWarp's tooling tracks this; see `.nvmrc`).
 - Git.
 
-### Install and run
+### Local dev
 
 ```bash
 git clone https://github.com/CrispStrobe/scratch-gui.git
 cd scratch-gui
 
-# --ignore-scripts skips the upstream micro:bit firmware download that
-# frequently times out.
-npm install --ignore-scripts
+# --ignore-scripts skips the flaky upstream micro:bit firmware download.
+npm install --ignore-scripts --include=dev
+
+# Stub the file the firmware download would have generated, otherwise webpack
+# bails on `can't resolve '../generated/microbit-hex-url.cjs'`. The micro:bit
+# firmware-flasher path is the only thing this disables.
+mkdir -p src/generated
+printf "module.exports = '';\n" > src/generated/microbit-hex-url.cjs
 
 npm start
 # → http://localhost:8601
 ```
 
-## Loading custom extensions
-
-To run unsandboxed extensions (required for Bluetooth / Serial), you need to
-register your gallery and trust its hosting domain.
-
-### 1. Register the gallery
-
-Edit `src/lib/libraries/extensions/index.jsx`. The `galleryLoading`,
-`galleryMore`, and `galleryError` entries each have an `href` — point them at
-your GitHub Pages URL:
-
-```javascript
-export const galleryLoading = {
-    name: 'My Extension Gallery',
-    // ...
-    href: 'https://crispstrobe.github.io/extensions/',
-    // ...
-};
-```
-
-### 2. Trust the hosting domain
-
-Edit `src/containers/tw-security-manager.jsx`:
-
-```javascript
-const isTrustedExtension = url => (
-    url.startsWith('https://extensions.turbowarp.org/') ||
-    url.startsWith('https://crispstrobe.github.io/') ||  // ← add yours
-    extensionsTrustedByUser.has(url)
-);
-```
-
-### 3. Extension headers
-
-Each `.js` extension file in the gallery needs a header block so the gallery
-build can index it:
-
-```javascript
-// Name: LEGO NXT Universal
-// ID: legonxt_transpile_universal
-// Description: Control NXT via Bluetooth or compile NXC code.
-// By: CrispStrobe <https://github.com/CrispStrobe>
-// License: MPL-2.0
-```
-
-## Building / deploying
-
-### Web build (GitHub Pages / Vercel)
-
-Static editor for any static host:
+### Production build for static hosting (GitHub Pages, Vercel, anywhere else)
 
 ```bash
-rm -rf build
-NODE_ENV=production npm run build
-# → contents of build/ → push to gh-pages branch (or use `npm run deploy`)
+NODE_ENV=production CI=true npx webpack --bail
+# → contents of build/
+
+# Push the build to gh-pages on this repo:
+npm run deploy
 ```
 
-### Library build (for TurboWarp Desktop / Android / iOS)
+`CI=true` suppresses the webpack ProgressPlugin's stdout flood, which has
+caused builds to die mid-stream when run via nested `npm` scripts.
 
-Native shells consume `dist/scratch-gui.js` (UMD) instead of a static site.
-Build in **library mode**:
+### Library build for the native shells
+
+`turbowarp-desktop` consumes `dist/scratch-gui.js` (UMD) instead of a static
+site:
 
 ```bash
 BUILD_MODE=dist npm run build
 
-# Webpack outputs to dist/js/, but the consumers expect dist/. Fix it:
+# Webpack outputs to dist/js/; consumers expect dist/ at root.
 mv dist/js/* dist/
 rmdir dist/js
 ```
 
-`dist/scratch-gui.js` is then linked into `turbowarp-desktop`, copied into the
-Android app's web assets, etc. See the per-shell READMEs for the exact wiring.
+See the per-shell READMEs for the linking step ("brain transplant" recipe in
+`turbowarp-desktop` and `turbowarp-ios`).
+
+## Vercel
+
+Auto-deploys from `develop` to <https://scratch-gui-three.vercel.app/>. The
+build is driven by `vercel.json` at the repo root:
+
+- `installCommand`: `npm install --ignore-scripts --include=dev --no-audit --no-fund`
+- `buildCommand`: `./scripts/vercel-build.sh` (stubs the micro:bit file, runs webpack)
+- `outputDirectory`: `build`
+
+Vercel sets `NODE_ENV=production` which makes `npm install` skip
+`devDependencies` by default — `--include=dev` is therefore mandatory or
+`webpack-cli` won't be installed.
+
+## GitHub Pages
+
+`npm run deploy` builds + force-pushes `build/` to the `gh-pages` branch.
+GitHub Pages then serves <https://crispstrobe.github.io/scratch-gui/>.
+
+The deploy ships a `vercel.json` in the build output too (it's copied via the
+`static/` directory, see `webpack.config.js`'s `CopyWebpackPlugin`) so even
+if Vercel ever reads the gh-pages branch it gets the right config.
 
 ## Troubleshooting
 
 ### `ECONNRESET` during `npm install`
 
-The upstream `scripts/prepublish.mjs` tries to download the micro:bit firmware
-from a URL that frequently times out. Workarounds:
+The upstream `scripts/prepublish.mjs` downloads the micro:bit firmware from
+an upstream URL that frequently times out. Two workarounds:
 
-- Run `npm install --ignore-scripts` (skips the download entirely; the
-  micro:bit extension just won't have its hex bundled). **One catch:**
-  `src/lib/microbit-update.js` still does
-  `import hexUrl from '../generated/microbit-hex-url.cjs'` so the production
-  build will fail with "can't resolve '../generated/microbit-hex-url.cjs'".
-  Create a stub:
-
-  ```bash
-  mkdir -p src/generated
-  printf "module.exports = '';\n" > src/generated/microbit-hex-url.cjs
-  ```
-
-  This makes the import resolve to an empty string. The micro:bit firmware
-  flasher won't function (it's looking for a real `.hex` URL), but every
+- `npm install --ignore-scripts` + create the stub file (see the dev recipe
+  above). Recommended; the micro:bit firmware-flasher won't work but every
   other code path is unaffected.
-
 - Or patch `scripts/prepublish.mjs` to point at a working mirror:
-
   ```javascript
   const url = 'https://downloads.scratch.mit.edu/microbit/scratch-microbit-1.2.0.hex.zip';
   ```
 
-### `Cannot read properties of null (reading 'store')`
+### `Cannot read properties of null (reading 'store')` in a downstream shell
 
-Seen when integrating this `scratch-gui` into TurboWarp Desktop or other
-downstream Electron / native shells. Cause: duplicate React versions — the
-nested `node_modules/react` inside `scratch-gui/node_modules/` clashes with
-the host app's React. Remove the nested copies before linking. See the
-[turbowarp-desktop README](https://github.com/CrispStrobe/turbowarp-desktop)
-for the full "brain transplant" recipe.
+Duplicate React versions: the nested `scratch-gui/node_modules/react` clashes
+with the host app's React. Remove the nested copies before linking. See the
+[turbowarp-desktop README](https://github.com/CrispStrobe/turbowarp-desktop).
 
-### Node v24: `ERR_MODULE_NOT_FOUND`
+### Webpack dies mid-build with no error
 
-The build chain isn't yet compatible with Node 24. Use Node v18 or v20.
+The ProgressPlugin can flood stdout enough that nested `npm run` chains
+deadlock. Use `CI=true` or invoke `node_modules/.bin/webpack --bail`
+directly.
 
-### Missing optional deps / chokidar warnings
+### Missing `webpack-cli` on Vercel
 
-```bash
-npm install --no-optional
-```
+Vercel sets `NODE_ENV=production` which suppresses `devDependencies`. Use
+`npm install --include=dev` (already in `vercel.json`).
 
-These are macOS-only `fsevents` bindings and similar — safe to skip on Linux/Windows.
+### Node ≥ 24 issues
+
+The build chain isn't yet compatible with Node 24+. Stick to 22 LTS until
+TurboWarp upstream catches up.
 
 ## Branches
 
-- **`develop`** — main published branch; backs the GitHub Pages / Vercel demos.
-- **`lego-bluetooth-extensions`** — work-in-progress branch with additional
-  LEGO Bluetooth changes.
+- **`develop`** — main published branch; backs the GitHub Pages + Vercel
+  demos.
+- **`backup-remote`**, **`feature/github-pages`**, **`lego-boost-xcratch`**,
+  **`lego-bluetooth-extensions`** — historical / experimental, retained for
+  reference. Ignore unless you know why you need them.
 
 ## License
 
-This project, like TurboWarp's modifications to Scratch, is licensed under
-**GPL-3.0**. See [`LICENSE`](LICENSE) and <https://www.gnu.org/licenses/>.
+GPL-3.0, same as upstream TurboWarp/scratch-gui. See [`LICENSE`](LICENSE).
 
-The original `scratch-gui` upstream license is included below as required.
-This is **not** the license of this project.
-
-```
-Copyright (c) 2016, Massachusetts Institute of Technology
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
-
-`src/lib/default-project/dango.svg` is based on [Twemoji](https://twemoji.twitter.com/) and is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The original Scratch Foundation `scratch-gui` upstream license is included
+in the repository; it is **not** the license of this fork (TurboWarp's
+modifications upgraded the project to GPL-3.0 and we inherit that).
