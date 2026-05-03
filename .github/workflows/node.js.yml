@@ -2,21 +2,62 @@ name: CI
 
 on:
   push:
+    branches: [develop]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Lint + build smoke test
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        persist-credentials: false
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-        cache: npm
-    - run: npm ci
-    - run: npm run build
-    - run: npm run test:unit
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts dodges the upstream prepublish.mjs micro:bit-firmware
+      # download (often times out); --include=dev is required because Vercel /
+      # CI default NODE_ENV=production strips devDependencies, including
+      # webpack-cli.
+      - name: Install
+        run: npm install --ignore-scripts --include=dev --no-audit --no-fund
+
+      # The micro:bit firmware-flasher imports a generated file that is not
+      # produced by --ignore-scripts. Stub it; the flasher path won't function
+      # but every other code path is unaffected.
+      - name: Stub micro:bit firmware URL
+        run: |
+          mkdir -p src/generated
+          printf "module.exports = '';\n" > src/generated/microbit-hex-url.cjs
+
+      - name: Lint
+        run: npm run test:lint
+
+      - name: Build (CI=true to suppress webpack ProgressPlugin output flood)
+        env:
+          CI: "true"
+          NODE_ENV: production
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npx webpack --bail
+
+      - name: Sanity-check build output
+        run: |
+          set -e
+          test -s build/index.html
+          test -s build/editor.html
+          test -s build/player.html
+          # index.html should load the editor chunk (post-splash-relocation)
+          grep -q 'js/pentapod/editor\.[a-z0-9]\+\.js' build/index.html || (
+            echo "index.html does not load the editor chunk"; exit 1
+          )
+
+      - name: Unit tests
+        run: npm run test:unit
