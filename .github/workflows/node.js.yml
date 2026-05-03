@@ -27,8 +27,11 @@ jobs:
       # download (often times out); --include=dev is required because Vercel /
       # CI default NODE_ENV=production strips devDependencies, including
       # webpack-cli.
+      # --legacy-peer-deps tolerates the copy-webpack-plugin@14 / webpack@4
+      # peer-dep mismatch that the npm audit fix introduced (we're stuck on
+      # webpack 4 until a real upstream-modernisation pass).
       - name: Install
-        run: npm install --ignore-scripts --include=dev --no-audit --no-fund
+        run: npm install --ignore-scripts --include=dev --legacy-peer-deps --no-audit --no-fund
 
       # The micro:bit firmware-flasher imports a generated file that is not
       # produced by --ignore-scripts. Stub it; the flasher path won't function
