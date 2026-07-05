@@ -16,6 +16,8 @@ import searchIcon from '../components/action-menu/icon--search.svg';
 import RecordModal from './record-modal.jsx';
 import SoundEditor from './sound-editor.jsx';
 import SoundLibrary from './sound-library.jsx';
+import SoundFxGenerator from '../components/tw-soundfx/soundfx-generator.jsx';
+import soundFxIcon from '../components/tw-soundfx/icon--soundfx.svg';
 import SoundEditorNotSupported from '../components/tw-sound-editor-not-supported/sound-editor-not-supported.jsx';
 
 import {getSoundLibrary} from '../lib/libraries/tw-async-libraries';
@@ -54,9 +56,11 @@ class SoundTab extends React.Component {
             'handleFileUploadClick',
             'handleSoundUpload',
             'handleDrop',
+            'handleOpenSoundFx',
+            'handleCloseSoundFx',
             'setFileInput'
         ]);
-        this.state = {selectedSoundIndex: 0};
+        this.state = {selectedSoundIndex: 0, soundFxVisible: false};
     }
 
     componentWillReceiveProps (nextProps) {
@@ -129,6 +133,14 @@ class SoundTab extends React.Component {
 
     handleFileUploadClick () {
         this.fileInput.click();
+    }
+
+    handleOpenSoundFx () {
+        this.setState({soundFxVisible: true});
+    }
+
+    handleCloseSoundFx () {
+        this.setState({soundFxVisible: false});
     }
 
     handleSoundUpload (e) {
@@ -217,6 +229,11 @@ class SoundTab extends React.Component {
                 description: 'Button to record a sound in the editor tab',
                 id: 'gui.soundTab.recordSound'
             },
+            generateSound: {
+                defaultMessage: 'Generate',
+                description: 'Button to generate a sound effect in the editor tab',
+                id: 'gui.soundTab.generateSound'
+            },
             addSound: {
                 defaultMessage: 'Choose a Sound',
                 description: 'Button to add a sound in the editor tab',
@@ -246,6 +263,10 @@ class SoundTab extends React.Component {
                     title: intl.formatMessage(messages.recordSound),
                     img: addSoundFromRecordingIcon,
                     onClick: onNewSoundFromRecordingClick
+                }, {
+                    title: intl.formatMessage(messages.generateSound),
+                    img: soundFxIcon,
+                    onClick: this.handleOpenSoundFx
                 }, {
                     title: intl.formatMessage(messages.addSound),
                     img: searchIcon,
@@ -278,6 +299,12 @@ class SoundTab extends React.Component {
                         vm={this.props.vm}
                         onNewSound={this.handleNewSound}
                         onRequestClose={this.props.onRequestCloseSoundLibrary}
+                    />
+                ) : null}
+                {this.state.soundFxVisible ? (
+                    <SoundFxGenerator
+                        onNewSound={this.handleNewSound}
+                        onRequestClose={this.handleCloseSoundFx}
                     />
                 ) : null}
             </AssetPanel>
