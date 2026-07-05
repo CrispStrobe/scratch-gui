@@ -1,21 +1,30 @@
 {
-  "short_name": "TurboWarp",
-  "name": "TurboWarp",
-  "description": "Mod of Scratch 3 with a compiler, dark mode, and more features.",
+  "short_name": "Brickwright",
+  "name": "Brickwright — blocks, code, and bricks",
+  "description": "A creative-coding studio where every Scratch project is also plain code — blocks, text, and real bricks.",
   "icons": [
+    {
+      "src": "images/brick-robot.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
     {
       "src": "images/192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "images/512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "editor",
-  "background_color": "#333333",
+  "start_url": "editor.html",
+  "scope": "./",
+  "background_color": "#0e9bb0",
   "display": "standalone",
-  "theme_color": "#333333"
+  "theme_color": "#0e9bb0"
 }
