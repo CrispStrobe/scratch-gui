@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="google" value="notranslate">
-    <meta name="description" content="<%= htmlWebpackPlugin.options.APP_NAME %> is a Scratch mod with a compiler to run projects faster, dark mode for your eyes, a bunch of addons to improve the editor, and more." />
+    <meta name="description" content="<%= htmlWebpackPlugin.options.APP_NAME %> is a creative-coding studio where every Scratch project is also plain code — switch between blocks and text anytime, bake in your own art, and drive real bricks and robots." />
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <link rel="icon" type="image/svg+xml" href="<%= htmlWebpackPlugin.options.root %>images/brick-robot.svg">
     <link rel="apple-touch-icon" href="<%= htmlWebpackPlugin.options.root %>images/apple-touch-icon.png">
     <% if (htmlWebpackPlugin.options.root === "/" || htmlWebpackPlugin.options.root === "") { %>
       <link rel="manifest" href="<%= htmlWebpackPlugin.options.root %>manifest.webmanifest">

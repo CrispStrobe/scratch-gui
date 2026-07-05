@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import examples from '../../lib/sb3-creator-examples.js';
+import brickRobot from './brick-robot.svg';
 
 /**
  * "Pseudocode" editor tab: the full SB3 Creator tool inside the editor.
@@ -149,11 +150,15 @@ class PseudocodeImporter extends React.Component {
         const sel = {padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', font: 'inherit'};
         return (
             <div style={wrap}>
-                <div style={{marginBottom: 10}}>
-                    <strong style={{fontSize: 16}}>Pseudocode → Project</strong>
-                    <span style={{marginLeft: 10, opacity: .7}}>
-                        Write pseudocode and compile it into blocks — or press “From blocks” to see the current project as code.
-                    </span>
+                <div style={{marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12}}>
+                    <img src={brickRobot} alt="Brickwright mascot" width={44} height={52} draggable={false} />
+                    <div>
+                        <strong style={{fontSize: 16}}>Brickwright Script</strong>
+                        <div style={{opacity: .7}}>
+                            Write your project as plain code and compile it into blocks — or press “From blocks”
+                            to read the current project back as code. The same language drives Bricks &amp; robots.
+                        </div>
+                    </div>
                 </div>
 
                 <div style={{display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10}}>

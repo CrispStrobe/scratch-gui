@@ -89,8 +89,8 @@ const Footer = () => (
             <div className={styles.footerText}>
                 <FormattedMessage
                     // eslint-disable-next-line max-len
-                    defaultMessage="{APP_NAME} is not affiliated with Scratch, the Scratch Team, or the Scratch Foundation."
-                    description="Disclaimer that TurboWarp is not connected to Scratch"
+                    defaultMessage="{APP_NAME} is not affiliated with or endorsed by Scratch, the Scratch Foundation, TurboWarp, or the LEGO Group. LEGO®, MINDSTORMS®, SPIKE™, WeDo®, BOOST™, and Powered Up™ are trademarks of the LEGO Group, used here only to describe hardware compatibility."
+                    description="Disclaimer that the app is not connected to Scratch or LEGO"
                     id="tw.footer.disclaimer"
                     values={{
                         APP_NAME
@@ -331,8 +331,8 @@ class Interface extends React.Component {
                                 <p>
                                     <FormattedMessage
                                         // eslint-disable-next-line max-len
-                                        defaultMessage="{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below."
-                                        description="Description of TurboWarp on the homepage"
+                                        defaultMessage="{APP_NAME} is a creative-coding studio where every Scratch project is also plain code — write it as blocks or text and switch anytime, then run it fast or drive real bricks. Try it by inputting a project ID or URL above or choosing a featured project below."
+                                        description="Description of the app on the homepage"
                                         id="tw.home.description"
                                         values={{
                                             APP_NAME

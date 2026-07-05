@@ -1,11 +1,25 @@
-# scratch-gui (CrispStrobe LEGO/TurboWarp build)
+# Brickwright
 
-A fork of [TurboWarp's `scratch-gui`](https://github.com/TurboWarp/scratch-gui)
-preconfigured to load the
-[CrispStrobe extension gallery](https://github.com/CrispStrobe/extensions) —
-LEGO hardware extensions for **NXT, EV3, Boost, Spike Prime, WeDo 2.0, and
-Powered Up** plus a few utilities (planetemaths, arrays & tensors, gamepad,
-CSP solver). All extensions ship `en` / `de` / `fr` translations.
+**Brickwright** is a creative-coding studio built on Scratch: every project is
+also plain code, so you can **build it in blocks, write it as text, and switch
+between the two anytime** — then run it fast on screen or drive real **bricks
+and robots**. The name says it: a *wright* (a maker — ship*wright*, play*wright*)
+who both **builds** and **writes** with blocks.
+
+Two signature features:
+
+- **Brickwright Script** — a pseudocode language that compiles to Scratch blocks
+  *and* decompiles back (a true block ⇄ code round-trip), plus baking your own
+  SVG art straight into sprites. Lives in the **Script** editor tab.
+- **Brickwright Bricks** — the
+  [CrispStrobe extension gallery](https://github.com/CrispStrobe/extensions):
+  LEGO hardware extensions for **NXT, EV3, Boost, Spike Prime, WeDo 2.0, and
+  Powered Up** plus utilities (planetemaths, arrays & tensors, gamepad, CSP
+  solver). All extensions ship `en` / `de` / `fr` translations.
+
+Built on [TurboWarp's `scratch-gui`](https://github.com/TurboWarp/scratch-gui)
+(GPL-3.0); the compiler/decompiler comes from
+[sb3-creator](https://github.com/CrispStrobe/sb3-creator).
 
 **Live editors** (both land directly in the editor; the upstream TurboWarp
 player splash has been moved to `/player.html`):
@@ -16,8 +30,24 @@ player splash has been moved to `/player.html`):
 > **Upstream:** for the unforked editor, see
 > <https://github.com/TurboWarp/scratch-gui> (and behind that,
 > <https://github.com/scratchfoundation/scratch-gui>). For Scratch itself, see
-> <https://scratch.mit.edu>. **Not affiliated with Scratch, the Scratch
-> Foundation, TurboWarp, or LEGO.**
+> <https://scratch.mit.edu>.
+
+## Trademarks & disclaimer
+
+**Brickwright is an independent project. It is not affiliated with, authorized,
+sponsored, or endorsed by the LEGO Group, the Scratch Foundation, TurboWarp, or
+any other trademark holder named here.**
+
+- **LEGO®**, **MINDSTORMS®**, **SPIKE™**, **WeDo®**, **BOOST™**, and **Powered
+  Up™** are trademarks of the LEGO Group. Brickwright uses these names **only in
+  a referential, descriptive sense** — to state that an extension is *compatible
+  with* the corresponding LEGO® hardware. We do not sell LEGO products, use the
+  LEGO logo, or use LEGO's brand colours/trade dress in our own branding.
+- **Scratch** is a trademark of the Scratch Foundation.
+- The LEGO Group does not sponsor, authorize, or endorse this software.
+
+If you're a rights holder and have a concern about how a name is used, please
+open an issue and we'll address it promptly.
 
 ## What we changed vs upstream
 

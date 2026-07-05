@@ -391,10 +391,10 @@ const GUIComponent = props => {
                                         />
                                     </Tab>
                                     <Tab className={tabClassNames.tab}>
-                                        <span role="img" aria-label="pseudocode" style={{marginRight: 4}}>{'📝'}</span>
+                                        <span role="img" aria-label="script" style={{marginRight: 4}}>{'📜'}</span>
                                         <FormattedMessage
-                                            defaultMessage="Pseudocode"
-                                            description="Button to get to the pseudocode compiler panel"
+                                            defaultMessage="Script"
+                                            description="Button to get to the Brickwright pseudocode / code panel"
                                             id="gui.gui.pseudocodeTab"
                                         />
                                     </Tab>
