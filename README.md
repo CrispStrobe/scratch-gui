@@ -24,8 +24,8 @@ Built on [TurboWarp's `scratch-gui`](https://github.com/TurboWarp/scratch-gui)
 **Live editors** (both land directly in the editor; the upstream TurboWarp
 player splash has been moved to `/player.html`):
 
-- <https://crispstrobe.github.io/scratch-gui/>
-- <https://scratch-gui-three.vercel.app/>
+- <https://crispstrobe.github.io/brickwright/>
+- <https://brickwright.vercel.app/>
 
 > **Upstream:** for the unforked editor, see
 > <https://github.com/TurboWarp/scratch-gui> (and behind that,
@@ -70,7 +70,7 @@ native shell:
 
 | Repo | Role |
 |------|------|
-| **`scratch-gui`** (this) | The editor UI |
+| **`brickwright`** (this) | The editor UI |
 | [`CrispStrobe/extensions`](https://github.com/CrispStrobe/extensions) | The gallery (`.js` files + `extensions-v0.json` metadata). Hosted at <https://crispstrobe.github.io/extensions/>; the editor fetches it. |
 | [`CrispStrobe/turbowarp-lego`](https://github.com/CrispStrobe/turbowarp-lego) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, …) used by the bridge-mode extensions. |
 | [`CrispStrobe/legacy-lego-compiler`](https://github.com/CrispStrobe/legacy-lego-compiler) | Hosted REST API: NXC → `.rxe`, lmsasm → EV3 bytecode. Used by the transpiler extensions. |
@@ -88,8 +88,8 @@ native shell:
 ### Local dev
 
 ```bash
-git clone https://github.com/CrispStrobe/scratch-gui.git
-cd scratch-gui
+git clone https://github.com/CrispStrobe/brickwright.git
+cd brickwright
 
 # --ignore-scripts skips the flaky upstream micro:bit firmware download.
 npm install --ignore-scripts --include=dev
@@ -135,7 +135,7 @@ See the per-shell READMEs for the linking step ("brain transplant" recipe in
 
 ## Vercel
 
-Auto-deploys from `develop` to <https://scratch-gui-three.vercel.app/>. The
+Auto-deploys from `develop` to <https://brickwright.vercel.app/>. The
 build is driven by `vercel.json` at the repo root:
 
 - `installCommand`: `npm install --ignore-scripts --include=dev --no-audit --no-fund`
@@ -148,12 +148,15 @@ Vercel sets `NODE_ENV=production` which makes `npm install` skip
 
 ## GitHub Pages
 
-`npm run deploy` builds + force-pushes `build/` to the `gh-pages` branch.
-GitHub Pages then serves <https://crispstrobe.github.io/scratch-gui/>.
+Pages deploys **automatically via GitHub Actions** on every push to `develop`
+(`.github/workflows/deploy-pages.yml`): it builds and publishes with
+`actions/deploy-pages`, so there's no manual step. The site serves at
+<https://crispstrobe.github.io/brickwright/>. (The Pages "Source" is set to
+**GitHub Actions**, not a branch — the old legacy branch builder was slow and
+occasionally failed transiently.)
 
-The deploy ships a `vercel.json` in the build output too (it's copied via the
-`static/` directory, see `webpack.config.js`'s `CopyWebpackPlugin`) so even
-if Vercel ever reads the gh-pages branch it gets the right config.
+`npm run deploy` (force-push `build/` to `gh-pages`) still exists as a manual
+fallback but is no longer the primary path.
 
 ## Troubleshooting
 

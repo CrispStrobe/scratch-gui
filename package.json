@@ -4,7 +4,7 @@
   "description": "Graphical User Interface for creating and running Scratch 3.0 projects",
   "author": "Massachusetts Institute of Technology",
   "license": "GPL-3.0",
-  "homepage": "https://crispstrobe.github.io/scratch-gui",
+  "homepage": "https://crispstrobe.github.io/brickwright",
   "repository": {
     "type": "git",
     "url": "https://github.com/crispstrobe/scratch-gui.git"
