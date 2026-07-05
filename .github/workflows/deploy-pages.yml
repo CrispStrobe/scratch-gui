@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+# Builds and publishes the editor to GitHub Pages via the modern Actions
+# pipeline (actions/deploy-pages) instead of the legacy branch builder, which
+# was slow (~3 min) and occasionally failed with "try again later". Fully
+# automatic on every push to develop — no local build + gh-pages push needed.
+
+on:
+  push:
+    branches: [develop]
+    paths-ignore: ['**.md', 'docs/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # See node.js.yml for why these flags/stubs are needed.
+      - name: Install
+        run: npm install --ignore-scripts --include=dev --legacy-peer-deps --no-audit --no-fund
+
+      - name: Install ESLint parser missing from package.json
+        run: npm install --no-save --legacy-peer-deps --no-audit --no-fund @babel/eslint-parser
+
+      - name: Stub micro:bit firmware URL
+        run: |
+          mkdir -p src/generated
+          printf "module.exports = '';\n" > src/generated/microbit-hex-url.cjs
+
+      - name: Build
+        env:
+          CI: "true"
+          NODE_ENV: production
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npx webpack --bail
+
+      - name: Add .nojekyll
+        run: touch build/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+      - id: deployment
+        uses: actions/deploy-pages@v4
