@@ -47,11 +47,21 @@ jobs:
       - name: Install ESLint parser missing from package.json
         run: npm install --no-save --legacy-peer-deps --no-audit --no-fund @babel/eslint-parser
 
-      # Informational: flag if the vendored SB3 Creator compiler/examples have
-      # drifted from the source repo. Fix with `npm run sync:sb3creator`.
+      # Check out the source repo so the drift check compares against a real
+      # git tree (deterministic — no raw.githubusercontent CDN lag).
+      - name: Checkout sb3-creator (source of vendored files)
+        uses: actions/checkout@v4
+        with:
+          repository: CrispStrobe/sb3-creator
+          path: _sb3creator-src
+          persist-credentials: false
+
+      # Non-gating: emit a warning (not a failing step) if the vendored
+      # compiler/examples drifted. Fix with `npm run sync:sb3creator`.
       - name: Check vendored sb3-creator is in sync
-        continue-on-error: true
-        run: npm run sync:sb3creator:check
+        run: |
+          node scripts/sync-sb3creator.mjs --check --dir _sb3creator-src \
+            || echo "::warning::vendored sb3-creator drifted from source — run 'npm run sync:sb3creator'"
 
       # The micro:bit firmware-flasher imports a generated file that is not
       # produced by --ignore-scripts. Stub it; the flasher path won't function
@@ -65,9 +75,13 @@ jobs:
       # hundreds of pre-existing lint errors (valid-jsdoc, no-unused-vars,
       # react/prop-types, …) that we inherit unchanged. Surfacing the count
       # in the CI summary without gating PRs on it.
-      - name: Lint (informational)
-        continue-on-error: true
-        run: npm run test:lint
+      # The upstream TurboWarp scratch-gui codebase has hundreds of pre-existing
+      # lint errors (valid-jsdoc, no-unused-vars, react/prop-types, …) under the
+      # strict eslint-config-scratch. We inherit them unchanged, so lint can't
+      # gate. Surface it as a warning instead of a failing step (no red ✗).
+      - name: Lint (informational, non-gating)
+        run: |
+          npm run test:lint || echo "::warning::eslint reported issues (pre-existing upstream, non-gating)"
 
       - name: Build (CI=true to suppress webpack ProgressPlugin output flood)
         env:
