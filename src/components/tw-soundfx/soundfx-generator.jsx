@@ -52,18 +52,41 @@ class SoundFxGenerator extends React.Component {
         this.setState(s => ({params: {...s.params, [key]: value}}));
     }
     async render_ () {
-        return this.synth.generateBuffer(this.state.params, this.duration());
+        const buf = await this.synth.generateBuffer(this.state.params, this.duration());
+        // sfxr buffers come out quiet and at inconsistent levels — normalise to a
+        // healthy peak so both the preview and the saved sound are clearly audible.
+        if (buf) {
+            const d = buf.getChannelData(0);
+            let peak = 0;
+            for (let i = 0; i < d.length; i++) {
+                const a = Math.abs(d[i]);
+                if (a > peak) peak = a;
+            }
+            if (peak > 0.0001) {
+                const gain = 0.9 / peak;
+                for (let i = 0; i < d.length; i++) d[i] *= gain;
+            }
+        }
+        return buf;
     }
     async play () {
         try {
             const buf = await this.render_();
-            if (!buf) return;
+            if (!buf) {
+                this.setState({status: 'No audio was produced — try another preset.'});
+                return;
+            }
             const ctx = this.synth.audioContext;
-            if (ctx.state === 'suspended') await ctx.resume();
+            if (ctx.state !== 'running') {
+                try {
+                    await ctx.resume();
+                } catch (e) { /* best effort */ }
+            }
             const src = ctx.createBufferSource();
             src.buffer = buf;
             src.connect(ctx.destination);
             src.start();
+            this.setState({status: ''});
         } catch (e) {
             this.setState({status: `Preview failed: ${e.message}`});
         }

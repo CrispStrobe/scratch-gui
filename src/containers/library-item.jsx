@@ -138,9 +138,13 @@ class LibraryItem extends React.PureComponent {
     }
     render () {
         const iconMd5 = this.curIconMd5();
-        const iconURL = iconMd5 ?
-            `https://cdn.assets.scratch.mit.edu/internalapi/asset/${iconMd5}/get/` :
-            this.props.iconRawURL;
+        // A data: rawURL (e.g. a bundled Brickwright sprite) wins over the CDN,
+        // whose host doesn't have our custom asset's md5.
+        const iconURL = (this.props.iconRawURL && this.props.iconRawURL.startsWith('data:')) ?
+            this.props.iconRawURL :
+            (iconMd5 ?
+                `https://cdn.assets.scratch.mit.edu/internalapi/asset/${iconMd5}/get/` :
+                this.props.iconRawURL);
         return (
             <LibraryItemComponent
                 intl={this.props.intl}
