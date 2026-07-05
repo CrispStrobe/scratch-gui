@@ -113,10 +113,26 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             // Also accept project_url from the URL hash. The fragment is never sent to
             // the server, so large `data:` URLs (e.g. a whole .sb3 handed off from
             // another same-domain tool) don't trip the server's URI-length limit (414).
-            if (!projectUrl && typeof location !== 'undefined' && location.hash) {
-                projectUrl = new URLSearchParams(location.hash.replace(/^#/, '')).get('project_url');
+            let pseudocode = null;
+            if (typeof location !== 'undefined' && location.hash) {
+                const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+                if (!projectUrl) projectUrl = hashParams.get('project_url');
+                pseudocode = hashParams.get('pseudocode');
             }
-            if (projectUrl) {
+            if (pseudocode) {
+                // Compile the SB3 Creator pseudocode into a project in-browser (the whole
+                // compiler is bundled), so `#pseudocode=...` loads a project with no round
+                // trip and no separate tool.
+                assetPromise = import(/* webpackChunkName: "sb3-creator" */ './sb3-creator.js')
+                    .then(mod => {
+                        const SB3Creator = mod.default;
+                        const creator = new SB3Creator();
+                        creator.parse(decodeURIComponent(pseudocode));
+                        return creator.generateSB3();
+                    })
+                    .then(blob => blob.arrayBuffer())
+                    .then(buffer => ({data: buffer}));
+            } else if (projectUrl) {
                 if (
                     !projectUrl.startsWith('http:') &&
                     !projectUrl.startsWith('https:') &&
