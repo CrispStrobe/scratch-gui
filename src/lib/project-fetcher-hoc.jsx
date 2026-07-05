@@ -110,6 +110,12 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             let projectUrl = typeof URLSearchParams === 'undefined' ?
                 null :
                 new URLSearchParams(location.search).get('project_url');
+            // Also accept project_url from the URL hash. The fragment is never sent to
+            // the server, so large `data:` URLs (e.g. a whole .sb3 handed off from
+            // another same-domain tool) don't trip the server's URI-length limit (414).
+            if (!projectUrl && typeof location !== 'undefined' && location.hash) {
+                projectUrl = new URLSearchParams(location.hash.replace(/^#/, '')).get('project_url');
+            }
             if (projectUrl) {
                 if (
                     !projectUrl.startsWith('http:') &&
