@@ -30,6 +30,7 @@ import TWPackagerIntegrationHOC from '../lib/tw-packager-integration-hoc.jsx';
 import SettingsStore from '../addons/settings-store-singleton';
 import '../lib/tw-fix-history-api';
 import GUI from './render-gui.jsx';
+import PseudocodeImporter from '../components/tw-pseudocode/pseudocode-importer.jsx';
 import MenuBar from '../components/menu-bar/menu-bar.jsx';
 import ProjectInput from '../components/tw-project-input/project-input.jsx';
 import FeaturedProjects from '../components/tw-featured-projects/featured-projects.jsx';
@@ -257,6 +258,7 @@ class Interface extends React.Component {
                         backpackHost="_local_"
                         {...props}
                     />
+                    {isEditor ? <PseudocodeImporter /> : null}
                     {isHomepage ? (
                         <React.Fragment>
                             {isBrowserSupported() ? null : (
