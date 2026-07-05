@@ -58,7 +58,7 @@ const handleClickAddonSettingsPopup = addonId => {
 
 const messages = defineMessages({
     defaultTitle: {
-        defaultMessage: 'Run Scratch projects faster',
+        defaultMessage: 'blocks, code, and bricks',
         description: 'Title of homepage',
         id: 'tw.guiDefaultTitle'
     }
