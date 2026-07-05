@@ -3,8 +3,16 @@ name: CI
 on:
   push:
     branches: [develop]
+    paths-ignore: ['**.md', 'docs/**']
   pull_request:
+    paths-ignore: ['**.md', 'docs/**']
   workflow_dispatch:
+
+# A new push to the same branch/PR cancels the previous (still-building) run
+# instead of queuing another 8 GB webpack build behind it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -38,6 +46,12 @@ jobs:
       # @babel/eslint-parser on the side so test:lint can resolve.
       - name: Install ESLint parser missing from package.json
         run: npm install --no-save --legacy-peer-deps --no-audit --no-fund @babel/eslint-parser
+
+      # Informational: flag if the vendored SB3 Creator compiler/examples have
+      # drifted from the source repo. Fix with `npm run sync:sb3creator`.
+      - name: Check vendored sb3-creator is in sync
+        continue-on-error: true
+        run: npm run sync:sb3creator:check
 
       # The micro:bit firmware-flasher imports a generated file that is not
       # produced by --ignore-scripts. Stub it; the flasher path won't function

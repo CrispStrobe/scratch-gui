@@ -67,6 +67,15 @@ class PseudocodeImporter extends React.Component {
     loadExample (key) {
         if (key && examples[key]) this.setState({code: examples[key], status: `Loaded example: ${key}`});
     }
+    // Sprite names declared in the current pseudocode — used to populate the
+    // "associate SVG → sprite" dropdowns so you pick a real sprite, not guess a name.
+    spriteNames () {
+        const names = [];
+        const re = /^\s*SPRITE\s+([^\s:]+)/gm;
+        let m;
+        while ((m = re.exec(this.state.code)) !== null) names.push(m[1]);
+        return names;
+    }
     handleFiles (e) {
         const files = Array.from(e.target.files || []);
         files.forEach(f => {
@@ -194,30 +203,68 @@ class PseudocodeImporter extends React.Component {
                 <details style={{margin: '12px 0 4px'}}>
                     <summary style={{cursor: 'pointer', fontWeight: 600}}>🖼️ Custom sprite art (upload SVG)</summary>
                     <p style={{margin: '8px 0'}}>
-                        Upload one or more <code>.svg</code> files, then type the name of a sprite that
-                        appears in your pseudocode (e.g. <code>Player</code> for <code>SPRITE Player:</code>).
-                        On <strong>Compile &amp; Load</strong>, each SVG is baked in as that sprite&apos;s
-                        costume — <em>replace</em> swaps its costume, <em>add as frame</em> appends one for animation.
+                        Upload one or more <code>.svg</code> files, then associate each with a sprite from your
+                        pseudocode in the table below. On <strong>Compile &amp; Load</strong>, every SVG is baked
+                        in as that sprite&apos;s costume — <em>replace</em> swaps its costume, <em>add as frame</em>
+                        appends one for animation.
                     </p>
                     <input type="file" accept=".svg,image/svg+xml" multiple onChange={this.handleFiles} />
-                    {this.state.uploads.map((u, i) => (
-                        <div key={i} style={{display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0'}}>
-                            <img src={`data:image/svg+xml,${encodeURIComponent(u.svg)}`} alt=""
-                                style={{width: 36, height: 36, objectFit: 'contain', background: '#fff',
-                                    border: '1px solid #e2e8f0', borderRadius: 6}} />
-                            <input placeholder="sprite name" value={u.sprite}
-                                onChange={e => this.setUpload(i, {sprite: e.target.value})}
-                                style={{padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', width: 120}} />
-                            <select value={u.mode} onChange={e => this.setUpload(i, {mode: e.target.value})}
-                                style={{padding: '4px 6px', borderRadius: 6, border: '1px solid #cbd5e1'}}>
-                                <option value="replace">replace costume</option>
-                                <option value="add">add as frame</option>
-                            </select>
-                            <span style={{flex: 1, opacity: .6, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis'}}>{u.filename}</span>
-                            <button onClick={() => this.removeUpload(i)}
-                                style={{border: 'none', background: 'none', cursor: 'pointer', fontSize: 16}}>✕</button>
-                        </div>
-                    ))}
+                    {this.state.uploads.length > 0 && (() => {
+                        const sprites = this.spriteNames();
+                        const th = {textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e2e8f0', fontSize: 12, opacity: .75};
+                        const td = {padding: '6px 8px', borderBottom: '1px solid #eef2f7', verticalAlign: 'middle'};
+                        return (
+                            <table style={{borderCollapse: 'collapse', width: '100%', marginTop: 10}}>
+                                <thead><tr>
+                                    <th style={th}>SVG file</th>
+                                    <th style={th}>Sprite</th>
+                                    <th style={th}>Mode</th>
+                                    <th style={th} />
+                                </tr></thead>
+                                <tbody>
+                                    {this.state.uploads.map((u, i) => (
+                                        <tr key={i}>
+                                            <td style={td}>
+                                                <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
+                                                    <img src={`data:image/svg+xml,${encodeURIComponent(u.svg)}`} alt=""
+                                                        style={{width: 36, height: 36, objectFit: 'contain', background: '#fff',
+                                                            border: '1px solid #e2e8f0', borderRadius: 6, flexShrink: 0}} />
+                                                    <span style={{fontSize: 12, opacity: .7, wordBreak: 'break-all'}}>{u.filename}</span>
+                                                </div>
+                                            </td>
+                                            <td style={td}>
+                                                <select value={u.sprite} onChange={e => this.setUpload(i, {sprite: e.target.value})}
+                                                    style={{padding: '4px 8px', borderRadius: 6,
+                                                        border: `1px solid ${u.sprite ? '#cbd5e1' : '#f0a0a0'}`, minWidth: 130}}>
+                                                    <option value="">— choose sprite —</option>
+                                                    {sprites.map(n => <option key={n} value={n}>{n}</option>)}
+                                                    {u.sprite && !sprites.includes(u.sprite) &&
+                                                        <option value={u.sprite}>{u.sprite} (not in code)</option>}
+                                                </select>
+                                            </td>
+                                            <td style={td}>
+                                                <select value={u.mode} onChange={e => this.setUpload(i, {mode: e.target.value})}
+                                                    style={{padding: '4px 6px', borderRadius: 6, border: '1px solid #cbd5e1'}}>
+                                                    <option value="replace">replace costume</option>
+                                                    <option value="add">add as frame</option>
+                                                </select>
+                                            </td>
+                                            <td style={td}>
+                                                <button onClick={() => this.removeUpload(i)}
+                                                    style={{border: 'none', background: 'none', cursor: 'pointer', fontSize: 16}}>✕</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        );
+                    })()}
+                    {this.state.uploads.length > 0 && this.spriteNames().length === 0 && (
+                        <p style={{margin: '8px 0 0', fontSize: 12, color: '#b45309'}}>
+                            No <code>SPRITE</code> declarations found in your pseudocode yet — add one (e.g.
+                            <code> SPRITE Player:</code>) to associate an SVG with it.
+                        </p>
+                    )}
                 </details>
 
                 <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
