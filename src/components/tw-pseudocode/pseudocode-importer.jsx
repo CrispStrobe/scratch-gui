@@ -12,6 +12,23 @@ class PseudocodeImporter extends React.Component {
         this.state = {code: '', uploads: [], status: '', busy: false};
         this.handleFiles = this.handleFiles.bind(this);
         this.compile = this.compile.bind(this);
+        this.fromBlocks = this.fromBlocks.bind(this);
+    }
+    async fromBlocks () {
+        this.setState({busy: true, status: 'Reading current project…'});
+        try {
+            const mod = await import(/* webpackChunkName: "sb3-creator" */ '../../lib/sb3-creator.js');
+            const SB3Creator = mod.default;
+            const project = JSON.parse(this.props.vm.toJSON());
+            const code = new SB3Creator().decompile(project);
+            const unsupported = (code.match(/^# unsupported:/gm) || []).length;
+            this.setState({code, status: unsupported ?
+                `Decompiled — ${unsupported} block(s) not representable in pseudocode (left as comments).` :
+                'Decompiled the current project. Edit, then Compile & Load to apply.'});
+        } catch (e) {
+            this.setState({status: `Error: ${e.message}`});
+        }
+        this.setState({busy: false});
     }
     handleFiles (e) {
         const files = Array.from(e.target.files || []);
@@ -68,7 +85,7 @@ class PseudocodeImporter extends React.Component {
                 <div style={{marginBottom: 10}}>
                     <strong style={{fontSize: 16}}>Pseudocode → Project</strong>
                     <span style={{marginLeft: 10, opacity: .7}}>
-                        Write SB3 Creator pseudocode, compile it into blocks, and load it here.
+                        Write pseudocode and compile it into blocks — or press “From blocks” to see the current project as code.
                     </span>
                 </div>
                 <textarea
@@ -95,9 +112,13 @@ class PseudocodeImporter extends React.Component {
                         <button onClick={() => this.removeUpload(i)} style={{border: 'none', background: 'none', cursor: 'pointer', fontSize: 16}}>✕</button>
                     </div>
                 ))}
-                <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 14}}>
+                <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
                     <button onClick={this.compile} disabled={this.state.busy || !this.state.code.trim()} style={btn}>
                         🚀 Compile &amp; Load
+                    </button>
+                    <button onClick={this.fromBlocks} disabled={this.state.busy} style={{...btn,
+                        background: 'linear-gradient(135deg,#a55b80,#8e4a6c)'}}>
+                        ⟵ From blocks
                     </button>
                     {this.state.status ? <span style={{fontSize: 13}}>{this.state.status}</span> : null}
                 </div>
@@ -107,7 +128,7 @@ class PseudocodeImporter extends React.Component {
 }
 
 PseudocodeImporter.propTypes = {
-    vm: PropTypes.shape({loadProject: PropTypes.func}).isRequired
+    vm: PropTypes.shape({loadProject: PropTypes.func, toJSON: PropTypes.func}).isRequired
 };
 
 export default connect(state => ({vm: state.scratchGui.vm}))(PseudocodeImporter);
