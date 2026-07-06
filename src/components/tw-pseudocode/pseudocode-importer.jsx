@@ -31,7 +31,7 @@ const GROUPS = [
         ['sensing', 'Sensing'], ['control', 'Control'], ['operators', 'Operators']
     ]},
     {label: 'Extensions', items: [
-        ['planetemaths', '🧮 Planète Maths']
+        ['planetemaths', '🧮 Planète Maths'], ['arrays', '📐 Arrays & Vectors']
     ]}
 ];
 
@@ -57,6 +57,9 @@ const SYNTAX = [
         '<flag> = boolean parameter', 'call: draw box 3 4', 'params in body: go to x: col y: row']],
     ['Planète Maths (extension)', ['factorial of 5', 'sum of digits of 123', 'min of a and b / max of a and b',
         '2 to the power of 8', 'pi, euler', 'x is multiple of 3']],
+    ['Arrays & Vectors (extension)', ['new array "v" = [1,2,3]  (0-based)', 'new array "v" = range 1 to 5',
+        'push x to array "v" / set item i of array "v" to x', 'item i of array "v" / sum of array "v"',
+        'largest / smallest / length / mean of array "v"', 'array "v" contains x / array "v" as text']],
     ['Sensing & more', ['x position of Player', 'current year, day of week',
         'distance to mouse-pointer', 'set drag mode draggable', 'play note 60 for 0.5 beats, set tempo to 120']]
 ];
