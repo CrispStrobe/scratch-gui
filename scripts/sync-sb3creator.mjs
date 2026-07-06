@@ -30,7 +30,8 @@ const FILES = [
     ['src/utils/examples.js', path.join(lib, 'sb3-creator-examples.js')],
     ['src/utils/pythonToPseudocode.js', path.join(lib, 'sb3-creator-python.js')],
     ['src/utils/javascriptToPseudocode.js', path.join(lib, 'sb3-creator-javascript.js')],
-    ['src/utils/runtimeRegistry.generated.js', path.join(lib, 'sb3-creator-runtime.js')]
+    ['src/utils/runtimeRegistry.generated.js', path.join(lib, 'sb3-creator-runtime.js')],
+    ['src/utils/scratchRuntime.js', path.join(lib, 'sb3-creator-scratchruntime.js')]
 ];
 
 async function readSource (rel) {
@@ -44,7 +45,8 @@ async function readSource (rel) {
 // names (e.g. javascriptToPseudocode.js imports pythonToPseudocode.js).
 const rewriteImports = (src) => src
     .replace(/(['"])\.\/pythonToPseudocode\.js\1/g, "'./sb3-creator-python.js'")
-    .replace(/(['"])\.\/runtimeRegistry\.generated\.js\1/g, "'./sb3-creator-runtime.js'");
+    .replace(/(['"])\.\/runtimeRegistry\.generated\.js\1/g, "'./sb3-creator-runtime.js'")
+    .replace(/(['"])\.\/scratchRuntime\.js\1/g, "'./sb3-creator-scratchruntime.js'");
 
 let stale = 0;
 for (const [remote, dest] of FILES) {
