@@ -72,11 +72,11 @@ native shell:
 |------|------|
 | **`brickwright`** (this) | The editor UI |
 | [`CrispStrobe/extensions`](https://github.com/CrispStrobe/extensions) | The gallery (`.js` files + `extensions-v0.json` metadata). Hosted at <https://crispstrobe.github.io/extensions/>; the editor fetches it. |
-| [`CrispStrobe/turbowarp-lego`](https://github.com/CrispStrobe/turbowarp-lego) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, …) used by the bridge-mode extensions. |
+| [`CrispStrobe/brickwright-lego`](https://github.com/CrispStrobe/brickwright-lego) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, …) used by the bridge-mode extensions. |
 | [`CrispStrobe/legacy-lego-compiler`](https://github.com/CrispStrobe/legacy-lego-compiler) | Hosted REST API: NXC → `.rxe`, lmsasm → EV3 bytecode. Used by the transpiler extensions. |
-| [`CrispStrobe/turbowarp-desktop`](https://github.com/CrispStrobe/turbowarp-desktop) | Electron build of this editor. Mac / Windows / Linux installers via GitHub Actions. |
-| [`CrispStrobe/turbowarp-android`](https://github.com/CrispStrobe/turbowarp-android) | Capacitor Android wrapper with native Bluetooth bridges. Builds `.apk` + `.ipa`. |
-| [`CrispStrobe/turbowarp-ios`](https://github.com/CrispStrobe/turbowarp-ios) | WKWebView iOS wrapper (CodePM-based) with native Bluetooth bridges. Builds `.ipa`. |
+| [`CrispStrobe/brickwright-desktop`](https://github.com/CrispStrobe/brickwright-desktop) | Electron build of this editor. Mac / Windows / Linux installers via GitHub Actions. |
+| [`CrispStrobe/brickwright-android`](https://github.com/CrispStrobe/brickwright-android) | Capacitor Android wrapper with native Bluetooth bridges. Builds `.apk` + `.ipa`. |
+| [`CrispStrobe/brickwright-ios`](https://github.com/CrispStrobe/brickwright-ios) | WKWebView iOS wrapper (CodePM-based) with native Bluetooth bridges. Builds `.ipa`. |
 
 ## Build & run
 
@@ -119,7 +119,7 @@ caused builds to die mid-stream when run via nested `npm` scripts.
 
 ### Library build for the native shells
 
-`turbowarp-desktop` consumes `dist/scratch-gui.js` (UMD) instead of a static
+`brickwright-desktop` consumes `dist/scratch-gui.js` (UMD) instead of a static
 site:
 
 ```bash
@@ -131,7 +131,7 @@ rmdir dist/js
 ```
 
 See the per-shell READMEs for the linking step ("brain transplant" recipe in
-`turbowarp-desktop` and `turbowarp-ios`).
+`brickwright-desktop` and `brickwright-ios`).
 
 ## Vercel
 
@@ -177,7 +177,7 @@ an upstream URL that frequently times out. Two workarounds:
 
 Duplicate React versions: the nested `scratch-gui/node_modules/react` clashes
 with the host app's React. Remove the nested copies before linking. See the
-[turbowarp-desktop README](https://github.com/CrispStrobe/turbowarp-desktop).
+[brickwright-desktop README](https://github.com/CrispStrobe/brickwright-desktop).
 
 ### Webpack dies mid-build with no error
 
