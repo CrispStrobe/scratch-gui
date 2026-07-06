@@ -26,9 +26,9 @@ views). The arrows move a project between them:
 
 ```
    ┌──────────────┐   ⇦ To blocks    ┌────────────────────────────────┐
-   │    Blocks     │ ◀──────────────  │   Code                          │
-   │  (Scratch     │                  │   🧩 Pseudocode                  │
-   │   canvas)     │  From blocks ⇨   │   🐍 Python   ⇄  🟨 JavaScript   │
+   │    Blocks    │ ◀──────────────  │   Code                         │
+   │  (Scratch    │                  │   🧩 Pseudocode                │
+   │   canvas)    │  From blocks ⇨   │   🐍 Python   ⇄  🟨 JavaScript  │
    └──────────────┘ ──────────────▶  └────────────────────────────────┘
 ```
 
