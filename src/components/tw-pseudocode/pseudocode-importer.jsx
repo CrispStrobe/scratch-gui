@@ -59,7 +59,7 @@ const SYNTAX = [
 class PseudocodeImporter extends React.Component {
     constructor (props) {
         super(props);
-        this.state = {code: '', uploads: [], status: '', busy: false, showRef: false};
+        this.state = {code: '', uploads: [], status: '', busy: false, showRef: false, lang: 'pseudocode'};
         this.handleFiles = this.handleFiles.bind(this);
         this.compile = this.compile.bind(this);
         this.fromBlocks = this.fromBlocks.bind(this);
@@ -132,11 +132,23 @@ class PseudocodeImporter extends React.Component {
             const mod = await import(/* webpackChunkName: "sb3-creator" */ '../../lib/sb3-creator.js');
             const SB3Creator = mod.default;
             const project = JSON.parse(this.props.vm.toJSON());
-            const code = new SB3Creator().decompile(project);
-            const unsupported = (code.match(/^# unsupported:/gm) || []).length;
-            this.setState({code, status: unsupported ?
-                `Decompiled — ${unsupported} block(s) not representable in pseudocode (left as comments).` :
-                'Decompiled the current project. Edit, then Compile & Load to apply.'});
+            const gen = new SB3Creator();
+            const lang = this.state.lang;
+            let code, status;
+            if (lang === 'python') {
+                code = gen.generatePython(project);
+                status = 'Python — a read-only view of the current project (the algorithmic parts run).';
+            } else if (lang === 'javascript') {
+                code = gen.generateJavaScript(project);
+                status = 'JavaScript — a read-only view of the current project (the algorithmic parts run).';
+            } else {
+                code = gen.decompile(project);
+                const unsupported = (code.match(/^# unsupported:/gm) || []).length;
+                status = unsupported ?
+                    `Decompiled — ${unsupported} block(s) not representable in pseudocode (left as comments).` :
+                    'Decompiled the current project. Edit, then Compile & Load to apply.';
+            }
+            this.setState({code, status});
         } catch (e) {
             this.setState({status: `Error: ${e.message}`});
         }
@@ -273,13 +285,24 @@ class PseudocodeImporter extends React.Component {
                 </details>
 
                 <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
-                    <button onClick={this.compile} disabled={this.state.busy || !this.state.code.trim()} style={btn}>
+                    <button onClick={this.compile}
+                        disabled={this.state.busy || !this.state.code.trim() || this.state.lang !== 'pseudocode'}
+                        title={this.state.lang !== 'pseudocode' ? 'Switch the “From blocks” language to Pseudocode to edit & compile' : ''}
+                        style={btn}>
                         🚀 Compile &amp; Load
                     </button>
                     <button onClick={this.fromBlocks} disabled={this.state.busy}
                         style={{...btn, background: 'linear-gradient(135deg,#a55b80,#8e4a6c)'}}>
                         ⟵ From blocks
                     </button>
+                    <label style={{fontSize: 13}}>as{' '}
+                        <select value={this.state.lang} onChange={e => this.setState({lang: e.target.value})}
+                            style={{padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', font: 'inherit'}}>
+                            <option value="pseudocode">Pseudocode (editable)</option>
+                            <option value="python">Python (read-only)</option>
+                            <option value="javascript">JavaScript (read-only)</option>
+                        </select>
+                    </label>
                     {this.state.status ? <span style={{fontSize: 13}}>{this.state.status}</span> : null}
                 </div>
             </div>
