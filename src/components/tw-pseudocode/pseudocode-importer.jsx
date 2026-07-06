@@ -519,11 +519,13 @@ class PseudocodeImporter extends React.Component {
                     </div>
                 )}
 
-                <div style={{display: 'flex', gap: 2, marginBottom: -1}} role="tablist">
+                {/* Plain buttons — NOT role="tab", which would collide with the editor's
+                    top-level react-tabs and switch to Costumes/Sounds by index. */}
+                <div style={{display: 'flex', gap: 2, marginBottom: -1}}>
                     {[['pseudocode', '🧩 Pseudocode'], ['python', '🐍 Python'], ['javascript', '🟨 JavaScript']].map(([l, label]) => {
                         const active = this.state.lang === l;
                         return (
-                            <button key={l} role="tab" aria-selected={active} onClick={() => this.switchTab(l)}
+                            <button key={l} type="button" aria-pressed={active} onClick={() => this.switchTab(l)}
                                 disabled={this.state.busy && !active}
                                 style={{padding: '8px 16px', border: '1px solid #cbd5e1', borderBottom: active ? '1px solid #fff' : '1px solid #cbd5e1',
                                     borderRadius: '8px 8px 0 0', cursor: 'pointer', fontWeight: active ? 700 : 500,
