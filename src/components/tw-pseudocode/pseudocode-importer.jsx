@@ -59,11 +59,34 @@ const SYNTAX = [
 class PseudocodeImporter extends React.Component {
     constructor (props) {
         super(props);
-        this.state = {code: '', uploads: [], status: '', busy: false, showRef: false, lang: 'pseudocode'};
+        this.state = {code: '', uploads: [], status: '', busy: false, showRef: false, lang: 'pseudocode', output: null};
         this.handleFiles = this.handleFiles.bind(this);
         this.compile = this.compile.bind(this);
         this.fromBlocks = this.fromBlocks.bind(this);
         this.loadExample = this.loadExample.bind(this);
+        this.run = this.run.bind(this);
+    }
+
+    // Run the generated JavaScript in-page (natively; the editor already allows
+    // eval for the VM compiler). Only the algorithmic subset is runnable — a
+    // `forever` loop would hang the tab, so we refuse those with a friendly note.
+    // (Python execution via Skulpt/Pyodide is the next step; see PLAN §22 P2.)
+    run () {
+        const code = this.state.code;
+        const out = [];
+        const log = (...a) => out.push(a.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
+        this.setState({output: '', running: true});
+        try {
+            if (/while\s*\(\s*true\s*\)/.test(code)) {
+                throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
+            }
+            // eslint-disable-next-line no-new-func
+            const fn = new Function('console', 'prompt', code);
+            fn({log, error: log, warn: log}, (q) => window.prompt(q) || '');
+            this.setState({output: out.join('\n') || '(no output)', running: false});
+        } catch (e) {
+            this.setState({output: (out.join('\n') + '\n' + String(e.message || e)).trim(), running: false});
+        }
     }
     loadExample (key) {
         if (key && examples[key]) this.setState({code: examples[key], status: `Loaded example: ${key}`});
@@ -296,15 +319,28 @@ class PseudocodeImporter extends React.Component {
                         ⟵ From blocks
                     </button>
                     <label style={{fontSize: 13}}>as{' '}
-                        <select value={this.state.lang} onChange={e => this.setState({lang: e.target.value})}
+                        <select value={this.state.lang}
+                            onChange={e => this.setState({lang: e.target.value, output: null})}
                             style={{padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', font: 'inherit'}}>
                             <option value="pseudocode">Pseudocode (editable)</option>
                             <option value="python">Python (read-only)</option>
                             <option value="javascript">JavaScript (read-only)</option>
                         </select>
                     </label>
+                    {this.state.lang === 'javascript' && this.state.code.trim() ? (
+                        <button onClick={this.run} disabled={this.state.running}
+                            style={{...btn, background: 'linear-gradient(135deg,#37b24d,#2f9e44)'}}>
+                            ▶ Run
+                        </button>
+                    ) : null}
                     {this.state.status ? <span style={{fontSize: 13}}>{this.state.status}</span> : null}
                 </div>
+                {this.state.output != null ? (
+                    <pre style={{marginTop: 10, padding: 12, background: '#0c3a44', color: '#c7f0e0', borderRadius: 8,
+                        fontFamily: 'monospace', fontSize: 13, maxHeight: 220, overflow: 'auto', whiteSpace: 'pre-wrap'}}>
+                        {this.state.output || '…'}
+                    </pre>
+                ) : null}
             </div>
         );
     }
