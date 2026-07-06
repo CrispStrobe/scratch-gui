@@ -56,6 +56,25 @@ const SYNTAX = [
         'distance to mouse-pointer', 'set drag mode draggable', 'play note 60 for 0.5 beats, set tempo to 120']]
 ];
 
+const LANG_LABEL = {pseudocode: 'Pseudocode', python: 'Python', javascript: 'JavaScript'};
+
+// What the Python / JavaScript front-ends actually support (shown as the reference
+// when those tabs are active, so you know what round-trips to blocks).
+const SUPPORTED = {
+    python: [
+        ['Structure', ['def when_flag_clicked():', 'def do_myblock(a, b):', 'x = 0 / xs = []  (module state)', 'when_flag_clicked()  (run)']],
+        ['Control', ['if / elif / else:', 'while cond:  →  repeat until', 'while True:  →  forever', 'for _ in range(n):', 'return  →  stop this script']],
+        ['Statements', ['x = expr  /  x += expr', 'print(x)  →  say', 'x = input(p)  →  ask', 'xs.append/insert/clear', 'del xs[i-1]  /  xs[i-1] = v']],
+        ['Expressions', ['+ - * / %,  a == b → =', 'and / or / not', '_eq(a, b) (loose =)', 'random.randint(a, b)', 'len(x), math.floor(x), str()/int()']]
+    ],
+    javascript: [
+        ['Structure', ['function when_flag_clicked() {}', 'function do_myblock(a, b) {}', 'let x = 0;  let xs = [];', 'when_flag_clicked();  // run']],
+        ['Control', ['if / else', 'while (cond)  →  repeat until', 'while (true)  →  forever', 'for (let i=0; i<n; i++)', 'return;  →  stop this script']],
+        ['Statements', ['x = expr;  /  x += expr;', 'console.log(x)  →  say', 'prompt(p)  →  ask', 'xs.push/splice, xs.length', 'xs[i-1] = v']],
+        ['Expressions', ['+ - * / %,  === → =', '&& / || / !', '_eq(a, b), _rand(a, b)', 'String()/Number()', 'Math.floor(x), arr[i-1]']]
+    ]
+};
+
 // Web Worker bodies for the sandboxed (non-interactive) runner. They run off the
 // main thread so a runaway/`forever` loop can be `terminate()`d on a timeout instead
 // of freezing the tab. Neither has a real `prompt`/`input` — interactive programs take
@@ -470,43 +489,40 @@ class PseudocodeImporter extends React.Component {
         const sel = {padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', font: 'inherit'};
         return (
             <div style={wrap}>
-                <div style={{marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12}}>
-                    <img src={brickRobot} alt="Brickwright mascot" width={44} height={52} draggable={false} />
-                    <div>
-                        <strong style={{fontSize: 16}}>Brickwright Script</strong>
-                        <div style={{opacity: .7}}>
-                            Write your project as <strong>Pseudocode</strong>, <strong>Python</strong>, or{' '}
-                            <strong>JavaScript</strong> — all three are two-way. Press “To blocks” to compile the
-                            active tab, or “From blocks” to read the current project into every language. Switching
-                            tabs converts between them; sprite/pen behaviour lives in the blocks, so the code tabs
-                            show the algorithmic parts.
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10}}>
-                    <label style={{fontWeight: 600}}>Load an example:{' '}
-                        <select defaultValue="" onChange={e => this.loadExample(e.target.value)} style={sel}>
-                            <option value="" disabled>choose…</option>
-                            {GROUPS.map(g => (
-                                <optgroup key={g.label} label={g.label}>
-                                    {g.items.filter(([k]) => examples[k]).map(([k, label]) => (
-                                        <option key={k} value={k}>{label}</option>
-                                    ))}
-                                </optgroup>
-                            ))}
-                        </select>
-                    </label>
+                {/* One compact row: mascot · title · info tooltip · example loader · reference toggle */}
+                <div style={{display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10}}>
+                    <img src={brickRobot} alt="Brickwright mascot" width={28} height={33} draggable={false} />
+                    <strong style={{fontSize: 15}}>Brickwright Code</strong>
+                    <span title={'Write your project as Pseudocode, Python, or JavaScript — all three are two-way. ' +
+                        '“To blocks” compiles the active tab; “From blocks” reads the current project into every ' +
+                        'language. Switching tabs converts between them. Sprite/pen behaviour lives in the blocks, ' +
+                        'so the code tabs show the algorithmic parts.'}
+                    style={{display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18,
+                        borderRadius: '50%', background: '#e2e8f0', color: '#475569', fontSize: 12, fontWeight: 700, cursor: 'help'}}>
+                        i
+                    </span>
+                    <span style={{flex: 1}} />
+                    <select defaultValue="" onChange={e => this.loadExample(e.target.value)} style={sel} title="Load a built-in example">
+                        <option value="" disabled>📚 Load example…</option>
+                        {GROUPS.map(g => (
+                            <optgroup key={g.label} label={g.label}>
+                                {g.items.filter(([k]) => examples[k]).map(([k, label]) => (
+                                    <option key={k} value={k}>{label}</option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </select>
                     <button onClick={() => this.setState(s => ({showRef: !s.showRef}))}
-                        style={{...sel, cursor: 'pointer', background: '#f1f5f9'}}>
-                        📝 {this.state.showRef ? 'Hide' : 'Show'} syntax reference
+                        style={{...sel, cursor: 'pointer', background: this.state.showRef ? '#e2e8f0' : '#f1f5f9'}}
+                        title={`Reference for ${this.state.lang}`}>
+                        📝 {LANG_LABEL[this.state.lang]} reference
                     </button>
                 </div>
 
                 {this.state.showRef && (
                     <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))',
                         gap: 12, marginBottom: 12, padding: 12, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0'}}>
-                        {SYNTAX.map(([h, items]) => (
+                        {(this.state.lang === 'pseudocode' ? SYNTAX : SUPPORTED[this.state.lang]).map(([h, items]) => (
                             <div key={h}>
                                 <div style={{fontWeight: 700, marginBottom: 4}}>{h}</div>
                                 <ul style={{margin: 0, paddingLeft: 16}}>
@@ -618,13 +634,14 @@ class PseudocodeImporter extends React.Component {
                 <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
                     <button onClick={this.compile}
                         disabled={this.state.busy || !this.activeCode().trim()}
-                        title="Compile the active tab to blocks (Python/JavaScript compile the algorithmic subset)"
+                        title={`Compile this ${LANG_LABEL[this.state.lang]} into blocks`}
                         style={btn}>
-                        🚀 To blocks
+                        ⇦ To blocks
                     </button>
                     <button onClick={this.fromBlocks} disabled={this.state.busy}
+                        title="Read the current blocks back into all three languages"
                         style={{...btn, background: 'linear-gradient(135deg,#a55b80,#8e4a6c)'}}>
-                        ⟵ From blocks
+                        From blocks ⇨
                     </button>
                     {this.state.lang !== 'pseudocode' && this.activeCode().trim() ? (
                         <button onClick={this.run} disabled={this.state.running}

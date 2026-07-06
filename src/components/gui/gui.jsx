@@ -349,9 +349,9 @@ const GUIComponent = props => {
                                             src={codeIcon()}
                                         />
                                         <FormattedMessage
-                                            defaultMessage="Code"
-                                            description="Button to get to the code panel"
-                                            id="gui.gui.codeTab"
+                                            defaultMessage="Blocks"
+                                            description="Button to get to the blocks (scripts) panel"
+                                            id="gui.gui.blocksTab"
                                         />
                                     </Tab>
                                     <Tab
@@ -391,10 +391,10 @@ const GUIComponent = props => {
                                         />
                                     </Tab>
                                     <Tab className={tabClassNames.tab}>
-                                        <span role="img" aria-label="pseudocode" style={{marginRight: 4}}>{'📜'}</span>
+                                        <span role="img" aria-label="code" style={{marginRight: 4}}>{'📜'}</span>
                                         <FormattedMessage
-                                            defaultMessage="Pseudocode"
-                                            description="Button to get to the Brickwright pseudocode panel"
+                                            defaultMessage="Code"
+                                            description="Button to get to the Brickwright code panel (pseudocode/Python/JavaScript)"
                                             id="gui.gui.pseudocodeTab"
                                         />
                                     </Tab>
