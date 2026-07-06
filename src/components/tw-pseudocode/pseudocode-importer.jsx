@@ -67,25 +67,54 @@ class PseudocodeImporter extends React.Component {
         this.run = this.run.bind(this);
     }
 
-    // Run the generated JavaScript in-page (natively; the editor already allows
-    // eval for the VM compiler). Only the algorithmic subset is runnable — a
-    // `forever` loop would hang the tab, so we refuse those with a friendly note.
-    // (Python execution via Skulpt/Pyodide is the next step; see PLAN §22 P2.)
-    run () {
+    // Lazily load Skulpt (Python-in-the-browser). Its prebuilt dist assumes a
+    // global `Sk`, so we inject it as a <script> rather than importing it as a
+    // module. ~1 MB, fetched only on the first Python run.
+    async loadSkulpt () {
+        if (window.Sk && window.Sk.configure) return window.Sk;
+        const [core, stdlib] = await Promise.all([
+            import(/* webpackChunkName: "skulpt" */ '!!raw-loader!skulpt/dist/skulpt.min.js'),
+            import(/* webpackChunkName: "skulpt-stdlib" */ '!!raw-loader!skulpt/dist/skulpt-stdlib.js')
+        ]);
+        const inject = (m) => { const s = document.createElement('script'); s.text = m.default || m; document.head.appendChild(s); };
+        inject(core); inject(stdlib);
+        if (!window.Sk || !window.Sk.configure) throw new Error('Skulpt failed to load');
+        return window.Sk;
+    }
+
+    // Run the generated code in-page. JS runs natively (the editor already allows
+    // eval for the VM compiler); Python runs on Skulpt. Only the algorithmic
+    // subset is runnable — a `forever` loop would hang the tab, so we refuse those.
+    async run () {
         const code = this.state.code;
-        const out = [];
-        const log = (...a) => out.push(a.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
         this.setState({output: '', running: true});
         try {
-            if (/while\s*\(\s*true\s*\)/.test(code)) {
-                throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
+            if (this.state.lang === 'python') {
+                if (/^\s*while True:/m.test(code)) throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
+                this.setState({status: 'Loading Python (Skulpt)…'});
+                const Sk = await this.loadSkulpt();
+                let text = '';
+                Sk.configure({
+                    output: (t) => { text += t; },
+                    read: (f) => { if (Sk.builtinFiles && Sk.builtinFiles.files[f]) return Sk.builtinFiles.files[f]; throw new Error(`module ${f} not found`); },
+                    inputfun: (p) => window.prompt(p) || '',
+                    inputfunTakesPrompt: true,
+                    __future__: Sk.python3
+                });
+                await Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<brickwright>', false, code, true));
+                this.setState({output: text.trimEnd() || '(no output)', running: false, status: ''});
+                return;
             }
+            // JavaScript
+            if (/while\s*\(\s*true\s*\)/.test(code)) throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
+            const out = [];
+            const log = (...a) => out.push(a.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
             // eslint-disable-next-line no-new-func
             const fn = new Function('console', 'prompt', code);
             fn({log, error: log, warn: log}, (q) => window.prompt(q) || '');
-            this.setState({output: out.join('\n') || '(no output)', running: false});
+            this.setState({output: out.join('\n') || '(no output)', running: false, status: ''});
         } catch (e) {
-            this.setState({output: (out.join('\n') + '\n' + String(e.message || e)).trim(), running: false});
+            this.setState({output: String(e.message || e), running: false, status: ''});
         }
     }
     loadExample (key) {
@@ -327,10 +356,10 @@ class PseudocodeImporter extends React.Component {
                             <option value="javascript">JavaScript (read-only)</option>
                         </select>
                     </label>
-                    {this.state.lang === 'javascript' && this.state.code.trim() ? (
+                    {this.state.lang !== 'pseudocode' && this.state.code.trim() ? (
                         <button onClick={this.run} disabled={this.state.running}
                             style={{...btn, background: 'linear-gradient(135deg,#37b24d,#2f9e44)'}}>
-                            ▶ Run
+                            ▶ Run {this.state.lang === 'python' ? 'Python' : 'JS'}
                         </button>
                     ) : null}
                     {this.state.status ? <span style={{fontSize: 13}}>{this.state.status}</span> : null}
