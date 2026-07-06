@@ -72,7 +72,7 @@ native shell:
 |------|------|
 | **`brickwright`** (this) | The editor UI |
 | [`CrispStrobe/extensions`](https://github.com/CrispStrobe/extensions) | The gallery (`.js` files + `extensions-v0.json` metadata). Hosted at <https://crispstrobe.github.io/extensions/>; the editor fetches it. |
-| [`CrispStrobe/brickwright-lego`](https://github.com/CrispStrobe/brickwright-lego) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, …) used by the bridge-mode extensions. |
+| [`CrispStrobe/brickwright-bridges`](https://github.com/CrispStrobe/brickwright-bridges) | Working sandbox + Python bridges (`nxt_bridge.py`, `ev3dev_ondevice.py`, …) used by the bridge-mode extensions. |
 | [`CrispStrobe/legacy-lego-compiler`](https://github.com/CrispStrobe/legacy-lego-compiler) | Hosted REST API: NXC → `.rxe`, lmsasm → EV3 bytecode. Used by the transpiler extensions. |
 | [`CrispStrobe/brickwright-desktop`](https://github.com/CrispStrobe/brickwright-desktop) | Electron build of this editor. Mac / Windows / Linux installers via GitHub Actions. |
 | [`CrispStrobe/brickwright-android`](https://github.com/CrispStrobe/brickwright-android) | Capacitor Android wrapper with native Bluetooth bridges. Builds `.apk` + `.ipa`. |
