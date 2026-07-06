@@ -87,34 +87,36 @@ class PseudocodeImporter extends React.Component {
     // subset is runnable — a `forever` loop would hang the tab, so we refuse those.
     async run () {
         const code = this.state.code;
+        const buf = [];
         this.setState({output: '', running: true});
+        const finish = (extra) => this.setState({
+            output: (buf.join('').trimEnd() + (extra ? '\n' + extra : '')).trim() || '(no output)',
+            running: false, status: ''
+        });
         try {
+            const forever = this.state.lang === 'python' ? /^\s*while True:/m : /while\s*\(\s*true\s*\)/;
+            if (forever.test(code)) throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
             if (this.state.lang === 'python') {
-                if (/^\s*while True:/m.test(code)) throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
                 this.setState({status: 'Loading Python (Skulpt)…'});
                 const Sk = await this.loadSkulpt();
-                let text = '';
                 Sk.configure({
-                    output: (t) => { text += t; },
+                    output: (t) => buf.push(t),
                     read: (f) => { if (Sk.builtinFiles && Sk.builtinFiles.files[f]) return Sk.builtinFiles.files[f]; throw new Error(`module ${f} not found`); },
                     inputfun: (p) => window.prompt(p) || '',
                     inputfunTakesPrompt: true,
                     __future__: Sk.python3
                 });
                 await Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<brickwright>', false, code, true));
-                this.setState({output: text.trimEnd() || '(no output)', running: false, status: ''});
-                return;
+                finish();
+            } else {
+                const log = (...a) => buf.push(a.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n');
+                // eslint-disable-next-line no-new-func
+                const fn = new Function('console', 'prompt', code);
+                fn({log, error: log, warn: log}, (q) => window.prompt(q) || '');
+                finish();
             }
-            // JavaScript
-            if (/while\s*\(\s*true\s*\)/.test(code)) throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
-            const out = [];
-            const log = (...a) => out.push(a.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
-            // eslint-disable-next-line no-new-func
-            const fn = new Function('console', 'prompt', code);
-            fn({log, error: log, warn: log}, (q) => window.prompt(q) || '');
-            this.setState({output: out.join('\n') || '(no output)', running: false, status: ''});
         } catch (e) {
-            this.setState({output: String(e.message || e), running: false, status: ''});
+            finish(String(e.message || e));
         }
     }
     loadExample (key) {
