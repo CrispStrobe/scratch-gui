@@ -186,12 +186,57 @@ CodeEditor.propTypes = {
 class PseudocodeImporter extends React.Component {
     constructor (props) {
         super(props);
-        this.state = {code: '', uploads: [], status: '', busy: false, showRef: false, lang: 'pseudocode', output: null};
+        // One buffer per language tab. Editing the active tab clears the others so
+        // switching tabs always re-derives them from the latest edit — you can never
+        // end up with (say) pseudocode sitting in the Python tab.
+        this.state = {lang: 'pseudocode', buffers: {pseudocode: '', python: '', javascript: ''},
+            uploads: [], status: '', busy: false, showRef: false, output: null, running: false};
         this.handleFiles = this.handleFiles.bind(this);
         this.compile = this.compile.bind(this);
         this.fromBlocks = this.fromBlocks.bind(this);
         this.loadExample = this.loadExample.bind(this);
         this.run = this.run.bind(this);
+        this.switchTab = this.switchTab.bind(this);
+    }
+
+    activeCode () { return this.state.buffers[this.state.lang]; }
+    setActiveCode (text) { this.setState(s => ({buffers: {pseudocode: '', python: '', javascript: '', [s.lang]: text}})); }
+
+    // Lazily import the compiler module.
+    async lib () { return (await import(/* webpackChunkName: "sb3-creator" */ '../../lib/sb3-creator.js')); }
+
+    // Convert one language's source to another by going through blocks:
+    // source → pseudocode → parse() → project → generate(to). Returns {code} or {error}.
+    async deriveBuffer (src, from, to) {
+        try {
+            const SB3 = (await this.lib()).default;
+            let pseudo = src;
+            if (from === 'python') pseudo = (await import(/* webpackChunkName: "sb3-creator-python" */ '../../lib/sb3-creator-python.js')).default(src).pseudocode;
+            else if (from === 'javascript') pseudo = (await import(/* webpackChunkName: "sb3-creator-javascript" */ '../../lib/sb3-creator-javascript.js')).default(src).pseudocode;
+            const creator = new SB3();
+            creator.parse(pseudo);
+            const proj = creator.project;
+            let code;
+            if (to === 'pseudocode') code = new SB3().decompile(proj);
+            else if (to === 'python') code = new SB3().generatePython(proj);
+            else code = new SB3().generateJavaScript(proj);
+            return {code};
+        } catch (e) { return {error: e.message}; }
+    }
+
+    // Switch language tab. If the target buffer is empty, derive it from the active
+    // buffer so the tab shows the same project in the new language.
+    switchTab (to) {
+        const from = this.state.lang;
+        if (to === from || this.state.busy) return;
+        const existing = this.state.buffers[to];
+        const src = this.state.buffers[from];
+        if ((existing && existing.trim()) || !src || !src.trim()) { this.setState({lang: to, output: null, status: ''}); return; }
+        this.setState({busy: true, status: `Converting to ${to}…`});
+        this.deriveBuffer(src, from, to).then(({code, error}) => {
+            if (error) { this.setState({busy: false, status: `Can't show as ${to}: ${error}`}); return; }
+            this.setState(s => ({lang: to, busy: false, output: null, status: '', buffers: {...s.buffers, [to]: code}}));
+        });
     }
 
     // Lazily fetch the prebuilt Skulpt sources (~1 MB, only on the first Python
@@ -279,7 +324,7 @@ class PseudocodeImporter extends React.Component {
     // guard. Everything else runs in a Web Worker with a hard timeout — a runaway
     // loop is killed cleanly instead of freezing the tab.
     async run () {
-        const code = this.state.code;
+        const code = this.activeCode();
         const lang = this.state.lang;
         const buf = [];
         this.setState({output: '', running: true, status: ''});
@@ -318,15 +363,17 @@ class PseudocodeImporter extends React.Component {
         }
     }
     loadExample (key) {
-        if (key && examples[key]) this.setState({code: examples[key], status: `Loaded example: ${key}`});
+        if (key && examples[key]) this.setState({lang: 'pseudocode', output: null,
+            buffers: {pseudocode: examples[key], python: '', javascript: ''}, status: `Loaded example: ${key}`});
     }
     // Sprite names declared in the current pseudocode — used to populate the
     // "associate SVG → sprite" dropdowns so you pick a real sprite, not guess a name.
     spriteNames () {
+        const src = this.state.lang === 'pseudocode' ? this.activeCode() : this.state.buffers.pseudocode;
         const names = [];
         const re = /^\s*SPRITE\s+([^\s:]+)/gm;
         let m;
-        while ((m = re.exec(this.state.code)) !== null) names.push(m[1]);
+        while ((m = re.exec(src || '')) !== null) names.push(m[1]);
         return names;
     }
     handleFiles (e) {
@@ -347,26 +394,23 @@ class PseudocodeImporter extends React.Component {
     removeUpload (i) {
         this.setState(s => ({uploads: s.uploads.filter((_, idx) => idx !== i)}));
     }
+    // Compile the active tab's code to blocks. Python/JavaScript go through their
+    // parser to pseudocode first. After loading, the other two tabs are regenerated
+    // from the compiled project so all three stay consistent.
     async compile () {
         const lang = this.state.lang;
-        if (lang === 'javascript') {
-            this.setState({status: 'JavaScript is a read-only view — switch to Pseudocode or Python to compile to blocks.'});
-            return;
-        }
         this.setState({busy: true, status: 'Compiling…'});
         try {
-            // Python compiles via the parser: Python → pseudocode → blocks. Pseudocode
-            // is fed straight in. Either way `source` is pseudocode for the compiler.
-            let source = this.state.code;
-            let pyWarnings = [];
+            let source = this.activeCode();
+            let parseWarnings = [];
             if (lang === 'python') {
-                const pmod = await import(/* webpackChunkName: "sb3-creator-python" */ '../../lib/sb3-creator-python.js');
-                const res = pmod.default(this.state.code);
-                source = res.pseudocode;
-                pyWarnings = res.warnings || [];
+                const res = (await import(/* webpackChunkName: "sb3-creator-python" */ '../../lib/sb3-creator-python.js')).default(source);
+                source = res.pseudocode; parseWarnings = res.warnings || [];
+            } else if (lang === 'javascript') {
+                const res = (await import(/* webpackChunkName: "sb3-creator-javascript" */ '../../lib/sb3-creator-javascript.js')).default(source);
+                source = res.pseudocode; parseWarnings = res.warnings || [];
             }
-            const mod = await import(/* webpackChunkName: "sb3-creator" */ '../../lib/sb3-creator.js');
-            const SB3Creator = mod.default;
+            const SB3Creator = (await this.lib()).default;
             const creator = new SB3Creator();
             creator.parse(source);
             const missing = [];
@@ -379,44 +423,40 @@ class PseudocodeImporter extends React.Component {
                 if (!ok) missing.push(name);
             });
             const blob = await creator.generateSB3();
-            const buffer = await blob.arrayBuffer();
-            await this.props.vm.loadProject(buffer);
+            await this.props.vm.loadProject(await blob.arrayBuffer());
             const first = this.props.vm.runtime.targets.find(target => !target.isStage);
             if (first) this.props.vm.setEditingTarget(first.id);
-            const warns = [...pyWarnings, ...creator.warnings];
+            // regenerate the other tabs from the compiled project
+            const proj = creator.project;
+            const nb = {...this.state.buffers};
+            if (lang !== 'pseudocode') nb.pseudocode = new SB3Creator().decompile(proj);
+            if (lang !== 'python') nb.python = new SB3Creator().generatePython(proj);
+            if (lang !== 'javascript') nb.javascript = new SB3Creator().generateJavaScript(proj);
+            const warns = [...parseWarnings, ...creator.warnings];
             if (missing.length) warns.push(`no sprite named: ${missing.join(', ')}`);
-            this.setState({status: warns.length ?
+            this.setState({buffers: nb, status: warns.length ?
                 `Loaded with warnings — ${warns.slice(0, 4).join(' · ')}` :
-                (lang === 'python' ? 'Python compiled to blocks and loaded. Switch to the Code tab to see them.'
-                    : 'Loaded into the editor. Switch to the Code tab to see the blocks.')});
+                'Compiled to blocks and loaded. Switch to the Code tab to see them.'});
         } catch (e) {
             this.setState({status: `Error: ${e.message}`});
         }
         this.setState({busy: false});
     }
+    // Read the running project into all three languages at once.
     async fromBlocks () {
         this.setState({busy: true, status: 'Reading current project…'});
         try {
-            const mod = await import(/* webpackChunkName: "sb3-creator" */ '../../lib/sb3-creator.js');
-            const SB3Creator = mod.default;
+            const SB3Creator = (await this.lib()).default;
             const project = JSON.parse(this.props.vm.toJSON());
-            const gen = new SB3Creator();
-            const lang = this.state.lang;
-            let code, status;
-            if (lang === 'python') {
-                code = gen.generatePython(project);
-                status = 'Python — edit it and press “To blocks” to compile back (the algorithmic parts run).';
-            } else if (lang === 'javascript') {
-                code = gen.generateJavaScript(project);
-                status = 'JavaScript — a read-only view of the current project (the algorithmic parts run).';
-            } else {
-                code = gen.decompile(project);
-                const unsupported = (code.match(/^# unsupported:/gm) || []).length;
-                status = unsupported ?
-                    `Decompiled — ${unsupported} block(s) not representable in pseudocode (left as comments).` :
-                    'Decompiled the current project. Edit, then Compile & Load to apply.';
-            }
-            this.setState({code, status});
+            const buffers = {
+                pseudocode: new SB3Creator().decompile(project),
+                python: new SB3Creator().generatePython(project),
+                javascript: new SB3Creator().generateJavaScript(project)
+            };
+            const unsupported = (buffers.pseudocode.match(/^# unsupported:/gm) || []).length;
+            this.setState({buffers, output: null, status: unsupported ?
+                `Read into all three languages — ${unsupported} block(s) not representable in pseudocode (left as comments).` :
+                'Read the current project into all three languages. Edit any of them, then “To blocks”.'});
         } catch (e) {
             this.setState({status: `Error: ${e.message}`});
         }
@@ -435,10 +475,11 @@ class PseudocodeImporter extends React.Component {
                     <div>
                         <strong style={{fontSize: 16}}>Brickwright Script</strong>
                         <div style={{opacity: .7}}>
-                            Write your project as <strong>Pseudocode</strong> or <strong>Python</strong> and press
-                            “To blocks” to compile it — or “From blocks” to read the current project back as code
-                            (Pseudocode, Python, or JavaScript). Edit, run, and round-trip: the same logic drives
-                            Bricks &amp; robots.
+                            Write your project as <strong>Pseudocode</strong>, <strong>Python</strong>, or{' '}
+                            <strong>JavaScript</strong> — all three are two-way. Press “To blocks” to compile the
+                            active tab, or “From blocks” to read the current project into every language. Switching
+                            tabs converts between them; sprite/pen behaviour lives in the blocks, so the code tabs
+                            show the algorithmic parts.
                         </div>
                     </div>
                 </div>
@@ -478,12 +519,31 @@ class PseudocodeImporter extends React.Component {
                     </div>
                 )}
 
+                <div style={{display: 'flex', gap: 2, marginBottom: -1}} role="tablist">
+                    {[['pseudocode', '🧩 Pseudocode'], ['python', '🐍 Python'], ['javascript', '🟨 JavaScript']].map(([l, label]) => {
+                        const active = this.state.lang === l;
+                        return (
+                            <button key={l} role="tab" aria-selected={active} onClick={() => this.switchTab(l)}
+                                disabled={this.state.busy && !active}
+                                style={{padding: '8px 16px', border: '1px solid #cbd5e1', borderBottom: active ? '1px solid #fff' : '1px solid #cbd5e1',
+                                    borderRadius: '8px 8px 0 0', cursor: 'pointer', fontWeight: active ? 700 : 500,
+                                    background: active ? '#fff' : '#eef2f7', color: active ? '#1e293b' : '#64748b',
+                                    position: 'relative', top: active ? 0 : 1}}>
+                                {label}
+                            </button>
+                        );
+                    })}
+                </div>
                 <CodeEditor
-                    value={this.state.code}
-                    onChange={e => this.setState({code: e.target.value})}
-                    readOnly={this.state.lang === 'javascript'}
+                    value={this.activeCode()}
+                    onChange={e => this.setActiveCode(e.target.value)}
+                    readOnly={false}
                     lang={this.state.lang}
-                    placeholder={'SPRITE Cat:\n  WHEN flag clicked:\n    say "Hello!" for 2 seconds\n    FOREVER:\n      move 10 steps\n      turn right 15 degrees'}
+                    placeholder={this.state.lang === 'pseudocode'
+                        ? 'SPRITE Cat:\n  WHEN flag clicked:\n    say "Hello!" for 2 seconds\n    FOREVER:\n      move 10 steps'
+                        : this.state.lang === 'python'
+                            ? 'def when_flag_clicked():\n    print("Hello!")\n\nwhen_flag_clicked()\n\n# or press “From blocks” to generate this from your project'
+                            : 'function when_flag_clicked() {\n  console.log("Hello!");\n}\nwhen_flag_clicked();\n\n// or press “From blocks” to generate this from your project'}
                 />
 
                 <details style={{margin: '12px 0 4px'}}>
@@ -555,25 +615,16 @@ class PseudocodeImporter extends React.Component {
 
                 <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
                     <button onClick={this.compile}
-                        disabled={this.state.busy || !this.state.code.trim() || this.state.lang === 'javascript'}
-                        title={this.state.lang === 'javascript' ? 'JavaScript is a read-only view — switch to Pseudocode or Python to compile' : ''}
-                        style={{...btn, opacity: this.state.lang === 'javascript' ? 0.5 : 1}}>
-                        {this.state.lang === 'python' ? '🚀 To blocks' : '🚀 Compile & Load'}
+                        disabled={this.state.busy || !this.activeCode().trim()}
+                        title="Compile the active tab to blocks (Python/JavaScript compile the algorithmic subset)"
+                        style={btn}>
+                        🚀 To blocks
                     </button>
                     <button onClick={this.fromBlocks} disabled={this.state.busy}
                         style={{...btn, background: 'linear-gradient(135deg,#a55b80,#8e4a6c)'}}>
                         ⟵ From blocks
                     </button>
-                    <label style={{fontSize: 13}} title="Two-way: Pseudocode and Python both compile to blocks and back. JavaScript is a read-only view.">
-                        <select value={this.state.lang}
-                            onChange={e => this.setState({lang: e.target.value, output: null})}
-                            style={{padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', font: 'inherit'}}>
-                            <option value="pseudocode">Pseudocode ⇄ blocks</option>
-                            <option value="python">Python ⇄ blocks</option>
-                            <option value="javascript">JavaScript → view</option>
-                        </select>
-                    </label>
-                    {this.state.lang !== 'pseudocode' && this.state.code.trim() ? (
+                    {this.state.lang !== 'pseudocode' && this.activeCode().trim() ? (
                         <button onClick={this.run} disabled={this.state.running}
                             style={{...btn, background: 'linear-gradient(135deg,#37b24d,#2f9e44)'}}>
                             ▶ Run {this.state.lang === 'python' ? 'Python' : 'JS'}
