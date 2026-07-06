@@ -209,7 +209,7 @@ class PseudocodeImporter extends React.Component {
         // switching tabs always re-derives them from the latest edit — you can never
         // end up with (say) pseudocode sitting in the Python tab.
         this.state = {lang: 'pseudocode', buffers: {pseudocode: '', python: '', javascript: ''},
-            uploads: [], status: '', busy: false, showRef: false, output: null, running: false};
+            uploads: [], status: '', busy: false, showRef: false, showInfo: false, showArt: false, output: null, running: false};
         this.handleFiles = this.handleFiles.bind(this);
         this.compile = this.compile.bind(this);
         this.fromBlocks = this.fromBlocks.bind(this);
@@ -382,8 +382,8 @@ class PseudocodeImporter extends React.Component {
         }
     }
     loadExample (key) {
-        if (key && examples[key]) this.setState({lang: 'pseudocode', output: null,
-            buffers: {pseudocode: examples[key], python: '', javascript: ''}, status: `Loaded example: ${key}`});
+        if (key && examples[key]) this.setState({lang: 'pseudocode', output: null, status: '',
+            buffers: {pseudocode: examples[key], python: '', javascript: ''}});
     }
     // Sprite names declared in the current pseudocode — used to populate the
     // "associate SVG → sprite" dropdowns so you pick a real sprite, not guess a name.
@@ -493,14 +493,13 @@ class PseudocodeImporter extends React.Component {
                 <div style={{display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10}}>
                     <img src={brickRobot} alt="Brickwright mascot" width={28} height={33} draggable={false} />
                     <strong style={{fontSize: 15}}>Brickwright Code</strong>
-                    <span title={'Write your project as Pseudocode, Python, or JavaScript — all three are two-way. ' +
-                        '“To blocks” compiles the active tab; “From blocks” reads the current project into every ' +
-                        'language. Switching tabs converts between them. Sprite/pen behaviour lives in the blocks, ' +
-                        'so the code tabs show the algorithmic parts.'}
-                    style={{display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18,
-                        borderRadius: '50%', background: '#e2e8f0', color: '#475569', fontSize: 12, fontWeight: 700, cursor: 'help'}}>
+                    <button type="button" onClick={() => this.setState(s => ({showInfo: !s.showInfo}))}
+                        aria-label="About the Code tab" title="Click for info"
+                        style={{display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18,
+                            padding: 0, border: 'none', borderRadius: '50%', background: this.state.showInfo ? '#4c97ff' : '#e2e8f0',
+                            color: this.state.showInfo ? '#fff' : '#475569', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontStyle: 'italic'}}>
                         i
-                    </span>
+                    </button>
                     <span style={{flex: 1}} />
                     <select defaultValue="" onChange={e => this.loadExample(e.target.value)} style={sel} title="Load a built-in example">
                         <option value="" disabled>📚 Load example…</option>
@@ -519,6 +518,16 @@ class PseudocodeImporter extends React.Component {
                     </button>
                 </div>
 
+                {this.state.showInfo && (
+                    <div style={{marginBottom: 10, padding: '8px 12px', background: '#eff6ff', border: '1px solid #bfdbfe',
+                        borderRadius: 8, fontSize: 13, color: '#334155'}}>
+                        Write your project as <strong>Pseudocode</strong>, <strong>Python</strong>, or <strong>JavaScript</strong> —
+                        all three are two-way. <strong>⇦ To blocks</strong> compiles the active tab; <strong>From blocks ⇨</strong>{' '}
+                        reads the current project into every language. Switching tabs converts between them. Sprite/pen behaviour
+                        lives in the blocks (the ground truth), so the code tabs show the algorithmic parts — comments are kept.
+                    </div>
+                )}
+
                 {this.state.showRef && (
                     <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))',
                         gap: 12, marginBottom: 12, padding: 12, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0'}}>
@@ -535,9 +544,9 @@ class PseudocodeImporter extends React.Component {
                     </div>
                 )}
 
-                {/* Plain buttons — NOT role="tab", which would collide with the editor's
-                    top-level react-tabs and switch to Costumes/Sounds by index. */}
-                <div style={{display: 'flex', gap: 2, marginBottom: -1}}>
+                {/* Tabs (left) + Custom-art toggle (right). Plain buttons — NOT role="tab",
+                    which would collide with the editor's top-level react-tabs. */}
+                <div style={{display: 'flex', gap: 2, marginBottom: -1, alignItems: 'flex-end'}}>
                     {[['pseudocode', '🧩 Pseudocode'], ['python', '🐍 Python'], ['javascript', '🟨 JavaScript']].map(([l, label]) => {
                         const active = this.state.lang === l;
                         return (
@@ -551,6 +560,13 @@ class PseudocodeImporter extends React.Component {
                             </button>
                         );
                     })}
+                    <span style={{flex: 1}} />
+                    <button type="button" onClick={() => this.setState(s => ({showArt: !s.showArt}))}
+                        title="Upload SVGs and bake them in as sprite costumes"
+                        style={{alignSelf: 'center', padding: '6px 12px', borderRadius: 6, cursor: 'pointer',
+                            border: '1px solid #cbd5e1', background: this.state.showArt ? '#e2e8f0' : '#f1f5f9', fontSize: 13}}>
+                        🖼️ Custom sprite art{this.state.uploads.length ? ` (${this.state.uploads.length})` : ''}
+                    </button>
                 </div>
                 <CodeEditor
                     value={this.activeCode()}
@@ -564,11 +580,11 @@ class PseudocodeImporter extends React.Component {
                             : 'function when_flag_clicked() {\n  console.log("Hello!");\n}\nwhen_flag_clicked();\n\n// or press “From blocks” to generate this from your project'}
                 />
 
-                <details style={{margin: '12px 0 4px'}}>
-                    <summary style={{cursor: 'pointer', fontWeight: 600}}>🖼️ Custom sprite art (upload SVG)</summary>
-                    <p style={{margin: '8px 0'}}>
+                {this.state.showArt && (
+                <div style={{margin: '12px 0 4px', padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8}}>
+                    <p style={{margin: '0 0 8px'}}>
                         Upload one or more <code>.svg</code> files, then associate each with a sprite from your
-                        pseudocode in the table below. On <strong>Compile &amp; Load</strong>, every SVG is baked
+                        pseudocode in the table below. On <strong>⇦ To blocks</strong>, every SVG is baked
                         in as that sprite&apos;s costume — <em>replace</em> swaps its costume, <em>add as frame</em>
                         appends one for animation.
                     </p>
@@ -629,7 +645,8 @@ class PseudocodeImporter extends React.Component {
                             <code> SPRITE Player:</code>) to associate an SVG with it.
                         </p>
                     )}
-                </details>
+                </div>
+                )}
 
                 <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
                     <button onClick={this.compile}

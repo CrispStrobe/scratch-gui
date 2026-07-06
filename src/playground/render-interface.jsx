@@ -331,11 +331,31 @@ class Interface extends React.Component {
                                 <p>
                                     <FormattedMessage
                                         // eslint-disable-next-line max-len
-                                        defaultMessage="{APP_NAME} is a creative-coding studio where every Scratch project is also plain code — write it as blocks or text and switch anytime, then run it fast or drive real bricks. Try it by inputting a project ID or URL above or choosing a featured project below."
+                                        defaultMessage="{APP_NAME} is a creative-coding studio built on TurboWarp where every Scratch project is also plain code. Write it as blocks, pseudocode, Python, or JavaScript and switch anytime — each is fully two-way — then run it fast or drive real bricks with the extra Bricks extensions. Try it by inputting a project ID or URL above or choosing a featured project below."
                                         description="Description of the app on the homepage"
                                         id="tw.home.description"
                                         values={{
                                             APP_NAME
+                                        }}
+                                    />
+                                </p>
+                                <p>
+                                    <FormattedMessage
+                                        // eslint-disable-next-line max-len
+                                        defaultMessage="{APP_NAME} is free and open source, based on TurboWarp. Found a bug, want a feature, or want to contribute? Open an issue or pull request at {repo}."
+                                        description="Invitation to the GitHub repository"
+                                        id="tw.home.repo"
+                                        values={{
+                                            APP_NAME,
+                                            repo: (
+                                                <a
+                                                    href="https://github.com/CrispStrobe/brickwright"
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {'github.com/CrispStrobe/brickwright'}
+                                                </a>
+                                            )
                                         }}
                                     />
                                 </p>
