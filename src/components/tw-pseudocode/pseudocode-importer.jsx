@@ -52,6 +52,8 @@ const SYNTAX = [
         'touching Sprite / touching color #ff0000', 'key space pressed? / mouse down?', 'nums contains 3']],
     ['Custom blocks', ['DEFINE draw box (col) (row):', 'DEFINE FAST render: (warp)',
         '<flag> = boolean parameter', 'call: draw box 3 4', 'params in body: go to x: col y: row']],
+    ['Planète Maths (extension)', ['factorial of 5', 'sum of digits of 123', 'min of a and b / max of a and b',
+        '2 to the power of 8', 'pi, euler', 'x is multiple of 3']],
     ['Sensing & more', ['x position of Player', 'current year, day of week',
         'distance to mouse-pointer', 'set drag mode draggable', 'play note 60 for 0.5 beats, set tempo to 120']]
 ];
