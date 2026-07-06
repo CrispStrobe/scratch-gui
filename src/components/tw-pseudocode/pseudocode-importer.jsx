@@ -217,7 +217,10 @@ class PseudocodeImporter extends React.Component {
         // switching tabs always re-derives them from the latest edit — you can never
         // end up with (say) pseudocode sitting in the Python tab.
         this.state = {lang: 'pseudocode', buffers: {pseudocode: '', python: '', javascript: ''},
-            uploads: [], status: '', busy: false, showRef: false, showInfo: false, showArt: false, output: null, running: false};
+            uploads: [], status: '', busy: false, showRef: false, showInfo: false, showArt: false, output: null, running: false,
+            // Hardware-extension driver mode (see reference/runtime-drivers.md): the emitted
+            // driver — shim (neutral) / remote (bridge over WebSocket) / on-brick (transpiler).
+            driverMode: 'shim'};
         this.handleFiles = this.handleFiles.bind(this);
         this.compile = this.compile.bind(this);
         this.fromBlocks = this.fromBlocks.bind(this);
@@ -245,8 +248,8 @@ class PseudocodeImporter extends React.Component {
             const proj = creator.project;
             let code;
             if (to === 'pseudocode') code = new SB3().decompile(proj);
-            else if (to === 'python') code = new SB3().generatePython(proj);
-            else code = new SB3().generateJavaScript(proj);
+            else if (to === 'python') code = new SB3().generatePython(proj, {driver: this.state.driverMode});
+            else code = new SB3().generateJavaScript(proj, {driver: this.state.driverMode});
             return {code};
         } catch (e) { return {error: e.message}; }
     }
@@ -263,6 +266,19 @@ class PseudocodeImporter extends React.Component {
         this.deriveBuffer(src, from, to).then(({code, error}) => {
             if (error) { this.setState({busy: false, status: `Can't show as ${to}: ${error}`}); return; }
             this.setState(s => ({lang: to, busy: false, output: null, status: '', buffers: {...s.buffers, [to]: code}}));
+        });
+    }
+
+    // Change the hardware-extension driver mode and regenerate the active code view.
+    setDriverMode (mode) {
+        this.setState({driverMode: mode}, () => {
+            const src = this.state.buffers.pseudocode;
+            if (this.state.lang === 'pseudocode' || !src || !src.trim()) return;
+            this.setState({busy: true, status: `Driver: ${mode}…`});
+            this.deriveBuffer(src, 'pseudocode', this.state.lang).then(({code, error}) => {
+                if (error) { this.setState({busy: false, status: error}); return; }
+                this.setState(s => ({busy: false, status: '', output: null, buffers: {...s.buffers, [s.lang]: code}}));
+            });
         });
     }
 
@@ -457,8 +473,8 @@ class PseudocodeImporter extends React.Component {
             const proj = creator.project;
             const nb = {...this.state.buffers};
             if (lang !== 'pseudocode') nb.pseudocode = new SB3Creator().decompile(proj);
-            if (lang !== 'python') nb.python = new SB3Creator().generatePython(proj);
-            if (lang !== 'javascript') nb.javascript = new SB3Creator().generateJavaScript(proj);
+            if (lang !== 'python') nb.python = new SB3Creator().generatePython(proj, {driver: this.state.driverMode});
+            if (lang !== 'javascript') nb.javascript = new SB3Creator().generateJavaScript(proj, {driver: this.state.driverMode});
             const warns = [...parseWarnings, ...creator.warnings];
             if (missing.length) warns.push(`no sprite named: ${missing.join(', ')}`);
             this.setState({buffers: nb, status: warns.length ?
@@ -477,8 +493,8 @@ class PseudocodeImporter extends React.Component {
             const project = JSON.parse(this.props.vm.toJSON());
             const buffers = {
                 pseudocode: new SB3Creator().decompile(project),
-                python: new SB3Creator().generatePython(project),
-                javascript: new SB3Creator().generateJavaScript(project)
+                python: new SB3Creator().generatePython(project, {driver: this.state.driverMode}),
+                javascript: new SB3Creator().generateJavaScript(project, {driver: this.state.driverMode})
             };
             const unsupported = (buffers.pseudocode.match(/^# unsupported:/gm) || []).length;
             this.setState({buffers, output: null, status: unsupported ?
@@ -671,6 +687,17 @@ class PseudocodeImporter extends React.Component {
                         style={{...btn, background: 'linear-gradient(135deg,#a55b80,#8e4a6c)'}}>
                         From blocks ⇨
                     </button>
+                    {this.state.lang !== 'pseudocode' && /_gamepad|_boost|Driver/.test(this.activeCode()) ? (
+                        <label style={{fontSize: 13}} title="Hardware-extension driver: shim (neutral) · remote (bridge over WebSocket) · on-brick (device transpiler). The program is driver-agnostic; this only swaps the driver.">
+                            🔌{' '}
+                            <select value={this.state.driverMode} onChange={e => this.setDriverMode(e.target.value)} disabled={this.state.busy}
+                                style={{padding: '5px 8px', borderRadius: 6, border: '1px solid #cbd5e1', font: 'inherit'}}>
+                                <option value="shim">driver: shim</option>
+                                <option value="remote">driver: remote (bridge)</option>
+                                <option value="ondevice">driver: on-brick</option>
+                            </select>
+                        </label>
+                    ) : null}
                     {this.state.lang !== 'pseudocode' && this.activeCode().trim() ? (
                         <button onClick={this.run} disabled={this.state.running}
                             style={{...btn, background: 'linear-gradient(135deg,#37b24d,#2f9e44)'}}>
