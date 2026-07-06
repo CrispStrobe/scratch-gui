@@ -29,6 +29,9 @@ const GROUPS = [
     {label: 'Language basics', items: [
         ['motion', 'Motion'], ['looks', 'Looks'], ['sound', 'Sound'], ['pen', 'Pen'],
         ['sensing', 'Sensing'], ['control', 'Control'], ['operators', 'Operators']
+    ]},
+    {label: 'Extensions', items: [
+        ['planetemaths', '🧮 Planète Maths']
     ]}
 ];
 
@@ -484,7 +487,10 @@ class PseudocodeImporter extends React.Component {
         this.setState({busy: false});
     }
     render () {
-        const wrap = {height: '100%', boxSizing: 'border-box', padding: 16, overflow: 'auto',
+        // The selected .tab-panel is display:flex (row); like .blocks-wrapper we must
+        // flex-grow to fill the column width, else we shrink to content (~660px) and
+        // leave a big gap before the stage.
+        const wrap = {height: '100%', flex: '1 1 auto', minWidth: 0, boxSizing: 'border-box', padding: 16, overflow: 'auto',
             display: 'flex', flexDirection: 'column', font: '14px/1.5 sans-serif', color: '#575e75'};
         const btn = {padding: '10px 18px', borderRadius: 8, border: 'none', color: '#fff', cursor: 'pointer',
             fontWeight: 600, background: 'linear-gradient(135deg,#4c97ff,#4280d7)'};
