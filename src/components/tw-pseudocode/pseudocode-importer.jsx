@@ -56,6 +56,47 @@ const SYNTAX = [
         'distance to mouse-pointer', 'set drag mode draggable', 'play note 60 for 0.5 beats, set tempo to 120']]
 ];
 
+// Web Worker bodies for the sandboxed (non-interactive) runner. They run off the
+// main thread so a runaway/`forever` loop can be `terminate()`d on a timeout instead
+// of freezing the tab. Neither has a real `prompt`/`input` — interactive programs take
+// the main-thread path instead. Kept as plain-ES5 strings so they need no transpile.
+const JS_WORKER = [
+    'self.onmessage = function (e) {',
+    '  var log = function () {',
+    '    var a = Array.prototype.slice.call(arguments);',
+    '    self.postMessage({type: "out", text: a.map(function (x) {',
+    '      return typeof x === "string" ? x : JSON.stringify(x);',
+    '    }).join(" ") + "\\n"});',
+    '  };',
+    '  var console = {log: log, error: log, warn: log, info: log};',
+    '  var prompt = function () { return ""; };',
+    '  try {',
+    '    (new Function("console", "prompt", e.data.code))(console, prompt);',
+    '    self.postMessage({type: "done"});',
+    '  } catch (err) { self.postMessage({type: "error", text: String(err && err.message || err)}); }',
+    '};'
+].join('\n');
+
+// Appended after the injected Skulpt sources to form the Python worker.
+const PY_WORKER = [
+    'self.onmessage = function (e) {',
+    '  Sk.configure({',
+    '    output: function (t) { self.postMessage({type: "out", text: t}); },',
+    '    read: function (f) {',
+    '      if (Sk.builtinFiles && Sk.builtinFiles.files[f]) return Sk.builtinFiles.files[f];',
+    '      throw new Error("module " + f + " not found");',
+    '    },',
+    '    inputfun: function () { return ""; },',
+    '    inputfunTakesPrompt: true,',
+    '    __future__: Sk.python3',
+    '  });',
+    '  Sk.misceval.asyncToPromise(function () {',
+    '    return Sk.importMainWithBody("<brickwright>", false, e.data.code, true);',
+    '  }).then(function () { self.postMessage({type: "done"}); })',
+    '    .catch(function (err) { self.postMessage({type: "error", text: String(err && err.message || err)}); });',
+    '};'
+].join('\n');
+
 class PseudocodeImporter extends React.Component {
     constructor (props) {
         super(props);
@@ -67,53 +108,124 @@ class PseudocodeImporter extends React.Component {
         this.run = this.run.bind(this);
     }
 
-    // Lazily load Skulpt (Python-in-the-browser). Its prebuilt dist assumes a
-    // global `Sk`, so we inject it as a <script> rather than importing it as a
-    // module. ~1 MB, fetched only on the first Python run.
-    async loadSkulpt () {
-        if (window.Sk && window.Sk.configure) return window.Sk;
+    // Lazily fetch the prebuilt Skulpt sources (~1 MB, only on the first Python
+    // run) and cache the raw strings so both the main-thread injector and the
+    // Worker builder can reuse them.
+    async skulptSource () {
+        if (this._skSrc) return this._skSrc;
         const [core, stdlib] = await Promise.all([
             import(/* webpackChunkName: "skulpt" */ '!!raw-loader!skulpt/dist/skulpt.min.js'),
             import(/* webpackChunkName: "skulpt-stdlib" */ '!!raw-loader!skulpt/dist/skulpt-stdlib.js')
         ]);
-        const inject = (m) => { const s = document.createElement('script'); s.text = m.default || m; document.head.appendChild(s); };
+        this._skSrc = {core: core.default || core, stdlib: stdlib.default || stdlib};
+        return this._skSrc;
+    }
+
+    // Skulpt's dist assumes a global `Sk`, so on the main thread we inject it as a
+    // <script> rather than importing it as a module.
+    async loadSkulpt () {
+        if (window.Sk && window.Sk.configure) return window.Sk;
+        const {core, stdlib} = await this.skulptSource();
+        const inject = (src) => { const s = document.createElement('script'); s.text = src; document.head.appendChild(s); };
         inject(core); inject(stdlib);
         if (!window.Sk || !window.Sk.configure) throw new Error('Skulpt failed to load');
         return window.Sk;
     }
 
-    // Run the generated code in-page. JS runs natively (the editor already allows
-    // eval for the VM compiler); Python runs on Skulpt. Only the algorithmic
-    // subset is runnable — a `forever` loop would hang the tab, so we refuse those.
+    // Run `workerSrc` (a self-contained worker body) against `code` in a fresh Web
+    // Worker, streaming its output into `buf`. Resolves {} on clean finish, {error}
+    // on a thrown error, or {timeout:true} after `timeoutMs` — at which point the
+    // worker (and any infinite loop inside it) is terminated. Never rejects.
+    runViaWorker (workerSrc, code, buf, timeoutMs) {
+        return new Promise((resolve) => {
+            let url;
+            let worker;
+            try {
+                url = URL.createObjectURL(new Blob([workerSrc], {type: 'application/javascript'}));
+                worker = new Worker(url);
+            } catch (e) {
+                if (url) URL.revokeObjectURL(url);
+                resolve({error: String((e && e.message) || e)});
+                return;
+            }
+            let settled = false;
+            const done = (result) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                worker.terminate();
+                URL.revokeObjectURL(url);
+                resolve(result);
+            };
+            const timer = setTimeout(() => done({timeout: true}), timeoutMs);
+            worker.onmessage = (e) => {
+                const d = e.data || {};
+                if (d.type === 'out') buf.push(d.text);
+                else if (d.type === 'done') done({});
+                else if (d.type === 'error') done({error: d.text});
+            };
+            worker.onerror = (e) => done({error: (e && e.message) || 'worker error'});
+            worker.postMessage({code});
+        });
+    }
+
+    runJsMain (code, buf) {
+        const log = (...a) => buf.push(a.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n');
+        // eslint-disable-next-line no-new-func
+        const fn = new Function('console', 'prompt', code);
+        fn({log, error: log, warn: log, info: log}, (q) => window.prompt(q) || '');
+    }
+
+    async runPyMain (code, buf) {
+        const Sk = await this.loadSkulpt();
+        Sk.configure({
+            output: (t) => buf.push(t),
+            read: (f) => { if (Sk.builtinFiles && Sk.builtinFiles.files[f]) return Sk.builtinFiles.files[f]; throw new Error(`module ${f} not found`); },
+            inputfun: (p) => window.prompt(p) || '',
+            inputfunTakesPrompt: true,
+            __future__: Sk.python3
+        });
+        await Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<brickwright>', false, code, true));
+    }
+
+    // Run the generated code in-page. Interactive programs (that read input) need
+    // the synchronous main-thread `prompt()`, so they run inline with a forever-loop
+    // guard. Everything else runs in a Web Worker with a hard timeout — a runaway
+    // loop is killed cleanly instead of freezing the tab.
     async run () {
         const code = this.state.code;
+        const lang = this.state.lang;
         const buf = [];
-        this.setState({output: '', running: true});
+        this.setState({output: '', running: true, status: ''});
+        const TIMEOUT = 4000;
         const finish = (extra) => this.setState({
-            output: (buf.join('').trimEnd() + (extra ? '\n' + extra : '')).trim() || '(no output)',
+            output: (buf.join('').trimEnd() + (extra ? (buf.length ? '\n' : '') + extra : '')).trim() || '(no output)',
             running: false, status: ''
         });
+        const forever = lang === 'python' ? /^\s*while\s+True\s*:/m : /while\s*\(\s*true\s*\)/;
+        const usesInput = lang === 'python' ? /(^|[^.\w])input\s*\(/.test(code) : /(^|[^.\w])prompt\s*\(/.test(code);
+        const canWorker = typeof Worker !== 'undefined' && typeof Blob !== 'undefined' &&
+            typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function';
         try {
-            const forever = this.state.lang === 'python' ? /^\s*while True:/m : /while\s*\(\s*true\s*\)/;
-            if (forever.test(code)) throw new Error('This project has a forever loop, so it would hang here. Try an algorithmic example (quiz, operators, 2048, …).');
-            if (this.state.lang === 'python') {
-                this.setState({status: 'Loading Python (Skulpt)…'});
-                const Sk = await this.loadSkulpt();
-                Sk.configure({
-                    output: (t) => buf.push(t),
-                    read: (f) => { if (Sk.builtinFiles && Sk.builtinFiles.files[f]) return Sk.builtinFiles.files[f]; throw new Error(`module ${f} not found`); },
-                    inputfun: (p) => window.prompt(p) || '',
-                    inputfunTakesPrompt: true,
-                    __future__: Sk.python3
-                });
-                await Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<brickwright>', false, code, true));
+            // A `forever:` game loop is meant for the blocks/green flag, not a text console —
+            // catch the obvious case up front with a friendly nudge (the Worker timeout below
+            // is only a safety net for non-obvious runaway loops).
+            if (forever.test(code)) throw new Error('This project has a forever (game) loop, so it runs in the blocks — press the green flag to play it. For a text run, try an algorithmic example (quiz, operators, 2048, …).');
+            if (usesInput || !canWorker) {
+                if (lang === 'python') { this.setState({status: 'Loading Python (Skulpt)…'}); await this.runPyMain(code, buf); } else this.runJsMain(code, buf);
                 finish();
             } else {
-                const log = (...a) => buf.push(a.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n');
-                // eslint-disable-next-line no-new-func
-                const fn = new Function('console', 'prompt', code);
-                fn({log, error: log, warn: log}, (q) => window.prompt(q) || '');
-                finish();
+                let result;
+                if (lang === 'python') {
+                    this.setState({status: 'Loading Python (Skulpt)…'});
+                    const {core, stdlib} = await this.skulptSource();
+                    result = await this.runViaWorker(`${core}\n${stdlib}\n${PY_WORKER}`, code, buf, TIMEOUT);
+                } else {
+                    result = await this.runViaWorker(JS_WORKER, code, buf, TIMEOUT);
+                }
+                if (result.timeout) finish(`⏱ Stopped after ${TIMEOUT / 1000}s — still running (likely an infinite loop).`);
+                else if (result.error) finish(result.error);
+                else finish();
             }
         } catch (e) {
             finish(String(e.message || e));
