@@ -27,7 +27,8 @@ const srcDir = dirIdx !== -1 ? process.argv[dirIdx + 1] : null;
 // [source path relative to the sb3-creator repo, local vendored destination]
 const FILES = [
     ['src/utils/sb3Creator.js', path.join(lib, 'sb3-creator.js')],
-    ['src/utils/examples.js', path.join(lib, 'sb3-creator-examples.js')]
+    ['src/utils/examples.js', path.join(lib, 'sb3-creator-examples.js')],
+    ['src/utils/pythonToPseudocode.js', path.join(lib, 'sb3-creator-python.js')]
 ];
 
 async function readSource (rel) {

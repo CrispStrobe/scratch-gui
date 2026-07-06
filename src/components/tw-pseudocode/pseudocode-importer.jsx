@@ -97,6 +97,92 @@ const PY_WORKER = [
     '};'
 ].join('\n');
 
+// ---- Lightweight syntax highlighter (dependency-free, CSP-safe) ------------------
+// A textarea can't render coloured text, so the editor is an overlay: a highlighted
+// <pre> sits behind a transparent <textarea> whose caret stays visible. This function
+// turns source into safe HTML for that <pre>. It's deliberately regex-simple —
+// strings, comments, numbers and a per-language keyword set — not a full lexer.
+const KEYWORDS = {
+    python: /^(def|if|elif|else|while|for|in|return|pass|and|or|not|True|False|None|import|from|as|global|range|del|break|continue|lambda|with|try|except|is)$/,
+    javascript: /^(function|if|else|while|for|of|in|return|let|const|var|true|false|null|undefined|new|typeof|do|switch|case|break|continue|try|catch|throw|class|this|void)$/,
+    pseudocode: /^(set|change|say|think|ask|wait|move|turn|go|glide|point|broadcast|create|delete|stop|add|insert|replace|call|play|hide|show|switch|next|when|and|or|not|of|to|by|until|contains|mod|join|item|pick|random|round|sqrt|length|clone|myself)$/i
+};
+const PSEUDO_CAPS = /^(SPRITE|STAGE|GLOBAL|LOCAL|LIST|SHAPE|COSTUME|BACKDROP|SOUND|WHEN|DEFINE|IF|THEN|ELSE|FOREVER|REPEAT|UNTIL|FAST)$/;
+
+function escHtml (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function highlight (code, lang) {
+    const commentPat = lang === 'javascript' ? '\\/\\/[^\\n]*' : '#[^\\n]*';
+    const re = new RegExp(`(${commentPat})|("(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*')|(\\b\\d+(?:\\.\\d+)?\\b)|([A-Za-z_][A-Za-z0-9_]*)`, 'g');
+    const kw = KEYWORDS[lang] || KEYWORDS.pseudocode;
+    let out = '', last = 0, m;
+    const wrap = (color, text, extra) => `<span style="color:${color}${extra || ''}">${escHtml(text)}</span>`;
+    while ((m = re.exec(code))) {
+        out += escHtml(code.slice(last, m.index));
+        last = re.lastIndex;
+        const [, comment, str, num, word] = m;
+        if (comment !== undefined) out += wrap('#6a737d', comment, ';font-style:italic');
+        else if (str !== undefined) out += wrap('#22863a', str);
+        else if (num !== undefined) out += wrap('#005cc5', num);
+        else if (word !== undefined) {
+            if (lang === 'pseudocode' && PSEUDO_CAPS.test(word)) out += wrap('#6f42c1', word, ';font-weight:600');
+            else if (kw.test(word)) out += wrap('#d73a49', word);
+            else out += escHtml(word);
+        }
+    }
+    out += escHtml(code.slice(last));
+    return out;
+}
+
+// Overlaid highlighted editor. Shares exact metrics between the <pre> and <textarea>
+// so the coloured layer lines up with the caret; scroll is mirrored on input/scroll.
+class CodeEditor extends React.Component {
+    constructor (props) {
+        super(props);
+        this.pre = React.createRef();
+        this.ta = React.createRef();
+        this.sync = this.sync.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+    }
+    sync () { const pre = this.pre.current, ta = this.ta.current; if (pre && ta) { pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; } }
+    onKeyDown (e) {
+        if (e.key !== 'Tab' || this.props.readOnly) return;
+        e.preventDefault();
+        const ta = e.target;
+        const s = ta.selectionStart, en = ta.selectionEnd, val = ta.value;
+        const next = val.slice(0, s) + '  ' + val.slice(en);
+        this.props.onChange({target: {value: next}});
+        requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = s + 2; });
+    }
+    render () {
+        const {value, onChange, readOnly, lang, placeholder} = this.props;
+        const shared = {margin: 0, boxSizing: 'border-box', fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
+            fontSize: 13, lineHeight: '1.5', padding: 12, border: '1px solid #cbd5e1', borderRadius: 8,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word', tabSize: 2, letterSpacing: 'normal'};
+        const html = value ? highlight(value, lang) + '<br/>' : `<span style="color:#94a3b8">${escHtml(placeholder || '')}</span>`;
+        return (
+            <div style={{position: 'relative', flex: 1, minHeight: 240, width: '100%'}}>
+                <pre ref={this.pre} aria-hidden="true" dangerouslySetInnerHTML={{__html: html}}
+                    style={{...shared, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'auto',
+                        background: readOnly ? '#f8fafc' : '#fff', color: '#24292e', pointerEvents: 'none',
+                        borderColor: readOnly ? '#e2e8f0' : '#cbd5e1'}} />
+                <textarea ref={this.ta} value={value} onChange={onChange} onScroll={this.sync} onKeyDown={this.onKeyDown}
+                    spellCheck={false} readOnly={readOnly}
+                    style={{...shared, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, resize: 'none', overflow: 'auto',
+                        background: 'transparent', color: 'transparent', caretColor: '#24292e', WebkitTextFillColor: 'transparent',
+                        borderColor: 'transparent'}} />
+            </div>
+        );
+    }
+}
+CodeEditor.propTypes = {
+    value: PropTypes.string,
+    onChange: PropTypes.func,
+    readOnly: PropTypes.bool,
+    lang: PropTypes.string,
+    placeholder: PropTypes.string
+};
+
 class PseudocodeImporter extends React.Component {
     constructor (props) {
         super(props);
@@ -262,12 +348,27 @@ class PseudocodeImporter extends React.Component {
         this.setState(s => ({uploads: s.uploads.filter((_, idx) => idx !== i)}));
     }
     async compile () {
+        const lang = this.state.lang;
+        if (lang === 'javascript') {
+            this.setState({status: 'JavaScript is a read-only view — switch to Pseudocode or Python to compile to blocks.'});
+            return;
+        }
         this.setState({busy: true, status: 'Compiling…'});
         try {
+            // Python compiles via the parser: Python → pseudocode → blocks. Pseudocode
+            // is fed straight in. Either way `source` is pseudocode for the compiler.
+            let source = this.state.code;
+            let pyWarnings = [];
+            if (lang === 'python') {
+                const pmod = await import(/* webpackChunkName: "sb3-creator-python" */ '../../lib/sb3-creator-python.js');
+                const res = pmod.default(this.state.code);
+                source = res.pseudocode;
+                pyWarnings = res.warnings || [];
+            }
             const mod = await import(/* webpackChunkName: "sb3-creator" */ '../../lib/sb3-creator.js');
             const SB3Creator = mod.default;
             const creator = new SB3Creator();
-            creator.parse(this.state.code);
+            creator.parse(source);
             const missing = [];
             this.state.uploads.forEach(u => {
                 const name = (u.sprite || '').trim();
@@ -282,11 +383,12 @@ class PseudocodeImporter extends React.Component {
             await this.props.vm.loadProject(buffer);
             const first = this.props.vm.runtime.targets.find(target => !target.isStage);
             if (first) this.props.vm.setEditingTarget(first.id);
-            const warns = [...creator.warnings];
+            const warns = [...pyWarnings, ...creator.warnings];
             if (missing.length) warns.push(`no sprite named: ${missing.join(', ')}`);
             this.setState({status: warns.length ?
                 `Loaded with warnings — ${warns.slice(0, 4).join(' · ')}` :
-                'Loaded into the editor. Switch to the Code tab to see the blocks.'});
+                (lang === 'python' ? 'Python compiled to blocks and loaded. Switch to the Code tab to see them.'
+                    : 'Loaded into the editor. Switch to the Code tab to see the blocks.')});
         } catch (e) {
             this.setState({status: `Error: ${e.message}`});
         }
@@ -303,7 +405,7 @@ class PseudocodeImporter extends React.Component {
             let code, status;
             if (lang === 'python') {
                 code = gen.generatePython(project);
-                status = 'Python — a read-only view of the current project (the algorithmic parts run).';
+                status = 'Python — edit it and press “To blocks” to compile back (the algorithmic parts run).';
             } else if (lang === 'javascript') {
                 code = gen.generateJavaScript(project);
                 status = 'JavaScript — a read-only view of the current project (the algorithmic parts run).';
@@ -333,8 +435,10 @@ class PseudocodeImporter extends React.Component {
                     <div>
                         <strong style={{fontSize: 16}}>Brickwright Script</strong>
                         <div style={{opacity: .7}}>
-                            Write your project as plain code and compile it into blocks — or press “From blocks”
-                            to read the current project back as code. The same language drives Bricks &amp; robots.
+                            Write your project as <strong>Pseudocode</strong> or <strong>Python</strong> and press
+                            “To blocks” to compile it — or “From blocks” to read the current project back as code
+                            (Pseudocode, Python, or JavaScript). Edit, run, and round-trip: the same logic drives
+                            Bricks &amp; robots.
                         </div>
                     </div>
                 </div>
@@ -374,13 +478,12 @@ class PseudocodeImporter extends React.Component {
                     </div>
                 )}
 
-                <textarea
+                <CodeEditor
                     value={this.state.code}
                     onChange={e => this.setState({code: e.target.value})}
+                    readOnly={this.state.lang === 'javascript'}
+                    lang={this.state.lang}
                     placeholder={'SPRITE Cat:\n  WHEN flag clicked:\n    say "Hello!" for 2 seconds\n    FOREVER:\n      move 10 steps\n      turn right 15 degrees'}
-                    spellCheck={false}
-                    style={{flex: 1, minHeight: 220, width: '100%', boxSizing: 'border-box', resize: 'vertical',
-                        fontFamily: 'monospace', fontSize: 13, border: '1px solid #cbd5e1', borderRadius: 8, padding: 12}}
                 />
 
                 <details style={{margin: '12px 0 4px'}}>
@@ -452,22 +555,22 @@ class PseudocodeImporter extends React.Component {
 
                 <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
                     <button onClick={this.compile}
-                        disabled={this.state.busy || !this.state.code.trim() || this.state.lang !== 'pseudocode'}
-                        title={this.state.lang !== 'pseudocode' ? 'Switch the “From blocks” language to Pseudocode to edit & compile' : ''}
-                        style={btn}>
-                        🚀 Compile &amp; Load
+                        disabled={this.state.busy || !this.state.code.trim() || this.state.lang === 'javascript'}
+                        title={this.state.lang === 'javascript' ? 'JavaScript is a read-only view — switch to Pseudocode or Python to compile' : ''}
+                        style={{...btn, opacity: this.state.lang === 'javascript' ? 0.5 : 1}}>
+                        {this.state.lang === 'python' ? '🚀 To blocks' : '🚀 Compile & Load'}
                     </button>
                     <button onClick={this.fromBlocks} disabled={this.state.busy}
                         style={{...btn, background: 'linear-gradient(135deg,#a55b80,#8e4a6c)'}}>
                         ⟵ From blocks
                     </button>
-                    <label style={{fontSize: 13}}>as{' '}
+                    <label style={{fontSize: 13}} title="Two-way: Pseudocode and Python both compile to blocks and back. JavaScript is a read-only view.">
                         <select value={this.state.lang}
                             onChange={e => this.setState({lang: e.target.value, output: null})}
                             style={{padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', font: 'inherit'}}>
-                            <option value="pseudocode">Pseudocode (editable)</option>
-                            <option value="python">Python (read-only)</option>
-                            <option value="javascript">JavaScript (read-only)</option>
+                            <option value="pseudocode">Pseudocode ⇄ blocks</option>
+                            <option value="python">Python ⇄ blocks</option>
+                            <option value="javascript">JavaScript → view</option>
                         </select>
                     </label>
                     {this.state.lang !== 'pseudocode' && this.state.code.trim() ? (
