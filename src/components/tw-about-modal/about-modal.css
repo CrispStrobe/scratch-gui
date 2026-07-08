@@ -1,0 +1,81 @@
+@import "../../css/colors.css";
+@import "../../css/default-colors.css";
+
+.modal-content {
+    max-width: 750px;
+}
+
+.body {
+    background: $ui-modal-background;
+    padding: 1.5rem 2.25rem;
+    min-height: 150px;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+@media (max-height: 600px) {
+    .modal-content {
+        margin: 50px auto;
+    }
+    .body {
+        max-height: calc(100vh - 150px);
+    }
+}
+
+.app-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: $text-primary;
+}
+
+.tagline {
+    margin-top: 0.25rem;
+    margin-bottom: 1rem;
+    color: $text-primary-transparent;
+}
+
+.section {
+    margin: 1.25rem 0;
+}
+
+.section-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid $ui-black-transparent;
+}
+
+.section-body p {
+    margin: 0.5rem 0;
+}
+
+.link {
+    color: $link-color;
+}
+
+.dep-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.dep-table td {
+    padding: 0.15rem 0.5rem 0.15rem 0;
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.dep-name {
+    font-family: monospace;
+}
+
+.dep-version {
+    color: $text-primary-transparent;
+}
+
+.dep-license {
+    color: $text-primary-transparent;
+    text-align: right;
+    width: 100%;
+}

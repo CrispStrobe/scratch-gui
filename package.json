@@ -28,7 +28,8 @@
     "test:smoke": "jest --runInBand test[\\\\/]smoke",
     "watch": "webpack --colors --watch",
     "sync:sb3creator": "node scripts/sync-sb3creator.mjs",
-    "sync:sb3creator:check": "node scripts/sync-sb3creator.mjs --check"
+    "sync:sb3creator:check": "node scripts/sync-sb3creator.mjs --check",
+    "gen:licenses": "node scripts/gen-license-manifest.mjs"
   },
   "config": {
     "commitizen": {

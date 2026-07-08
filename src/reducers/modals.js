@@ -19,6 +19,7 @@ const MODAL_FONTS = 'fontsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
 const MODAL_INVALID_PROJECT = 'invalidProjectModal';
 const MODAL_ADDON_SETTINGS = 'addonSettingsModal';
+const MODAL_ABOUT = 'aboutModal';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -38,7 +39,8 @@ const initialState = {
     [MODAL_FONTS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
     [MODAL_INVALID_PROJECT]: false,
-    [MODAL_ADDON_SETTINGS]: false
+    [MODAL_ADDON_SETTINGS]: false,
+    [MODAL_ABOUT]: false
 };
 
 const reducer = function (state, action) {
@@ -122,6 +124,9 @@ const openInvalidProjectModal = function () {
 const openAddonSettingsModal = function () {
     return openModal(MODAL_ADDON_SETTINGS);
 };
+const openAboutModal = function () {
+    return openModal(MODAL_ABOUT);
+};
 const closeBackdropLibrary = function () {
     return closeModal(MODAL_BACKDROP_LIBRARY);
 };
@@ -176,6 +181,9 @@ const closeInvalidProjectModal = function () {
 const closeAddonSettingsModal = function () {
     return closeModal(MODAL_ADDON_SETTINGS);
 };
+const closeAboutModal = function () {
+    return closeModal(MODAL_ABOUT);
+};
 export {
     reducer as default,
     initialState as modalsInitialState,
@@ -197,6 +205,7 @@ export {
     openUnknownPlatformModal,
     openInvalidProjectModal,
     openAddonSettingsModal,
+    openAboutModal,
     closeBackdropLibrary,
     closeCostumeLibrary,
     closeExtensionLibrary,
@@ -214,5 +223,6 @@ export {
     closeFontsModal,
     closeUnknownPlatformModal,
     closeInvalidProjectModal,
-    closeAddonSettingsModal
+    closeAddonSettingsModal,
+    closeAboutModal
 };
