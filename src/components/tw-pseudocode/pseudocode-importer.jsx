@@ -220,7 +220,9 @@ class PseudocodeImporter extends React.Component {
             uploads: [], status: '', busy: false, showRef: false, showInfo: false, showArt: false, output: null, running: false,
             // Hardware-extension codegen options (see reference/runtime-drivers.md): the emitted
             // driver (shim / remote / on-brick), plus async/await and event-hat switches.
-            driverMode: 'shim', asyncMode: false, eventsMode: false};
+            driverMode: 'shim', asyncMode: false, eventsMode: false,
+            // Include `#`/`//` comments (from native block comments) in Python/JS. Default on.
+            commentsMode: true};
         this.handleFiles = this.handleFiles.bind(this);
         this.compile = this.compile.bind(this);
         this.fromBlocks = this.fromBlocks.bind(this);
@@ -270,7 +272,7 @@ class PseudocodeImporter extends React.Component {
     }
 
     // Hardware-extension codegen options passed to generatePython/generateJavaScript.
-    genOpts () { return {driver: this.state.driverMode, async: this.state.asyncMode, events: this.state.eventsMode}; }
+    genOpts () { return {driver: this.state.driverMode, async: this.state.asyncMode, events: this.state.eventsMode, comments: this.state.commentsMode}; }
 
     // Apply a codegen-option change and regenerate the active code view.
     setGenOpt (patch) {
@@ -708,6 +710,14 @@ class PseudocodeImporter extends React.Component {
                             <label title="turn extension event hats (when button pressed …) into driver callbacks">
                                 <input type="checkbox" checked={this.state.eventsMode} disabled={this.state.busy}
                                     onChange={e => this.setGenOpt({eventsMode: e.target.checked})} /> events
+                            </label>
+                        </span>
+                    ) : null}
+                    {this.state.lang !== 'pseudocode' ? (
+                        <span style={{fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8}}>
+                            <label title="Show native block comments as # / // lines in the generated code (they round-trip back to blocks).">
+                                <input type="checkbox" checked={this.state.commentsMode} disabled={this.state.busy}
+                                    onChange={e => this.setGenOpt({commentsMode: e.target.checked})} /> comments
                             </label>
                         </span>
                     ) : null}
