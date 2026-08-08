@@ -157,9 +157,12 @@ class SB3Creator {
     }
 
     // Resolve one runtime-op argument: a menu/dropdown shadow -> its field value (quoted);
-    // a value input -> the language value via `valFn(key)`.
+    // a plain field -> the same; a value input -> the language value via `valFn(key)`.
     runtimeArg(b, key, blocks, valFn) {
         const input = b.inputs[key];
+        // Blocks whose arguments are fields rather than inputs (the stc12 pin blocks are the
+        // first) would otherwise resolve to a neutral value and lose the pin name entirely.
+        if (!input && b.fields && b.fields[key]) return this.pyStr(String(b.fields[key][0]));
         if (!input) return valFn(key);
         const inner = input[1];
         if (!Array.isArray(inner)) {
@@ -201,8 +204,14 @@ class SB3Creator {
         const methods = new Map();
         for (const op of Object.values(reg.ops)) if (!methods.has(op.method)) methods.set(op.method, op);
         const cls = rt.charAt(0).toUpperCase() + rt.slice(1);
+        // The simulated-board driver. Only the stc12 runtime has the pin table needed to
+        // speak boundary A, so other runtimes fall back to the neutral stub.
+        if (mode === 'simulator' && extId === 'stc12' && this._driverPins) {
+            return this.stc12SimulatorDriver(lang, this._driverPins);
+        }
         const banner = {
             shim: 'neutral stub — drives nothing; implement to drive real hardware',
+            simulator: 'simulated board — no board attached for this runtime, so neutral',
             remote: `forwards to a Brickwright bridge (brickwright-bridges) over WebSocket`,
             ondevice: `on-brick target — see the per-hardware transpiler (extensions/CrispStrobe) for real ev3dev/pybricks code`
         }[mode] || 'neutral stub';
@@ -246,6 +255,71 @@ class SB3Creator {
         }
         out.push(`const _${rt} = { ${entries.join(', ')} };`);
         return out;
+    }
+
+    // The `simulator` driver for the stc12 runtime: turns the emitted program into the MCU
+    // side of **boundary A** (see reference/simulation-contract.md), talking to a board layer.
+    //
+    // The program says `turn on led1`; the board needs `setPin("P1.0", mode, driveHigh)`. Only
+    // the project knows that led1 is P1.0, is push-pull, and is wired ACTIVE LOW — so the pin
+    // table is emitted as data beside the driver. That inversion (`on` -> a 0 on an active-low
+    // pin) is the whole reason the board can then *show* why the naive wiring stays dark.
+    //
+    // The host supplies `bwBoard`; with none attached the driver stays neutral, so the program
+    // still runs standalone.
+    stc12SimulatorDriver(lang, pins) {
+        const table = {};
+        for (const p of pins) {
+            table[p.name] = { pin: `P${p.port}.${p.bit}`, dir: p.direction, low: !!p.activeLow };
+        }
+        const json = JSON.stringify(table);
+        // `set high`/`set low` are levels; `turn on`/`off` are states and respect the polarity.
+        const drive = 'const _drv = (p, st) => (st === "high" ? true : st === "low" ? false : ((st === "on") !== p.low));';
+        const mode = 'const _mod = (p) => (p.dir === "output" ? "pushpull" : p.dir === "analog" ? "input" : "quasi");';
+        if (lang === 'py') {
+            return [
+                '# _stc12 driver — simulated board (boundary A). Supply `bw_board` to attach one.',
+                'import json',
+                `_stc12_pins = json.loads(${this.pyStr(json)})`,
+                'class _Stc12Simulated:',
+                '    def _p(self, name): return _stc12_pins.get(name)',
+                '    def _mode(self, p): return "pushpull" if p["dir"] == "output" else ("input" if p["dir"] == "analog" else "quasi")',
+                '    def _drive(self, p, st): return True if st == "high" else False if st == "low" else ((st == "on") != p["low"])',
+                '    def setPin(self, name, state):',
+                '        p = self._p(name)',
+                '        if p and _board(): _board().setPin(p["pin"], self._mode(p), self._drive(p, state))',
+                '    def togglePin(self, name):',
+                '        p = self._p(name)',
+                '        if p and _board(): _board().setPin(p["pin"], self._mode(p), not _board().readPin(p["pin"]))',
+                '    def readPin(self, name):',
+                '        p = self._p(name)',
+                '        if not p or not _board(): return 0',
+                '        # An ANALOG pin reads volts from the board; the MCU scales to counts.',
+                '        if p["dir"] == "analog": return int(_board().readAnalog(p["pin"]) / 5.0 * 1023)',
+                '        return (not _board().readPin(p["pin"])) if p["low"] else _board().readPin(p["pin"])',
+                '    def on(self, event, handler): pass',
+                'def _board(): return globals().get("bw_board")',
+                '_stc12 = _Stc12Simulated()'
+            ];
+        }
+        return [
+            '// _stc12 driver — simulated board (boundary A). Supply `bwBoard` to attach one.',
+            `const _stc12_pins = ${json};`,
+            drive, mode,
+            'const _board = () => (typeof bwBoard !== "undefined" ? bwBoard : null);',
+            'const _stc12 = {',
+            '    setPin: (name, st) => { const p = _stc12_pins[name], b = _board();',
+            '        if (p && b) b.setPin(p.pin, _mod(p), _drv(p, st)); },',
+            '    togglePin: (name) => { const p = _stc12_pins[name], b = _board();',
+            '        if (p && b) b.setPin(p.pin, _mod(p), !b.readPin(p.pin)); },',
+            '    readPin: (name) => { const p = _stc12_pins[name], b = _board();',
+            '        if (!p || !b) return 0;',
+            '        // An ANALOG pin reads volts from the board; the MCU scales to counts.',
+            '        if (p.dir === "analog") return Math.round(b.readAnalog(p.pin) / 5.0 * 1023);',
+            '        return p.low ? (b.readPin(p.pin) ? 0 : 1) : b.readPin(p.pin); },',
+            '    on: (event, handler) => {}',
+            '};'
+        ];
     }
 
     // Attach any buffered `# comment` to a freshly created block as a Scratch block
@@ -2805,8 +2879,6 @@ class SB3Creator {
             case 'sensing_answer': this._pyUses.answer = true; return 'answer';
             case 'argument_reporter_string_number':
             case 'argument_reporter_boolean': return this.pyName(f('VALUE'));
-            // STC12 pins only exist on the chip; off-target the read is neutral (see generateC).
-            case 'stc12_read': return '0';
             // Planète Maths extension (id `planetemaths`) — pure math, maps 1:1.
             case 'planetemaths_add': return `(${v('NUM1')} + ${v('NUM2')})`;
             case 'planetemaths_substract': return `(${v('NUM1')} - ${v('NUM2')})`;
@@ -2855,7 +2927,6 @@ class SB3Creator {
             case 'operator_contains': return `(str(${v('STRING2')}) in str(${v('STRING1')}))`;
             case 'data_listcontainsitem': return `(${v('ITEM')} in ${this.varRef(b.fields.LIST[0])})`;
             case 'argument_reporter_boolean': return this.pyName(b.fields.VALUE[0]);
-            case 'stc12_read': return 'False';
             // Planète Maths booleans — semantics from the implementation (opcode names
             // are internal misnomers: `gt` computes compare<0, i.e. NUM1 < NUM2).
             case 'planetemaths_gt': return `(${v('NUM1')} < ${v('NUM2')})`;
@@ -3097,6 +3168,7 @@ class SB3Creator {
     }
 
     generatePython(project = this.project, opts = {}) {
+        this._driverPins = (project.stc && project.stc.pins) || null;
         this._pyNames = new Map();
         this._pyUses = { random: false, math: false, time: false, eq: false, answer: false, arrays: false, json: false, sumdigits: false };
         this._runtimesUsed = new Set();
@@ -3278,8 +3350,6 @@ class SB3Creator {
             case 'sensing_answer': this._jsUses.answer = true; return 'answer';
             case 'argument_reporter_string_number':
             case 'argument_reporter_boolean': return this.pyName(f('VALUE'));
-            // STC12 pins only exist on the chip; off-target the read is neutral (see generateC).
-            case 'stc12_read': return '0';
             // Planète Maths extension (id `planetemaths`) — source of truth:
             // github.com/CrispStrobe/extensions (extensions/CrispStrobe/planetemaths.js).
             case 'planetemaths_add': return `(${v('NUM1')} + ${v('NUM2')})`;
@@ -3328,7 +3398,6 @@ class SB3Creator {
             case 'operator_contains': return `String(${v('STRING1')}).includes(String(${v('STRING2')}))`;
             case 'data_listcontainsitem': return `${this.varRef(b.fields.LIST[0])}.includes(${v('ITEM')})`;
             case 'argument_reporter_boolean': return this.pyName(b.fields.VALUE[0]);
-            case 'stc12_read': return 'false';
             // Planète Maths booleans (semantics from the implementation, not the labels).
             case 'planetemaths_gt': return `(${v('NUM1')} < ${v('NUM2')})`;
             case 'planetemaths_gte': return `(${v('NUM1')} <= ${v('NUM2')})`;
@@ -3417,6 +3486,7 @@ class SB3Creator {
     }
 
     generateJavaScript(project = this.project, opts = {}) {
+        this._driverPins = (project.stc && project.stc.pins) || null;
         this._pyNames = new Map();
         this._jsUses = { rand: false, eq: false, answer: false, fact: false, arrays: false, sumdigits: false };
         this._runtimesUsed = new Set();
@@ -4315,7 +4385,26 @@ SB3Creator.EXTENSION_URLS = {
 // All runtime/hardware extensions (Gamepad + Boost, PoweredUp, WeDo, Spike, EV3, …) are
 // auto-generated from their block surfaces (scripts/gen-runtime-registry.mjs) so the
 // pluggable-driver convention works for every one of them.
-SB3Creator.RUNTIME_EXTENSIONS = { ...GENERATED_RUNTIME };
+SB3Creator.RUNTIME_EXTENSIONS = {
+    ...GENERATED_RUNTIME,
+    // The STC12 pin surface. Declared here rather than special-cased in the walkers, which is
+    // the convention's own promise: adding hardware is one registry entry, not new emitter code.
+    //
+    // This is what lets the CHEAP simulation tier reach the chip blocks. Emitted Python/JS now
+    // calls `_stc12.setPin("led1", "on")` instead of dropping a `# comment`, so swapping in a
+    // driver that pokes a board layer simulates an STC12 program with no emitter change at all
+    // — the same swap point that already serves shim / remote / on-brick. See
+    // reference/simulation.md (tier 1). `generateC` does NOT come through here: on the chip
+    // these are direct SFR writes.
+    stc12: {
+        runtime: 'stc12',
+        ops: {
+            setpin: { kind: 'command', method: 'setPin', args: ['PIN', 'STATE'] },
+            toggle: { kind: 'command', method: 'togglePin', args: ['PIN'] },
+            read: { kind: 'reporter', method: 'readPin', args: ['PIN'], neutral: '0' }
+        }
+    }
+};
 
 // ---- STC12 / 8051 target (generateC) ---------------------------------------------
 // What the C emitter must know about a chip family. The point of keeping this explicit:
