@@ -29,7 +29,13 @@
     "watch": "webpack --colors --watch",
     "sync:sb3creator": "node scripts/sync-sb3creator.mjs",
     "sync:sb3creator:check": "node scripts/sync-sb3creator.mjs --check",
-    "gen:licenses": "node scripts/gen-license-manifest.mjs"
+    "gen:licenses": "node scripts/gen-license-manifest.mjs",
+    "sync:bwboard": "node scripts/sync-bw-board.mjs",
+    "sync:bwboard:check": "node scripts/sync-bw-board.mjs --check",
+    "sync:circuitui": "node scripts/sync-bw-circuit-ui.mjs",
+    "sync:circuitui:check": "node scripts/sync-bw-circuit-ui.mjs --check",
+    "sync:emuwasm": "node scripts/sync-emu8051-wasm.mjs",
+    "sync:emuwasm:check": "node scripts/sync-emu8051-wasm.mjs --check"
   },
   "config": {
     "commitizen": {
@@ -103,7 +109,10 @@
     "text-encoding": "0.7.0",
     "to-style": "1.3.3",
     "wav-encoder": "1.3.0",
-    "xhr": "2.5.0"
+    "xhr": "2.5.0",
+    "lit": "^3.3.3",
+    "@lit/react": "^1.0.8",
+    "@wokwi/elements": "^1.9.2"
   },
   "peerDependencies": {
     "react": "^16.0.0",
