@@ -88,7 +88,11 @@ const base = {
                 plugins: [
                     ['react-intl', {
                         messagesDir: './translations/messages/'
-                    }]],
+                    }],
+                    // preset-env is pinned at 7.14, which predates ES2022 static blocks;
+                    // @wokwi/elements uses them. The plugin is the small fix — bumping
+                    // preset-env would re-transpile the whole app for one syntax form.
+                    '@babel/plugin-transform-class-static-block'],
                 presets: ['@babel/preset-env', '@babel/preset-react']
             }
         },
