@@ -292,6 +292,9 @@ class SB3Creator {
                 '    def setPin(self, name, state):',
                 '        p = self._p(name)',
                 '        if p and _board(): _board().setPin(p["pin"], self._mode(p), self._drive(p, state))',
+                '    def writePin(self, name, v):',
+                '        p = self._p(name)',
+                '        if p and _board(): _board().setPin(p["pin"], self._mode(p), bool(int(v)))',
                 '    def togglePin(self, name):',
                 '        p = self._p(name)',
                 '        if p and _board(): _board().setPin(p["pin"], self._mode(p), not _board().readPin(p["pin"]))',
@@ -322,6 +325,8 @@ class SB3Creator {
             'const _stc12 = {',
             '    setPin: (name, st) => { const p = _stc12_pins[name], b = _board();',
             '        if (p && b) b.setPin(p.pin, _mod(p), _drv(p, st)); },',
+            '    writePin: (name, v) => { const p = _stc12_pins[name], b = _board();',
+            '        if (p && b) b.setPin(p.pin, _mod(p), !!Number(v)); },',
             '    togglePin: (name) => { const p = _stc12_pins[name], b = _board();',
             '        if (p && b) b.setPin(p.pin, _mod(p), !b.readPin(p.pin)); },',
             '    readPin: (name) => { const p = _stc12_pins[name], b = _board();',
@@ -619,6 +624,8 @@ class SB3Creator {
 
         // Literals
         if (/^-?\d+(\.\d+)?$/.test(s)) return [1, [4, s]];
+        // Hex, because a bit mask is unreadable in decimal and firmware is written in them.
+        if (/^0[xX][0-9a-fA-F]+$/.test(s)) return [1, [4, String(parseInt(s, 16))]];
         if (s.length >= 2 && s.startsWith('"') && s.endsWith('"') && this.matchQuote(s) === s.length - 1) {
             return [1, [10, s.slice(1, -1)]];
         }
@@ -719,6 +726,21 @@ class SB3Creator {
         }
         if ((m = s.match(/^round\s+(.+)$/i))) {
             return B('operator_round', { NUM: this.parseValue(m[1], context) });
+        }
+        // Bitwise. Scratch has none, and that absence is what made half the real 8051
+        // firmware in the corpus untranslatable — masking a port, setting one bit, shifting
+        // a reading. Worded like `mod` and `join` rather than punctuated, so pseudocode
+        // still reads aloud.
+        if ((m = s.match(/^bitnot\s+(.+)$/i))) return B('bitops_not', { NUM: this.parseValue(m[1], context) });
+        for (const [word, op] of [['bitand', 'and'], ['bitor', 'or'], ['bitxor', 'xor'],
+            ['shiftleft', 'shl'], ['shiftright', 'shr']]) {
+            const sp = this.splitBinary(s, [` ${word} `], { ci: true });
+            if (sp) {
+                return B(`bitops_${op}`, {
+                    NUM1: this.parseValue(sp.left, context),
+                    NUM2: this.parseValue(sp.right, context)
+                });
+            }
         }
         // Planète Maths distinctive reporters (no standard equivalent). syncExtensions
         // auto-declares the `planetemaths` extension from these opcodes.
@@ -1215,6 +1237,16 @@ class SB3Creator {
         }
         if ((match = line.match(/^set\s+([A-Za-z_]\w*)\s+(high|low)$/i)) && this.stcPin(match[1])) {
             return stcSet(this.stcPin(match[1]), match[2].toLowerCase());
+        }
+        // `set <pin> to <expr>` writes a computed LEVEL. Distinct from `turn on/off`, which
+        // are states and respect ACTIVE LOW; a level is a level, exactly like `set high`.
+        // Placed before the generic variable assignment (and before motion's `set x to`) so a
+        // declared pin always wins, consistent with the other pin statements.
+        if ((match = line.match(/^set\s+([A-Za-z_]\w*)\s+to\s+(.+)$/i)) && this.stcPin(match[1])) {
+            const { id, block } = cmd('stc12_writepin');
+            block[id].fields.PIN = [this.stcPin(match[1]).name, null];
+            block[id].inputs.VALUE = val(match[2]);
+            return ret(block);
         }
         if ((match = line.match(/^toggle\s+([A-Za-z_]\w*)$/i)) && this.stcPin(match[1])) {
             const { id, block } = this.createBlock('stc12_toggle');
@@ -2540,6 +2572,12 @@ class SB3Creator {
             case 'operator_multiply': return `${v('NUM1')} * ${v('NUM2')}`;
             case 'operator_divide': return `${v('NUM1')} / ${v('NUM2')}`;
             case 'operator_mod': return `${v('NUM1')} mod ${v('NUM2')}`;
+            case 'bitops_and': return `${v('NUM1')} bitand ${v('NUM2')}`;
+            case 'bitops_or': return `${v('NUM1')} bitor ${v('NUM2')}`;
+            case 'bitops_xor': return `${v('NUM1')} bitxor ${v('NUM2')}`;
+            case 'bitops_shl': return `${v('NUM1')} shiftleft ${v('NUM2')}`;
+            case 'bitops_shr': return `${v('NUM1')} shiftright ${v('NUM2')}`;
+            case 'bitops_not': return `bitnot ${v('NUM')}`;
             case 'operator_random': return `pick random ${v('FROM')} to ${v('TO')}`;
             case 'operator_round': return `round ${v('NUM')}`;
             case 'operator_mathop': return `${f('OPERATOR')} of ${v('NUM')}`;
@@ -2795,6 +2833,7 @@ class SB3Creator {
                 const state = f('STATE');
                 return line(state === 'on' || state === 'off' ? `turn ${state} ${f('PIN')}` : `set ${f('PIN')} ${state}`);
             }
+            case 'stc12_writepin': return line(`set ${f('PIN')} to ${v('VALUE')}`);
             case 'stc12_toggle': return line(`toggle ${f('PIN')}`);
             case 'data_showlist': return line(`show list ${f('LIST')}`);
             case 'data_hidelist': return line(`hide list ${f('LIST')}`);
@@ -2885,6 +2924,12 @@ class SB3Creator {
             case 'operator_multiply': return `(${v('NUM1')} * ${v('NUM2')})`;
             case 'operator_divide': return `(${v('NUM1')} / ${v('NUM2')})`;
             case 'operator_mod': return `(${v('NUM1')} % ${v('NUM2')})`;
+            case 'bitops_and': return `(int(${v('NUM1')}) & int(${v('NUM2')}))`;
+            case 'bitops_or': return `(int(${v('NUM1')}) | int(${v('NUM2')}))`;
+            case 'bitops_xor': return `(int(${v('NUM1')}) ^ int(${v('NUM2')}))`;
+            case 'bitops_shl': return `(int(${v('NUM1')}) << int(${v('NUM2')}))`;
+            case 'bitops_shr': return `(int(${v('NUM1')}) >> int(${v('NUM2')}))`;
+            case 'bitops_not': return `(~int(${v('NUM')}))`;
             case 'operator_random': this._pyUses.random = true; return `random.randint(${v('FROM')}, ${v('TO')})`;
             case 'operator_round': return `round(${v('NUM')})`;
             case 'operator_mathop': return this.pyMathop(f('OPERATOR'), v('NUM'));
@@ -3356,6 +3401,12 @@ class SB3Creator {
             case 'operator_multiply': return `(${v('NUM1')} * ${v('NUM2')})`;
             case 'operator_divide': return `(${v('NUM1')} / ${v('NUM2')})`;
             case 'operator_mod': return `(${v('NUM1')} % ${v('NUM2')})`;
+            case 'bitops_and': return `((${v('NUM1')}) & (${v('NUM2')}))`;
+            case 'bitops_or': return `((${v('NUM1')}) | (${v('NUM2')}))`;
+            case 'bitops_xor': return `((${v('NUM1')}) ^ (${v('NUM2')}))`;
+            case 'bitops_shl': return `((${v('NUM1')}) << (${v('NUM2')}))`;
+            case 'bitops_shr': return `((${v('NUM1')}) >> (${v('NUM2')}))`;
+            case 'bitops_not': return `(~(${v('NUM')}))`;
             case 'operator_random': this._jsUses.rand = true; return `_rand(${v('FROM')}, ${v('TO')})`;
             case 'operator_round': return `Math.round(${v('NUM')})`;
             case 'operator_mathop': return this.jsMathop(f('OPERATOR'), v('NUM'));
@@ -3761,6 +3812,14 @@ class SB3Creator {
             case 'operator_multiply': case 'planetemaths_multiply': return `(${v('NUM1')} * ${v('NUM2')})`;
             case 'operator_divide': case 'planetemaths_divide': return `(${v('NUM1')} / ${v('NUM2')})`;
             case 'operator_mod': return `(${v('NUM1')} % ${v('NUM2')})`;
+            // Native on the chip, and the reason these exist: masking a port, setting one
+            // bit, shifting an ADC reading.
+            case 'bitops_and': return `(${v('NUM1')} & ${v('NUM2')})`;
+            case 'bitops_or': return `(${v('NUM1')} | ${v('NUM2')})`;
+            case 'bitops_xor': return `(${v('NUM1')} ^ ${v('NUM2')})`;
+            case 'bitops_shl': return `(${v('NUM1')} << ${v('NUM2')})`;
+            case 'bitops_shr': return `(${v('NUM1')} >> ${v('NUM2')})`;
+            case 'bitops_not': return `(~${v('NUM')})`;
             case 'operator_round': return v('NUM');       // integer arithmetic already
             case 'planetemaths_oppose': return `(0 - ${v('NUM1')})`;
             case 'planetemaths_pourcent': return `(${v('NUM1')} / 100)`;
@@ -3900,6 +3959,12 @@ class SB3Creator {
             case 'data_setvariableto': return line(`${this.cRef(f('VARIABLE'))} = ${v('VALUE')};`);
             case 'data_changevariableby': return line(`${this.cRef(f('VARIABLE'))} += ${v('VALUE')};`);
             case 'stc12_setpin': return line(this.cSetPin(f('PIN'), f('STATE')));
+            case 'stc12_writepin': {
+                const sfr = this.cSfr(f('PIN'));
+                // A computed value is a LEVEL, so ACTIVE LOW does not invert it — the same
+                // rule `set high` / `set low` already follow.
+                return line(sfr ? `${sfr} = (${v('VALUE')}) ? 1 : 0;` : `/* set ${this.cComment(f('PIN'))} */`);
+            }
             case 'stc12_toggle': {
                 const sfr = this.cSfr(f('PIN'));
                 return line(sfr ? `${sfr} = !${sfr};` : `/* toggle ${this.cComment(f('PIN'))} */`);
@@ -4420,6 +4485,7 @@ SB3Creator.RUNTIME_EXTENSIONS = {
         ops: {
             setpin: { kind: 'command', method: 'setPin', args: ['PIN', 'STATE'] },
             toggle: { kind: 'command', method: 'togglePin', args: ['PIN'] },
+            writepin: { kind: 'command', method: 'writePin', args: ['PIN', 'VALUE'] },
             read: { kind: 'reporter', method: 'readPin', args: ['PIN'], neutral: '0' }
         }
     }
