@@ -73,7 +73,13 @@ const base = {
                 path.resolve(__dirname, 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]pify/,
-                /node_modules[\\/]@vernier[\\/]godirect/
+                /node_modules[\\/]@vernier[\\/]godirect/,
+                // The circuit designer's part graphics. lit 3 and @wokwi/elements ship
+                // modern ESM (`??=`, `?.`, class fields) and webpack 4's own parser
+                // cannot read it, so babel has to see these before webpack does.
+                /node_modules[\\/]lit(-html|-element)?[\\/]/,
+                /node_modules[\\/]@lit[\\/]/,
+                /node_modules[\\/]@wokwi[\\/]elements[\\/]/
             ],
             options: {
                 // Explicitly disable babelrc so we don't catch various config
