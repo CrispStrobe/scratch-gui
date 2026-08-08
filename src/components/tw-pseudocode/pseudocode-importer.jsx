@@ -249,8 +249,6 @@ class PseudocodeImporter extends React.Component {
             // Hardware-extension codegen options (see reference/runtime-drivers.md): the emitted
             // driver (shim / remote / on-brick), plus async/await and event-hat switches.
             driverMode: 'shim', asyncMode: false, eventsMode: false,
-            // circuit designer: lazily loaded on first open
-            showCircuit: false, Circuit: null,
             // Include `#`/`//` comments (from native block comments) in Python/JS. Default on.
             commentsMode: true};
         this.handleFiles = this.handleFiles.bind(this);
@@ -303,26 +301,7 @@ class PseudocodeImporter extends React.Component {
         });
     }
 
-    // The circuit designer, lazily loaded and wired to the vendored engine on first open —
-    // a chunk most users never need, so it must not sit in the entry bundle.
-    async openCircuit () {
-        if (this.state.showCircuit) { this.setState({showCircuit: false}); return; }
-        if (this.state.Circuit) { this.setState({showCircuit: true}); return; }
-        try {
-            const engine = await import(/* webpackChunkName: "bw-board" */ '../../lib/bw-board/index.js');
-            const ui = await import(/* webpackChunkName: "bw-circuit-ui" */ '../../lib/bw-circuit-ui/index.js');
-            ui.setEngine(engine);   // the panel takes the engine by injection, not by path
-            this.setState({Circuit: ui.CircuitDesigner, showCircuit: true});
-        } catch (e) {
-            this.setState({status: `Error: ${e.message}`});
-        }
-    }
 
-    // The project's PIN declarations, so the designer can infer a starting circuit from them
-    // (boundary C) rather than opening on a blank board.
-    currentStc () {
-        try { return JSON.parse(this.props.vm.toJSON()).stc || null; } catch { return null; }
-    }
 
     // Hardware-extension codegen options passed to generatePython/generateJavaScript.
     genOpts () { return {driver: this.state.driverMode, async: this.state.asyncMode, events: this.state.eventsMode, comments: this.state.commentsMode}; }
@@ -655,12 +634,6 @@ class PseudocodeImporter extends React.Component {
                         );
                     })}
                     <span style={{flex: 1}} />
-                    <button type="button" onClick={() => this.openCircuit()}
-                        title="Design the circuit this project drives"
-                        style={{alignSelf: 'center', padding: '6px 12px', borderRadius: 6, cursor: 'pointer',
-                            border: '1px solid #cbd5e1', background: this.state.showCircuit ? '#e2e8f0' : '#f1f5f9', fontSize: 13, marginRight: 6}}>
-                        🔌 Circuit
-                    </button>
                     <button type="button" onClick={() => this.setState(s => ({showArt: !s.showArt}))}
                         title="Upload SVGs and bake them in as sprite costumes"
                         style={{alignSelf: 'center', padding: '6px 12px', borderRadius: 6, cursor: 'pointer',
@@ -682,12 +655,6 @@ class PseudocodeImporter extends React.Component {
                             : 'function when_flag_clicked() {\n  console.log("Hello!");\n}\nwhen_flag_clicked();\n\n// or press “From blocks” to generate this from your project'}
                 />
 
-                {this.state.showCircuit && this.state.Circuit ? (
-                    <div style={{margin: '12px 0 4px', padding: 12, background: '#f8fafc',
-                        border: '1px solid #e2e8f0', borderRadius: 8}}>
-                        <this.state.Circuit stc={this.currentStc()} />
-                    </div>
-                ) : null}
 
                 {this.state.showArt && (
                 <div style={{margin: '12px 0 4px', padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8}}>

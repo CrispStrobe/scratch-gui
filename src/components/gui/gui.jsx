@@ -12,6 +12,7 @@ import VM from 'scratch-vm';
 import Blocks from '../../containers/blocks.jsx';
 import CostumeTab from '../../containers/costume-tab.jsx';
 import PseudocodeImporter from '../tw-pseudocode/pseudocode-importer.jsx';
+import CircuitTab from '../tw-pseudocode/circuit-tab.jsx';
 import TargetPane from '../../containers/target-pane.jsx';
 import SoundTab from '../../containers/sound-tab.jsx';
 import StageWrapper from '../../containers/stage-wrapper.jsx';
@@ -401,6 +402,14 @@ const GUIComponent = props => {
                                             id="gui.gui.pseudocodeTab"
                                         />
                                     </Tab>
+                                    <Tab className={tabClassNames.tab}>
+                                        <span role="img" aria-label="circuit" style={{marginRight: 4}}>{'🔌'}</span>
+                                        <FormattedMessage
+                                            defaultMessage="Circuit"
+                                            description="Button to get to the Brickwright circuit designer"
+                                            id="gui.gui.circuitTab"
+                                        />
+                                    </Tab>
                                 </TabList>
                                 <TabPanel className={tabClassNames.tabPanel}>
                                     <Box className={styles.blocksWrapper}>
@@ -445,6 +454,9 @@ const GUIComponent = props => {
                                 </TabPanel>
                                 <TabPanel className={tabClassNames.tabPanel}>
                                     <PseudocodeImporter />
+                                </TabPanel>
+                                <TabPanel className={tabClassNames.tabPanel}>
+                                    <CircuitTab />
                                 </TabPanel>
                             </Tabs>
                             {backpackVisible ? (
