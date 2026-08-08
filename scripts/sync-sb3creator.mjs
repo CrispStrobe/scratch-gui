@@ -30,6 +30,7 @@ const FILES = [
     ['src/utils/examples.js', path.join(lib, 'sb3-creator-examples.js')],
     ['src/utils/pythonToPseudocode.js', path.join(lib, 'sb3-creator-python.js')],
     ['src/utils/javascriptToPseudocode.js', path.join(lib, 'sb3-creator-javascript.js')],
+    ['src/utils/cToPseudocode.js', path.join(lib, 'sb3-creator-c.js')],
     ['src/utils/runtimeRegistry.generated.js', path.join(lib, 'sb3-creator-runtime.js')],
     ['src/utils/scratchRuntime.js', path.join(lib, 'sb3-creator-scratchruntime.js')]
 ];

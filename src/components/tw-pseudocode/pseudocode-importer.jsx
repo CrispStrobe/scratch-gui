@@ -66,10 +66,12 @@ const SYNTAX = [
 
 const LANG_LABEL = {pseudocode: 'Pseudocode', python: 'Python', javascript: 'JavaScript', c: 'C (STC12)'};
 
-// Languages you can compile back INTO blocks. C is not one of them yet: it is emit-only
-// for now (the C -> blocks front end is intended, but the way back is still being grown
-// from stc-compiler's Keil translator and disassembler), so its tab is a reading view.
-const TWO_WAY = new Set(['pseudocode', 'python', 'javascript']);
+// Languages you can compile back INTO blocks. C joined them once cToPseudocode landed:
+// it reads both our own emitted C (which carries an `@bw` marker header, so the round-trip
+// is exact) and hand-written firmware (pins from `#define LED1 P1_0`, polarity from the
+// `LED_ON 0` idiom - every inference reported as a warning, never guessed silently).
+// The one thing it will not do is invert the cooperative-scheduler form; it says so.
+const TWO_WAY = new Set(['pseudocode', 'python', 'javascript', 'c']);
 
 // What the Python / JavaScript front-ends actually support (shown as the reference
 // when those tabs are active, so you know what round-trips to blocks).
@@ -263,8 +265,8 @@ class PseudocodeImporter extends React.Component {
         try {
             const SB3 = (await this.lib()).default;
             let pseudo = src;
-            if (from === 'c') throw new Error('C is a reading view for now — edit the pseudocode, Python or JavaScript tab instead');
-            if (from === 'python') pseudo = (await import(/* webpackChunkName: "sb3-creator-python" */ '../../lib/sb3-creator-python.js')).default(src).pseudocode;
+            if (from === 'c') pseudo = (await import(/* webpackChunkName: "sb3-creator-c" */ '../../lib/sb3-creator-c.js')).default(src).pseudocode;
+            else if (from === 'python') pseudo = (await import(/* webpackChunkName: "sb3-creator-python" */ '../../lib/sb3-creator-python.js')).default(src).pseudocode;
             else if (from === 'javascript') pseudo = (await import(/* webpackChunkName: "sb3-creator-javascript" */ '../../lib/sb3-creator-javascript.js')).default(src).pseudocode;
             const creator = new SB3();
             creator.parse(pseudo);
@@ -470,7 +472,7 @@ class PseudocodeImporter extends React.Component {
     async compile () {
         const lang = this.state.lang;
         if (!TWO_WAY.has(lang)) {
-            this.setState({status: 'The C tab is a reading view for now — edit the Pseudocode tab and it regenerates.'});
+            this.setState({status: 'That language cannot be compiled back to blocks.'});
             return;
         }
         this.setState({busy: true, status: 'Compiling…'});
@@ -482,6 +484,9 @@ class PseudocodeImporter extends React.Component {
                 source = res.pseudocode; parseWarnings = res.warnings || [];
             } else if (lang === 'javascript') {
                 const res = (await import(/* webpackChunkName: "sb3-creator-javascript" */ '../../lib/sb3-creator-javascript.js')).default(source);
+                source = res.pseudocode; parseWarnings = res.warnings || [];
+            } else if (lang === 'c') {
+                const res = (await import(/* webpackChunkName: "sb3-creator-c" */ '../../lib/sb3-creator-c.js')).default(source);
                 source = res.pseudocode; parseWarnings = res.warnings || [];
             }
             const SB3Creator = (await this.lib()).default;
@@ -634,7 +639,7 @@ class PseudocodeImporter extends React.Component {
                     readOnly={!TWO_WAY.has(this.state.lang)}
                     lang={this.state.lang}
                     placeholder={this.state.lang === 'c'
-                        ? 'DEVICE STC12C5A60S2\nCLOCK 11059200\nPIN led = P1.0 OUTPUT ACTIVE LOW\n\nWHEN flag clicked:\n  FOREVER:\n    toggle led\n    wait 0.5 seconds\n\n(write that in the Pseudocode tab — this tab shows the C it compiles to)'
+                        ? '#include <stc12.h>\n#define LED1   P1_0\n#define LED_ON 0\n\nvoid main(void) {\n    for (;;) {\n        LED1 = LED_ON;\n        delay_ms(500);\n    }\n}\n\n// paste firmware here and press \u201c\u21e6 To blocks\u201d, or press \u201cFrom blocks\u201d'
                         : this.state.lang === 'pseudocode'
                         ? 'SPRITE Cat:\n  WHEN flag clicked:\n    say "Hello!" for 2 seconds\n    FOREVER:\n      move 10 steps'
                         : this.state.lang === 'python'
@@ -759,7 +764,7 @@ class PseudocodeImporter extends React.Component {
                     ) : null}
                     {this.state.lang === 'c' ? (
                         <span style={{fontSize: 13, color: '#64748b'}}>
-                            C for the STC12 / 8051 — a reading view. Compile it to a .hex with stc-compiler.vercel.app.
+                            C for the STC12 / 8051. Paste your own firmware and press &ldquo;&#8678; To blocks&rdquo;, or compile it to a .hex with stc-compiler.vercel.app.
                         </span>
                     ) : null}
                     {this.state.status ? <span style={{fontSize: 13}}>{this.state.status}</span> : null}
