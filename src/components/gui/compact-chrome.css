@@ -14,7 +14,10 @@
     position: absolute;
     top: 6px;
     right: 8px;
-    z-index: 100;
+    /* Above the menu bar, which sits at 491 and would otherwise swallow every
+       click on this button — found by driving the deployed editor, where the
+       About icon intercepted the pointer and the toggle looked simply dead. */
+    z-index: 600;
     width: 28px;
     height: 28px;
     padding: 0;
