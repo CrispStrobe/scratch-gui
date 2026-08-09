@@ -377,25 +377,29 @@ class SB3Creator {
     // The circuit extension driver — boundary B exposed to Python/JS. Meter reporters
     // sample at display rate (~60 Hz), not per edge (measured constraint from bw-board).
     circuitSimulatorDriver(lang) {
+        // No-board returns 'needs the simulator', not 0 — a voltmeter that reads
+        // 0 V when disconnected is indistinguishable from a grounded-net reading.
         if (lang === 'py') {
             return [
                 '# _circuit driver — board instruments (boundary B). Supply `bw_board` to attach one.',
+                '# No-board reporters return "needs the simulator", never 0 — refuse with a reason.',
                 'class _CircuitSimulated:',
                 '    def nodeVoltage(self, net):',
                 '        b = _board()',
-                '        return b.nodeVoltage(net) if b else 0',
+                '        return b.nodeVoltage(net) if b else "needs the simulator"',
                 '    def branchCurrent(self, part):',
                 '        b = _board()',
-                '        return b.branchCurrent(part, "a") if b else 0',
+                '        return b.branchCurrent(part, "a") if b else "needs the simulator"',
                 '    def resistance(self, a, b_net):',
                 '        b = _board()',
-                '        return b.resistance(a, b_net) if b else "requires-power-off"',
+                '        return b.resistance(a, b_net) if b else "needs the simulator"',
                 '    def ledBrightness(self, part):',
                 '        b = _board()',
-                '        return b.ledBrightness(part) if b else 0',
+                '        return b.ledBrightness(part) if b else "needs the simulator"',
                 '    def buzzerTone(self, part):',
                 '        b = _board()',
-                '        r = b.buzzerTone(part) if b else {"hz": 0, "on": False}',
+                '        if not b: return "needs the simulator"',
+                '        r = b.buzzerTone(part)',
                 '        return r.get("hz", 0) if r.get("on") else 0',
                 '    def setControl(self, control, value):',
                 '        b = _board()',
@@ -408,12 +412,13 @@ class SB3Creator {
         }
         return [
             '// _circuit driver — board instruments (boundary B). Supply `bwBoard` to attach one.',
+            '// No-board reporters return "needs the simulator", never 0 — refuse with a reason.',
             'const _circuit = {',
-            '    nodeVoltage: (net) => { const b = _board(); return b ? b.nodeVoltage(net) : 0; },',
-            '    branchCurrent: (part) => { const b = _board(); return b ? b.branchCurrent(part, "a") : 0; },',
-            '    resistance: (a, bNet) => { const b = _board(); return b ? b.resistance(a, bNet) : "requires-power-off"; },',
-            '    ledBrightness: (part) => { const b = _board(); return b ? b.ledBrightness(part) : 0; },',
-            '    buzzerTone: (part) => { const b = _board(); if (!b) return 0;',
+            '    nodeVoltage: (net) => { const b = _board(); return b ? b.nodeVoltage(net) : "needs the simulator"; },',
+            '    branchCurrent: (part) => { const b = _board(); return b ? b.branchCurrent(part, "a") : "needs the simulator"; },',
+            '    resistance: (a, bNet) => { const b = _board(); return b ? b.resistance(a, bNet) : "needs the simulator"; },',
+            '    ledBrightness: (part) => { const b = _board(); return b ? b.ledBrightness(part) : "needs the simulator"; },',
+            '    buzzerTone: (part) => { const b = _board(); if (!b) return "needs the simulator";',
             '        const r = b.buzzerTone(part); return r && r.on ? r.hz : 0; },',
             '    setControl: (control, v) => { const b = _board(); if (b) b.setControl(control, Number(v)); },',
             '    setPower: (state) => { const b = _board(); if (b) b.setPower(state === "on"); }',
@@ -1005,7 +1010,7 @@ class SB3Creator {
     // Parse a top-level DEVICE / CLOCK / PIN declaration. Returns true if the line was one.
     parseStcDeclaration(trimmed, lineIndex) {
         let m;
-        if ((m = trimmed.match(/^DEVICE\s+([\w-]+)$/i))) {
+        if ((m = trimmed.match(/^DEVICE\s+([\w-]+):?$/i))) {
             const device = m[1].toLowerCase();
             if (!SB3Creator.STC_PARTS[device]) {
                 this.warn(lineIndex, `Unknown DEVICE "${m[1]}"; known: ${Object.keys(SB3Creator.STC_PARTS).sort().join(', ')}`);
@@ -1840,8 +1845,18 @@ class SB3Creator {
         }
 
         // ---- Control ---------------------------------------------------------------
-        if ((match = line.match(/^wait\s+(.+)\s+seconds?$/i))) {
-            const { id, block } = cmd('control_wait'); block[id].inputs.DURATION = val(match[1]); return ret(block);
+        if ((match = line.match(/^wait\s+(.+?)\s+(seconds?|secs?|s|ms|milliseconds?)$/i))) {
+            const { id, block } = cmd('control_wait');
+            const unit = match[2].toLowerCase();
+            // Scratch stores duration in seconds; convert ms.
+            if (unit === 'ms' || unit.startsWith('millisecond')) {
+                const raw = match[1].trim();
+                const n = Number(raw);
+                block[id].inputs.DURATION = Number.isFinite(n) ? val(String(n / 1000)) : val(`${raw} / 1000`);
+            } else {
+                block[id].inputs.DURATION = val(match[1]);
+            }
+            return ret(block);
         }
         if ((match = line.match(/^wait until\s+(.+)$/i))) {
             const { id, block } = cmd('control_wait_until');
@@ -4915,6 +4930,7 @@ class SB3Creator {
             ' * the structure calls in bw_structure() are what make this read back as the',
             ' * same project. For the STC12/8051 this is the WRONG target — declare pins',
             ' * and you get bare metal instead. */',
+            '#define _POSIX_C_SOURCE 199309L   /* nanosleep, struct timespec */',
             ...C_HOST_INCLUDES.map((h) => `#include <${h}>`),
             '',
             cHostRuntime(body),
@@ -5436,6 +5452,11 @@ SB3Creator.CORE_CATEGORIES = new Set([
 SB3Creator.EXTENSION_URLS = {
     planetemaths: 'https://crispstrobe.github.io/extensions/CrispStrobe/planetemaths.js',
     arrays: 'https://crispstrobe.github.io/extensions/CrispStrobe/arrays.js',
+    // Without this line a hardware project carries `extensions: ["stc12"]` and no URL
+    // for it, so a TurboWarp-based host has nowhere to fetch the blocks from and the
+    // project fails to open at all: "Unknown extension: stc12". A host that has the
+    // extension built in (brickwright-lite does) checks that first and ignores the URL.
+    stc12: 'https://crispstrobe.github.io/extensions/CrispStrobe/stc12.js',
     ...GENERATED_URLS   // gamepad + LEGO/hardware extension URLs (auto-generated)
 };
 
@@ -5476,17 +5497,17 @@ SB3Creator.RUNTIME_EXTENSIONS = {
         }
     },
     // The circuit extension — board instruments and controls (simulation-only reporters).
-    // Meter reporters sample at display rate (~60 Hz), not per edge — measured constraint
-    // from bw-board 88ac0d6: branchCurrent on a PWM pin at 7.2K edges/sec against a
-    // 7.0K ops/sec MNA solver budget would drop below real time.
+    // Overrides the generated entry with camelCase method names (matching the simulator
+    // driver and boundary B) and neutral values (resistance alone refuses with a reason).
+    // The generated entry from circuit.js provides the opcode shape and the gallery URL.
     circuit: {
         runtime: 'circuit',
         ops: {
-            nodevoltage: { kind: 'reporter', method: 'nodeVoltage', args: ['NET'], neutral: '0' },
-            branchcurrent: { kind: 'reporter', method: 'branchCurrent', args: ['PART'], neutral: '0' },
-            resistance: { kind: 'reporter', method: 'resistance', args: ['A', 'B'], neutral: '"requires-power-off"' },
-            ledbrightness: { kind: 'reporter', method: 'ledBrightness', args: ['PART'], neutral: '0' },
-            buzzertone: { kind: 'reporter', method: 'buzzerTone', args: ['PART'], neutral: '0' },
+            nodevoltage: { kind: 'reporter', method: 'nodeVoltage', args: ['NET'], neutral: '"needs the simulator"' },
+            branchcurrent: { kind: 'reporter', method: 'branchCurrent', args: ['PART'], neutral: '"needs the simulator"' },
+            resistance: { kind: 'reporter', method: 'resistance', args: ['A', 'B'], neutral: '"needs the simulator"' },
+            ledbrightness: { kind: 'reporter', method: 'ledBrightness', args: ['PART'], neutral: '"needs the simulator"' },
+            buzzertone: { kind: 'reporter', method: 'buzzerTone', args: ['PART'], neutral: '"needs the simulator"' },
             setcontrol: { kind: 'command', method: 'setControl', args: ['CONTROL', 'VALUE'] },
             setpower: { kind: 'command', method: 'setPower', args: ['STATE'] }
         }
