@@ -1967,6 +1967,13 @@ class SB3Creator {
                 if (trimmed.endsWith(':')) {
                     let newBlockData;
                     const context = { target, extraBlocks: {}, parentId: null };
+                    // A comment written above `IF …:` belongs to the IF. The body is
+                    // parsed before the control block is linked, so without setting
+                    // the pending comment aside here the body's first statement
+                    // swallows it — and the decompiler then writes it one level in,
+                    // which is not what was written and does not survive a round trip.
+                    const ownComment = this._pendingComment;
+                    this._pendingComment = '';
 
                     if (trimmed.startsWith('FOREVER')) {
                         newBlockData = {
@@ -1977,7 +1984,7 @@ class SB3Creator {
                         const m = trimmed.match(/^REPEAT\s+UNTIL\s+(.+):$/i);
                         if (!m) {
                             this.warn(i, `Malformed REPEAT UNTIL (expected "REPEAT UNTIL <condition>:"): "${trimmed}"`);
-                            i++; continue;
+                            this._pendingComment = ownComment; i++; continue;
                         }
                         const { id, block } = this.createBlock('control_repeat_until');
                         context.parentId = id;
@@ -1987,7 +1994,7 @@ class SB3Creator {
                         const m = trimmed.match(/REPEAT\s+(.+?):/i);
                         if (!m) {
                             this.warn(i, `Malformed REPEAT (expected "REPEAT <count>:"): "${trimmed}"`);
-                            i++; continue;
+                            this._pendingComment = ownComment; i++; continue;
                         }
                         const { id, block } = this.createBlock('control_repeat');
                         context.parentId = id;
@@ -1997,7 +2004,7 @@ class SB3Creator {
                         const m = trimmed.match(/IF\s+(.+?)\s+THEN:/i);
                         if (!m) {
                             this.warn(i, `Malformed IF (expected "IF <condition> THEN:"): "${trimmed}"`);
-                            i++; continue;
+                            this._pendingComment = ownComment; i++; continue;
                         }
                         const { id, block } = this.createBlock('control_if');
                         context.parentId = id;
@@ -2006,6 +2013,7 @@ class SB3Creator {
                         newBlockData = { block, extraBlocks: context.extraBlocks };
                     } else if (trimmed.startsWith('ELSE')) {
                         // Find the parent IF block to convert to IF_ELSE
+                        this._pendingComment = ownComment;
                         if (lastBlockId && allBlocks[lastBlockId] && allBlocks[lastBlockId].opcode === 'control_if') {
                             allBlocks[lastBlockId].opcode = 'control_if_else';
                             const childResult = parseStructure(i + 1, childIndent(i, currentIndent), target);
@@ -2031,6 +2039,7 @@ class SB3Creator {
                             Object.assign(newBlockData.extraBlocks, childResult.blocks);
                         }
                         
+                        this._pendingComment = ownComment;   // …and hand it to the block it was written for
                         linkBlock(newBlockData);
                         i = childResult.endIndex;
                         continue;
@@ -4392,11 +4401,12 @@ class SB3Creator {
     // function per script, structural markers so the project round-trips —
     // with C's constraints: markers must live inside a function, and every
     // function needs a prototype before it is called.
-    // Reshape, transpose and the higher-order blocks need a list-valued return
-    // and a callable argument; neither fits the flat value model, and a stub
-    // returning 0 would make the C disagree with Python without saying so.
-    static C_ARRAYS_UNIMPLEMENTED = new Set(['reverse', 'flatten', 'sort', 'slice',
-        'create2d', 'get2d', 'set2d', 'transpose', 'reshape', 'map', 'filter', 'reduce']);
+    // Everything the extension offers has a C form now: the value model grew a
+    // list kind for reverse/sort/slice/transpose/reshape, and map/filter/reduce
+    // evaluate their lambda text with a small parser over the subset those
+    // blocks contain. The set stays as the place to name a block that has no C
+    // form, so one reappearing is a warning rather than a silent zero.
+    static C_ARRAYS_UNIMPLEMENTED = new Set([]);
 
     generateHostC(project = this.project, opts = {}) {
         this._cNames = new Map();
@@ -4583,6 +4593,7 @@ class SB3Creator {
         const procProtos = [], procDefs = [], taskDefs = [];
         const statics = [];
         let mainBody = [];
+        let mainNote = [];   // a comment on the single script's hat
         let taskIndex = 0;
         sections.forEach((t, idx) => {
             const pfx = spritePrefix(idx);
@@ -4608,14 +4619,24 @@ class SB3Creator {
                     const n = taskIndex++;
                     const task = taskNames[n];
                     const where = t.isStage ? '' : `, ${this.cComment(t.name)}`;
+                    // A comment on the hat belongs to the script. The host target
+                    // carries it; this one was dropping it, which is the only thing
+                    // that stopped a device round trip from being a fixed point.
+                    const hatNote = this.codeCommentLines(Object.keys(blocks)
+                        .find((k) => blocks[k] === b), '', '//');
                     markScripts.push(`script ${this._cTasks ? task : 'main'} ${n}`
                         + (t.isStage ? ' stage' : ` sprite ${this.pyStr(t.name)}`));
-                    if (!this._cTasks) { mainBody = this.cStackFrom(b.next, blocks, 1); continue; }
+                    if (!this._cTasks) {
+                        mainNote = hatNote;
+                        mainBody = this.cStackFrom(b.next, blocks, 1);
+                        continue;
+                    }
                     const ctx = { task, state: 0, statics, tasks: taskNames };
                     const body = this.cTaskFrom(b.next, blocks, 1, ctx);
                     taskDefs.push(`static unsigned int ${task}_state;`);
                     if (this.cHasWait(b.next, blocks)) taskDefs.push(`static unsigned int ${task}_until;`);
-                    taskDefs.push(`/* when green flag clicked (script ${n + 1}${where}) */`,
+                    taskDefs.push(...hatNote,
+                        `/* when green flag clicked (script ${n + 1}${where}) */`,
                         `static void ${task}(void)`, '{',
                         `    switch (${task}_state) {`,
                         '    case 0:',
@@ -4805,6 +4826,7 @@ class SB3Creator {
                 '    }');
         } else {
             out.push('');
+            out.push(...mainNote.map((l) => `    ${l}`));
             out.push(...mainBody);
         }
         out.push('}', '');
