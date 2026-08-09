@@ -70,7 +70,7 @@ const SYNTAX = [
         'distance to mouse-pointer', 'set drag mode draggable', 'play note 60 for 0.5 beats, set tempo to 120']]
 ];
 
-const LANG_LABEL = {pseudocode: 'Pseudocode', python: 'Python', javascript: 'JavaScript', c: 'C (STC12)'};
+const LANG_LABEL = {pseudocode: 'Pseudocode', python: 'Python', javascript: 'JavaScript', c: 'C'};
 
 // Languages you can compile back INTO blocks. C joined them once cToPseudocode landed:
 // it reads both our own emitted C (which carries an `@bw` marker header, so the round-trip
@@ -634,7 +634,7 @@ class PseudocodeImporter extends React.Component {
                 {/* Tabs (left) + Custom-art toggle (right). Plain buttons — NOT role="tab",
                     which would collide with the editor's top-level react-tabs. */}
                 <div style={{display: 'flex', gap: 2, marginBottom: -1, alignItems: 'flex-end'}}>
-                    {[['pseudocode', '🧩 Pseudocode'], ['python', '🐍 Python'], ['javascript', '🟨 JavaScript'], ['c', '🔌 C (STC12)']].map(([l, label]) => {
+                    {[['pseudocode', '🧩 Pseudocode'], ['python', '🐍 Python'], ['javascript', '🟨 JavaScript'], ['c', '🔧 C']].map(([l, label]) => {
                         const active = this.state.lang === l;
                         return (
                             <button key={l} type="button" aria-pressed={active} onClick={() => this.switchTab(l)}
