@@ -212,6 +212,11 @@ class SB3Creator {
         if (mode === 'simulator' && extId === 'stc12' && this._driverPins) {
             return this.stc12SimulatorDriver(lang, this._driverPins);
         }
+        // The circuit extension talks directly to the board (boundary B).
+        // Meter reporters sample at display rate (~60 Hz), not per edge.
+        if (mode === 'simulator' && extId === 'circuit') {
+            return this.circuitSimulatorDriver(lang);
+        }
         const banner = {
             shim: 'neutral stub — drives nothing; implement to drive real hardware',
             simulator: 'simulated board — no board attached for this runtime, so neutral',
@@ -307,6 +312,18 @@ class SB3Creator {
                 '        # An ANALOG pin reads volts from the board; the MCU scales to counts.',
                 '        if p["dir"] == "analog": return int(_board().readAnalog(p["pin"]) / 5.0 * 1023)',
                 '        return (not _board().readPin(p["pin"])) if p["low"] else _board().readPin(p["pin"])',
+                '    def setPwm(self, name, value):',
+                '        p = self._p(name)',
+                '        if p and _board(): _board().setPwm(p["pin"], int(value))',
+                '    def setTone(self, name, value):',
+                '        p = self._p(name)',
+                '        if p and _board(): _board().setTone(p["pin"], int(value))',
+                '    def setPort(self, name, value): pass  # TODO: whole-port sim',
+                '    def readPort(self, name): return 0  # TODO: whole-port sim',
+                '    def setPart(self, name, value): pass  # TODO: shift-register sim',
+                '    def print(self, value, mode):',
+                '        if mode == "text": print(value)',
+                '        else: print(int(value))',
                 '    def on(self, event, handler): pass',
                 'def _board(): return globals().get("bw_board")',
                 '_stc12 = _Stc12Simulated()',
@@ -337,6 +354,14 @@ class SB3Creator {
             '        // An ANALOG pin reads volts from the board; the MCU scales to counts.',
             '        if (p.dir === "analog") return Math.round(b.readAnalog(p.pin) / 5.0 * 1023);',
             '        return p.low ? (b.readPin(p.pin) ? 0 : 1) : b.readPin(p.pin); },',
+            '    setPwm: (name, v) => { const p = _stc12_pins[name], b = _board();',
+            '        if (p && b && b.setPwm) b.setPwm(p.pin, Number(v)); },',
+            '    setTone: (name, v) => { const p = _stc12_pins[name], b = _board();',
+            '        if (p && b && b.setTone) b.setTone(p.pin, Number(v)); },',
+            '    setPort: (name, v) => {},',  // TODO: whole-port sim
+            '    readPort: (name) => 0,',     // TODO: whole-port sim
+            '    setPart: (name, v) => {},',   // TODO: shift-register sim
+            '    print: (v, mode) => { console.log(mode === "text" ? v : Number(v)); },',
             '    on: (event, handler) => {}',
             '};',
             '',
@@ -346,6 +371,53 @@ class SB3Creator {
             'scratch.wait = (secs) => { _bw_t += BigInt(Math.round(Number(secs) * 1e9));',
             '    const b = _board(); if (b) b.advanceTo(_bw_t); };',
             'const _bw_now_ns = () => _bw_t;'
+        ];
+    }
+
+    // The circuit extension driver — boundary B exposed to Python/JS. Meter reporters
+    // sample at display rate (~60 Hz), not per edge (measured constraint from bw-board).
+    circuitSimulatorDriver(lang) {
+        if (lang === 'py') {
+            return [
+                '# _circuit driver — board instruments (boundary B). Supply `bw_board` to attach one.',
+                'class _CircuitSimulated:',
+                '    def nodeVoltage(self, net):',
+                '        b = _board()',
+                '        return b.nodeVoltage(net) if b else 0',
+                '    def branchCurrent(self, part):',
+                '        b = _board()',
+                '        return b.branchCurrent(part, "a") if b else 0',
+                '    def resistance(self, a, b_net):',
+                '        b = _board()',
+                '        return b.resistance(a, b_net) if b else "requires-power-off"',
+                '    def ledBrightness(self, part):',
+                '        b = _board()',
+                '        return b.ledBrightness(part) if b else 0',
+                '    def buzzerTone(self, part):',
+                '        b = _board()',
+                '        r = b.buzzerTone(part) if b else {"hz": 0, "on": False}',
+                '        return r.get("hz", 0) if r.get("on") else 0',
+                '    def setControl(self, control, value):',
+                '        b = _board()',
+                '        if b: b.setControl(control, float(value))',
+                '    def setPower(self, state):',
+                '        b = _board()',
+                '        if b: b.setPower(state == "on")',
+                '_circuit = _CircuitSimulated()'
+            ];
+        }
+        return [
+            '// _circuit driver — board instruments (boundary B). Supply `bwBoard` to attach one.',
+            'const _circuit = {',
+            '    nodeVoltage: (net) => { const b = _board(); return b ? b.nodeVoltage(net) : 0; },',
+            '    branchCurrent: (part) => { const b = _board(); return b ? b.branchCurrent(part, "a") : 0; },',
+            '    resistance: (a, bNet) => { const b = _board(); return b ? b.resistance(a, bNet) : "requires-power-off"; },',
+            '    ledBrightness: (part) => { const b = _board(); return b ? b.ledBrightness(part) : 0; },',
+            '    buzzerTone: (part) => { const b = _board(); if (!b) return 0;',
+            '        const r = b.buzzerTone(part); return r && r.on ? r.hz : 0; },',
+            '    setControl: (control, v) => { const b = _board(); if (b) b.setControl(control, Number(v)); },',
+            '    setPower: (state) => { const b = _board(); if (b) b.setPower(state === "on"); }',
+            '};'
         ];
     }
 
@@ -717,6 +789,26 @@ class SB3Creator {
         if ((m = s.match(/^read\s+([A-Za-z_]\w*)$/i)) && this.stcPin(m[1])) {
             return B('stc12_read', {}, { PIN: [this.stcPin(m[1]).name, null] });
         }
+        // STC12 port read: the whole 8-bit port value.
+        if ((m = s.match(/^read\s+([A-Za-z_]\w*)$/i)) && this.stcPort(m[1])) {
+            return B('stc12_readport', {}, { PORT: [this.stcPort(m[1]).name, null] });
+        }
+        // Circuit extension reporters (boundary B instruments).
+        if ((m = s.match(/^voltage at\s+(.+)$/i))) {
+            return B('circuit_nodevoltage', { NET: this.parseValue(m[1], context) });
+        }
+        if ((m = s.match(/^current through\s+(.+)$/i))) {
+            return B('circuit_branchcurrent', { PART: this.parseValue(m[1], context) });
+        }
+        if ((m = s.match(/^resistance between\s+(.+?)\s+and\s+(.+)$/i))) {
+            return B('circuit_resistance', { A: this.parseValue(m[1], context), B: this.parseValue(m[2], context) });
+        }
+        if ((m = s.match(/^brightness of\s+(.+)$/i))) {
+            return B('circuit_ledbrightness', { PART: this.parseValue(m[1], context) });
+        }
+        if ((m = s.match(/^tone of\s+(.+)$/i))) {
+            return B('circuit_buzzertone', { PART: this.parseValue(m[1], context) });
+        }
 
         if ((m = s.match(/^pick random\s+(.+)$/i))) {
             const parts = this.splitBinary(m[1], [' to '], { ci: true });
@@ -878,8 +970,11 @@ class SB3Creator {
     // dialect (`stc_pseudocode.py`), which is this target's reference implementation
     // and test oracle — see generateC().
     stcConfig(project = this.project) {
-        if (!project.stc) project.stc = { device: 'stc12c5a60s2', clock: 11059200, pins: [] };
-        return project.stc;
+        if (!project.stc) project.stc = { device: 'stc12c5a60s2', clock: 11059200, pins: [], ports: [], parts: [] };
+        const cfg = project.stc;
+        if (!cfg.ports) cfg.ports = [];
+        if (!cfg.parts) cfg.parts = [];
+        return cfg;
     }
 
     // A declared pin by name (case-insensitive), or null. Pin commands only claim a line
@@ -889,6 +984,22 @@ class SB3Creator {
         if (!cfg || !name) return null;
         const lower = String(name).trim().toLowerCase();
         return cfg.pins.find((p) => p.name.toLowerCase() === lower) || null;
+    }
+
+    // A declared whole-port by name, or null.
+    stcPort(name) {
+        const cfg = this.project && this.project.stc;
+        if (!cfg || !cfg.ports || !name) return null;
+        const lower = String(name).trim().toLowerCase();
+        return cfg.ports.find((p) => p.name.toLowerCase() === lower) || null;
+    }
+
+    // A declared shift-register part by name, or null.
+    stcPart(name) {
+        const cfg = this.project && this.project.stc;
+        if (!cfg || !cfg.parts || !name) return null;
+        const lower = String(name).trim().toLowerCase();
+        return cfg.parts.find((p) => p.name.toLowerCase() === lower) || null;
     }
 
     // Parse a top-level DEVICE / CLOCK / PIN declaration. Returns true if the line was one.
@@ -908,7 +1019,7 @@ class SB3Creator {
             this.stcConfig().clock = /^mhz$/i.test(m[2] || '') ? value * 1000000 : value;
             return true;
         }
-        if ((m = trimmed.match(/^PIN\s+([A-Za-z_]\w*)\s*=\s*P([0-4])\.([0-7])\s+(OUTPUT|INPUT|ANALOG)(?:\s+ACTIVE\s+(LOW|HIGH))?$/i))) {
+        if ((m = trimmed.match(/^PIN\s+([A-Za-z_]\w*)\s*=\s*P([0-4])\.([0-7])\s+(OUTPUT|INPUT|ANALOG|PWM|TONE)(?:\s+ACTIVE\s+(LOW|HIGH))?$/i))) {
             const [, name, port, bit, direction, active] = m;
             const cfg = this.stcConfig();
             if (this.stcPin(name)) {
@@ -920,11 +1031,90 @@ class SB3Creator {
                 this.warn(lineIndex, `ANALOG is only available on P1.0-P1.7 (ADC0-ADC7), not P${port}.${bit}`);
                 return true;
             }
+            // PORT conflict: a PIN inside a declared PORT would be clobbered by every
+            // port write, and neither declaration looks wrong on its own.
+            if (cfg.ports.some((w) => w.port === Number(port))) {
+                const conflict = cfg.ports.find((w) => w.port === Number(port));
+                this.warn(lineIndex, `P${port} is already declared as the whole port "${conflict.name}"; a PORT write covers all eight bits and would clobber P${port}.${bit}`);
+                return true;
+            }
             cfg.pins.push({
                 name,
                 port: Number(port),
                 bit: Number(bit),
                 direction: direction.toLowerCase(),
+                activeLow: /^low$/i.test(active || '')
+            });
+            return true;
+        }
+        // PORT <name> = P<n> OUTPUT|INPUT [ACTIVE LOW|HIGH]
+        if ((m = trimmed.match(/^PORT\s+([A-Za-z_]\w*)\s*=\s*P([0-4])\s+(OUTPUT|INPUT)(?:\s+ACTIVE\s+(LOW|HIGH))?$/i))) {
+            const [, name, port, direction, active] = m;
+            const cfg = this.stcConfig();
+            const portNum = Number(port);
+            if (this.stcPort(name) || this.stcPin(name) || this.stcPart(name)) {
+                this.warn(lineIndex, `"${name}" declared twice`);
+                return true;
+            }
+            // Conflict: a PIN already uses a bit on this port.
+            const conflict = cfg.pins.find((p) => p.port === portNum);
+            if (conflict) {
+                this.warn(lineIndex, `P${port} is already used one bit at a time, by "${conflict.name}" (P${conflict.port}.${conflict.bit}); a PORT writes all eight at once and would clobber it`);
+                return true;
+            }
+            // Two PORTs on the same physical port.
+            if (cfg.ports.some((p) => p.port === portNum)) {
+                this.warn(lineIndex, `P${port} is already declared as "${cfg.ports.find((p) => p.port === portNum).name}"`);
+                return true;
+            }
+            cfg.ports.push({
+                name,
+                port: portNum,
+                direction: direction.toLowerCase(),
+                activeLow: /^low$/i.test(active || '')
+            });
+            return true;
+        }
+        // PART <name> = 74HC595 data P<p>.<b> clock P<p>.<b> latch P<p>.<b> [ACTIVE LOW|HIGH]
+        if ((m = trimmed.match(/^PART\s+([A-Za-z_]\w*)\s*=\s*74HC595\s+data\s+P([0-4])\.([0-7])\s+clock\s+P([0-4])\.([0-7])\s+latch\s+P([0-4])\.([0-7])(?:\s+ACTIVE\s+(LOW|HIGH))?$/i))) {
+            const [, name, dp, db, cp, cb, lp, lb, active] = m;
+            const cfg = this.stcConfig();
+            if (this.stcPin(name) || this.stcPort(name) || this.stcPart(name)) {
+                this.warn(lineIndex, `"${name}" declared twice`);
+                return true;
+            }
+            const claims = [[Number(dp), Number(db)], [Number(cp), Number(cb)], [Number(lp), Number(lb)]];
+            const claimSet = new Set(claims.map(([p, b]) => `${p}.${b}`));
+            if (claimSet.size !== 3) {
+                this.warn(lineIndex, `"${name}" names the same pin twice; data, clock and latch must be three different pins`);
+                return true;
+            }
+            // Check conflicts with existing PINs, PORTs, PARTs.
+            for (const [p, b] of claims) {
+                const pinConflict = cfg.pins.find((pin) => pin.port === p && pin.bit === b);
+                if (pinConflict) {
+                    this.warn(lineIndex, `P${p}.${b} is already declared as "${pinConflict.name}"; a PART claims its pins`);
+                    return true;
+                }
+                const portConflict = cfg.ports.find((w) => w.port === p);
+                if (portConflict) {
+                    this.warn(lineIndex, `P${p}.${b} is inside the whole port "${portConflict.name}", which would clobber it`);
+                    return true;
+                }
+                for (const prev of cfg.parts) {
+                    if (prev.claims.some(([pp, pb]) => pp === p && pb === b)) {
+                        this.warn(lineIndex, `P${p}.${b} is already claimed by "${prev.name}"`);
+                        return true;
+                    }
+                }
+            }
+            cfg.parts.push({
+                name,
+                type: '74hc595',
+                claims,
+                data: { port: Number(dp), bit: Number(db) },
+                clock: { port: Number(cp), bit: Number(cb) },
+                latch: { port: Number(lp), bit: Number(lb) },
                 activeLow: /^low$/i.test(active || '')
             });
             return true;
@@ -986,6 +1176,9 @@ class SB3Creator {
         // A bare `read <pin>` used as a condition is the pin's level (active-low aware).
         if ((m = s.match(/^read\s+([A-Za-z_]\w*)$/i)) && this.stcPin(m[1])) {
             return push('stc12_read', {}, { PIN: [this.stcPin(m[1]).name, null] });
+        }
+        if ((m = s.match(/^read\s+([A-Za-z_]\w*)$/i)) && this.stcPort(m[1])) {
+            return push('stc12_readport', {}, { PORT: [this.stcPort(m[1]).name, null] });
         }
         if ((m = s.match(/^touching color\s+(.+)$/i))) {
             const color = this.parseValue(m[1].trim(), context);
@@ -1238,6 +1431,23 @@ class SB3Creator {
             || /^when\s+powered\s+on$/i.test(line)) {
             return { block: this.createBlock('event_whenflagclicked', { topLevel: true }).block, extraBlocks: {} };
         }
+        // STC12 event hat: `when <pin> pressed` / `when <pin> released` for INPUT pins.
+        if ((match = line.match(/^when\s+([A-Za-z_]\w*)\s+(pressed|released)$/i)) && this.stcPin(match[1])) {
+            const pin = this.stcPin(match[1]);
+            if (pin.direction === 'input') {
+                const { id, block } = this.createBlock('stc12_whenpin', { topLevel: true });
+                block[id].fields.PIN = [pin.name, null];
+                block[id].fields.EDGE = [match[2].toLowerCase(), null];
+                return { block, extraBlocks: {} };
+            }
+            // An OUTPUT/ANALOG/PWM/TONE pin has no edge to react to. Build the block
+            // anyway so the script body is kept, but generateC will refuse it.
+            this.warn(null, `"${pin.name}" is ${pin.direction.toUpperCase()}, not INPUT; a "when ${pin.name} ${match[2].toLowerCase()}" hat has no edge to react to`);
+            const { id, block } = this.createBlock('stc12_whenpin', { topLevel: true });
+            block[id].fields.PIN = [pin.name, null];
+            block[id].fields.EDGE = [match[2].toLowerCase(), null];
+            return { block, extraBlocks: {} };
+        }
 
         // Nothing above matched a line that arrived as `WHEN ...:`. Falling through
         // to statement parsing is what made an unknown hat silently drop its entire
@@ -1263,6 +1473,29 @@ class SB3Creator {
         if ((match = line.match(/^set\s+([A-Za-z_]\w*)\s+(high|low)$/i)) && this.stcPin(match[1])) {
             return stcSet(this.stcPin(match[1]), match[2].toLowerCase());
         }
+        // `set <pin> to <n> percent` — PWM duty cycle. Must match BEFORE the generic
+        // `set <pin> to <expr>` (writepin) below.
+        if ((match = line.match(/^set\s+([A-Za-z_]\w*)\s+to\s+(.+?)\s*(?:percent|%)$/i)) && this.stcPin(match[1])) {
+            const pin = this.stcPin(match[1]);
+            if (pin.direction !== 'pwm') {
+                this.warn(null, `"${pin.name}" is a ${pin.direction.toUpperCase()} pin; only a PWM pin takes a percentage`);
+            }
+            const { id, block } = cmd('stc12_setpwm');
+            block[id].fields.PIN = [pin.name, null];
+            block[id].inputs.VALUE = val(match[2]);
+            return ret(block);
+        }
+        // `set <pin> to <n> hz` — tone frequency. Must match BEFORE the generic writepin.
+        if ((match = line.match(/^set\s+([A-Za-z_]\w*)\s+to\s+(.+?)\s*(?:hz|hertz)$/i)) && this.stcPin(match[1])) {
+            const pin = this.stcPin(match[1]);
+            if (pin.direction !== 'tone') {
+                this.warn(null, `"${pin.name}" is a ${pin.direction.toUpperCase()} pin; only a TONE pin takes a frequency`);
+            }
+            const { id, block } = cmd('stc12_settone');
+            block[id].fields.PIN = [pin.name, null];
+            block[id].inputs.VALUE = val(match[2]);
+            return ret(block);
+        }
         // `set <pin> to <expr>` writes a computed LEVEL. Distinct from `turn on/off`, which
         // are states and respect ACTIVE LOW; a level is a level, exactly like `set high`.
         // Placed before the generic variable assignment (and before motion's `set x to`) so a
@@ -1277,6 +1510,42 @@ class SB3Creator {
             const { id, block } = this.createBlock('stc12_toggle');
             block[id].fields.PIN = [this.stcPin(match[1]).name, null];
             return { block, extraBlocks: {} };
+        }
+        // ---- STC12 / 8051 PORT and PART commands ------------------------------------
+        // `set <port> to <n>` — writes the whole 8-bit port at once.
+        if ((match = line.match(/^set\s+([A-Za-z_]\w*)\s+to\s+(.+)$/i)) && this.stcPort(match[1])) {
+            const port = this.stcPort(match[1]);
+            const { id, block } = cmd('stc12_setport');
+            block[id].fields.PORT = [port.name, null];
+            block[id].inputs.VALUE = val(match[2]);
+            return ret(block);
+        }
+        // `set <part> to <n>` — shifts a byte out to a 74HC595.
+        if ((match = line.match(/^set\s+([A-Za-z_]\w*)\s+to\s+(.+)$/i)) && this.stcPart(match[1])) {
+            const part = this.stcPart(match[1]);
+            const { id, block } = cmd('stc12_setpart');
+            block[id].fields.PART = [part.name, null];
+            block[id].inputs.VALUE = val(match[2]);
+            return ret(block);
+        }
+        // ---- STC12 / 8051 print (program-wide, no declaration needed) ---------------
+        if ((match = line.match(/^print\s+"([^"]*)"\s*$/i))) {
+            const { id, block } = cmd('stc12_print');
+            block[id].inputs.VALUE = [1, [10, match[1]]];
+            block[id].fields.MODE = ['text', null];
+            return ret(block);
+        }
+        if ((match = line.match(/^print\s+(.+)$/i))) {
+            const { id, block } = cmd('stc12_print');
+            block[id].inputs.VALUE = val(match[1]);
+            block[id].fields.MODE = ['number', null];
+            return ret(block);
+        }
+        // ---- Circuit extension commands (boundary B) --------------------------------
+        if ((match = line.match(/^turn power\s+(on|off)$/i))) {
+            const { id, block } = cmd('circuit_setpower');
+            block[id].fields.STATE = [match[1].toLowerCase(), null];
+            return ret(block);
         }
 
         // ---- Arrays & Vectors extension commands (anchored on `array "NAME"`; 0-based) ----
@@ -2108,9 +2377,9 @@ class SB3Creator {
                 i++; continue;
             }
 
-            // STC12 / 8051 target declarations (DEVICE / CLOCK / PIN). Inert for every
-            // other target; generateC() is the only consumer.
-            if (/^(DEVICE|CLOCK|PIN)\b/i.test(trimmed) && this.parseStcDeclaration(trimmed, i)) {
+            // STC12 / 8051 target declarations (DEVICE / CLOCK / PIN / PORT / PART). Inert
+            // for every other target; generateC() is the only consumer.
+            if (/^(DEVICE|CLOCK|PIN|PORT|PART)\b/i.test(trimmed) && this.parseStcDeclaration(trimmed, i)) {
                 i++; continue;
             }
 
@@ -2513,6 +2782,12 @@ class SB3Creator {
             for (const p of cfg.pins || []) {
                 out.push(`PIN ${p.name} = P${p.port}.${p.bit} ${p.direction.toUpperCase()}${p.activeLow ? ' ACTIVE LOW' : ''}`);
             }
+            for (const p of cfg.ports || []) {
+                out.push(`PORT ${p.name} = P${p.port} ${p.direction.toUpperCase()}${p.activeLow ? ' ACTIVE LOW' : ''}`);
+            }
+            for (const p of cfg.parts || []) {
+                out.push(`PART ${p.name} = 74HC595 data P${p.data.port}.${p.data.bit} clock P${p.clock.port}.${p.clock.bit} latch P${p.latch.port}.${p.latch.bit}${p.activeLow ? ' ACTIVE LOW' : ''}`);
+            }
             out.push('');
         }
         for (const v of Object.values(stage.variables || {})) out.push(`GLOBAL ${v[0]}`);
@@ -2685,6 +2960,13 @@ class SB3Creator {
             case 'arrays_reduce': return `reduce array ${v('NAME')} with ${this.dval(b.inputs.FUNC, blocks)} from ${v('INIT')}`;
             // STC12 / 8051 pin read (digital level or ADC value).
             case 'stc12_read': return `read ${f('PIN')}`;
+            case 'stc12_readport': return `read ${f('PORT')}`;
+            // circuit extension reporters
+            case 'circuit_nodevoltage': return `voltage at ${v('NET')}`;
+            case 'circuit_branchcurrent': return `current through ${v('PART')}`;
+            case 'circuit_resistance': return `resistance between ${v('A')} and ${v('B')}`;
+            case 'circuit_ledbrightness': return `brightness of ${v('PART')}`;
+            case 'circuit_buzzertone': return `tone of ${v('PART')}`;
             default: return b.opcode;
         }
     }
@@ -2744,6 +3026,7 @@ class SB3Creator {
             case 'event_whenthisspriteclicked': return 'WHEN sprite clicked:';
             case 'event_whenbroadcastreceived': return `WHEN I receive "${f('BROADCAST_OPTION')}":`;
             case 'control_start_as_clone': return 'WHEN I start as a clone:';
+            case 'stc12_whenpin': return `WHEN ${f('PIN')} ${f('EDGE')}:`;
             case 'procedures_definition': {
                 const proto = blocks[b.inputs.custom_block[1]];
                 const m = proto.mutation;
@@ -2869,6 +3152,18 @@ class SB3Creator {
             }
             case 'stc12_writepin': return line(`set ${f('PIN')} to ${v('VALUE')}`);
             case 'stc12_toggle': return line(`toggle ${f('PIN')}`);
+            case 'stc12_setpwm': return line(`set ${f('PIN')} to ${v('VALUE')} percent`);
+            case 'stc12_settone': return line(`set ${f('PIN')} to ${v('VALUE')} hz`);
+            case 'stc12_setport': return line(`set ${f('PORT')} to ${v('VALUE')}`);
+            case 'stc12_setpart': return line(`set ${f('PART')} to ${v('VALUE')}`);
+            case 'stc12_print': {
+                const mode = f('MODE');
+                if (mode === 'text') return line(`print "${this.dval(b.inputs.VALUE, blocks).replace(/^"|"$/g, '')}"`);
+                return line(`print ${v('VALUE')}`);
+            }
+            // circuit extension commands
+            case 'circuit_setcontrol': return line(`set ${v('CONTROL')} to ${v('VALUE')}`);
+            case 'circuit_setpower': return line(`turn power ${f('STATE')}`);
             case 'data_showlist': return line(`show list ${f('LIST')}`);
             case 'data_hidelist': return line(`hide list ${f('LIST')}`);
             case 'data_showvariable': return line(`show variable ${f('VARIABLE')}`);
@@ -2903,7 +3198,8 @@ class SB3Creator {
     // runnable Python; sprite/graphics blocks are emitted as `# ...` comments.
     isHat(op) {
         return ['event_whenflagclicked', 'event_whenkeypressed', 'event_whenthisspriteclicked',
-            'event_whenbroadcastreceived', 'control_start_as_clone', 'procedures_definition'].includes(op);
+            'event_whenbroadcastreceived', 'control_start_as_clone', 'procedures_definition',
+            'stc12_whenpin'].includes(op);
     }
 
     pyName(name) {
@@ -3036,7 +3332,7 @@ class SB3Creator {
             case 'planetemaths_or': return `(${c('OPERAND1')} or ${c('OPERAND2')})`;
             case 'planetemaths_not': return `(not ${c('OPERAND1')})`;
             case 'planetemaths_contains': return `(str(${v('STRING2')}) in str(${v('STRING1')}))`;
-            case 'planetemaths_multiple': return `(${v('NUM1')} % ${v('NUM2')} == 0)`;
+            case 'planetemaths_multiple': this._pyUses.multiple = true; return `_multiple(${v('NUM1')}, ${v('NUM2')})`;
             // Scratch-runtime predicates (touching, key pressed?, mouse down?) -> scratch.<method>().
             default: {
                 const ac = this.arraysCall(b, blocks, this.pyVal);
@@ -3248,6 +3544,22 @@ class SB3Creator {
         }
     }
 
+    // DEVICE / CLOCK / PIN as reversible marker calls. Without these the Python
+    // and JavaScript targets emitted the pin-driver shim and the setPin() calls
+    // but nothing that says what the pins ARE, so a hardware project came back
+    // from either of them with `_stc12` as a variable and no pins at all.
+    stcStructMarkers(project) {
+        const stc = project && project.stc;
+        if (!stc || !stc.pins || !stc.pins.length) return [];
+        const q = (v) => this.pyStr(v);
+        const lines = [`scratch.device(${q(stc.device)}, ${stc.clock})`];
+        for (const pin of stc.pins) {
+            lines.push(`scratch.pin(${q(pin.name)}, ${q(`P${pin.port}.${pin.bit}`)}, `
+                + `${q(pin.direction)}, ${pin.activeLow ? 1 : 0})`);
+        }
+        return lines;
+    }
+
     // The pseudocode structure markers for one target: scratch.sprite/stage + local + costume.
     // `quote` = this.pyStr (JSON strings work in both Python and JS).
     scratchStructMarkers(t) {
@@ -3328,7 +3640,11 @@ class SB3Creator {
                 } else {
                     const name = this.pyFreshName(pfx + this.pyHatBase(b));
                     const isFlag = b.opcode === 'event_whenflagclicked';
+                    // A comment on the hat belongs to the script, and was being dropped.
+                    const note = this.codeCommentLines(Object.keys(blocks)
+                        .find((k) => blocks[k] === b), '', '#');
                     let code = this.pyFunc(`def ${name}():`, b.next, blocks, []);
+                    if (note.length) code = note.join('\n') + '\n' + code;
                     if (!isFlag) code = `# ${this.decompileHat(b, blocks)}  (event handler — call it when that event happens)\n` + code;
                     defs.push(code);
                     if (isFlag) flagCalls.push(`${name}()`);
@@ -3356,6 +3672,11 @@ class SB3Creator {
             out.push('def _sumdigits(n): return sum(int(d) for d in str(n) if d.isdigit())');
             out.push('');
         }
+        if (this._pyUses.multiple) {
+            out.push('def _multiple(a, b):  # `is multiple of`, kept distinct from `mod … = 0`');
+            out.push('    return float(b) != 0 and float(a) % float(b) == 0');
+            out.push('');
+        }
         if (this._pyUses.eq) {
             out.push('def _eq(a, b):  # Scratch-style loose equality');
             out.push('    try:');
@@ -3369,6 +3690,9 @@ class SB3Creator {
         // module state
         if (this._pyUses.answer) stateDecls.push('answer = ""');
         if (stateDecls.length) { out.push(...stateDecls); out.push(''); }
+        // Hardware declarations first: they are the project's header in pseudocode too.
+        const stcMarkers = this.stcStructMarkers(project);
+        if (stcMarkers.length) { out.push(...stcMarkers); out.push(''); }
         // Global-name markers (carry original names so the parser un-mangles identifiers).
         for (const n of gScalars) out.push(`scratch.global_var(${this.pyStr(n)})`);
         for (const n of gLists) out.push(`scratch.global_list(${this.pyStr(n)})`);
@@ -3512,7 +3836,7 @@ class SB3Creator {
             case 'planetemaths_or': return `(${c('OPERAND1')} || ${c('OPERAND2')})`;
             case 'planetemaths_not': return `(!${c('OPERAND1')})`;
             case 'planetemaths_contains': return `String(${v('STRING1')}).includes(String(${v('STRING2')}))`;
-            case 'planetemaths_multiple': return `(${v('NUM1')} % ${v('NUM2')} === 0)`;
+            case 'planetemaths_multiple': this._jsUses.multiple = true; return `_multiple(${v('NUM1')}, ${v('NUM2')})`;
             default: {
                 const ac = this.arraysCall(b, blocks, this.jsVal);
                 if (ac) return ac.call;
@@ -3592,7 +3916,7 @@ class SB3Creator {
     generateJavaScript(project = this.project, opts = {}) {
         this._driverPins = (project.stc && project.stc.pins) || null;
         this._pyNames = new Map();
-        this._jsUses = { rand: false, eq: false, answer: false, fact: false, arrays: false, sumdigits: false };
+        this._jsUses = { rand: false, eq: false, answer: false, fact: false, arrays: false, sumdigits: false, multiple: false };
         this._runtimesUsed = new Set();
         this._async = !!(opts && opts.async);
         this._events = !!(opts && opts.events);
@@ -3648,7 +3972,11 @@ class SB3Creator {
                 } else {
                     const name = this.pyFreshName(pfx + this.pyHatBase(b));
                     const isFlag = b.opcode === 'event_whenflagclicked';
-                    let code = [`${af}function ${name}() {`, ...this.jsStackFrom(b.next, blocks, 1), '}'].join('\n');
+                    // A comment on the hat belongs to the script, and was being dropped.
+                    const note = this.codeCommentLines(Object.keys(blocks)
+                        .find((k) => blocks[k] === b), '', '//');
+                    let code = [...note, `${af}function ${name}() {`,
+                        ...this.jsStackFrom(b.next, blocks, 1), '}'].join('\n');
                     if (!isFlag) code = `// ${this.decompileHat(b, blocks)}  (event handler — call it when that event happens)\n` + code;
                     defs.push(code);
                     if (isFlag) flagCalls.push(`${name}();`);
@@ -3663,6 +3991,9 @@ class SB3Creator {
         out.push('// Scratch blocks (motion/looks/sensing/…) map to a `scratch` runtime object;');
         out.push('// sprite structure is marked by scratch.sprite()/costume() so it round-trips to blocks.');
         out.push('');
+        // `is multiple of` gets its own function: `x % y === 0` is a different
+        // block that means the same thing, and the way back cannot guess which.
+        if (this._jsUses.multiple) out.push('function _multiple(a, b) { return Number(b) !== 0 && Number(a) % Number(b) === 0; }');
         if (this._jsUses.eq) out.push('function _eq(a, b) { const x = Number(a), y = Number(b); if (!Number.isNaN(x) && !Number.isNaN(y)) return x === y; return String(a).toLowerCase() === String(b).toLowerCase(); }');
         if (this._jsUses.rand) out.push('function _rand(a, b) { a = Number(a); b = Number(b); return Math.floor(Math.random() * (b - a + 1)) + a; }');
         if (this._jsUses.fact) out.push('function _fact(n) { n = Number(n); let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }');
@@ -3675,6 +4006,8 @@ class SB3Creator {
         for (const extId of this._runtimesUsed) { out.push(...this.runtimeShim(extId, 'js', opts.driver || 'shim')); out.push(''); }
         if (this._jsUses.answer) stateDecls.push('let answer = "";');
         if (stateDecls.length) { out.push(...stateDecls); out.push(''); }
+        const stcMarkers = this.stcStructMarkers(project).map((l) => l + ';');
+        if (stcMarkers.length) { out.push(...stcMarkers); out.push(''); }
         for (const n of gScalars) out.push(`scratch.global_var(${this.pyStr(n)});`);
         for (const n of gLists) out.push(`scratch.global_list(${this.pyStr(n)});`);
         if (gScalars.length || gLists.length) out.push('');
@@ -3758,6 +4091,18 @@ class SB3Creator {
     // Make arbitrary text safe to drop inside a /* ... */ comment.
     cComment(text) {
         return String(text).replace(/\*\//g, '* /').replace(/\/\*/g, '/ *');
+    }
+
+    // A marker-header token that must survive the trip byte for byte — a block id.
+    // cComment is the wrong tool for those: Scratch's id alphabet contains both `*`
+    // and `/` (see generateId, and generateAssetId which already exists to dodge the
+    // same alphabet for filenames), so roughly one id in 400 contains `*/` and would
+    // close the comment the header lives in. cComment would then rewrite it to `* /`
+    // and silently hand back a DIFFERENT id, which is worse than a broken comment.
+    // encodeURIComponent leaves `*` alone but escapes `/`, so escape `*` too; what is
+    // left has no `/`, no `*` and no whitespace, and decodeURIComponent is exact.
+    cMark(text) {
+        return encodeURIComponent(String(text)).replace(/\*/g, '%2A');
     }
 
     cWarn(message) {
@@ -3858,6 +4203,10 @@ class SB3Creator {
             case 'planetemaths_oppose': return `(0 - ${v('NUM1')})`;
             case 'planetemaths_pourcent': return `(${v('NUM1')} / 100)`;
             case 'stc12_read': return this.cPinRead(f('PIN'));
+            case 'stc12_readport': {
+                const portCfg = this.project && this.project.stc && (this.project.stc.ports || []).find((p) => p.name.toLowerCase() === f('PORT').toLowerCase());
+                return portCfg ? `P${portCfg.port}` : `0 /* read ${this.cComment(f('PORT'))} */`;
+            }
             case 'argument_reporter_string_number':
             case 'argument_reporter_boolean': return this.cName(f('VALUE'));
             default: {
@@ -3902,6 +4251,10 @@ class SB3Creator {
             case 'planetemaths_not': return `(!${c('OPERAND1')})`;
             case 'planetemaths_multiple': return `((${v('NUM1')} % ${v('NUM2')}) == 0)`;
             case 'stc12_read': return this.cPinRead(f('PIN'));
+            case 'stc12_readport': {
+                const portCfg = this.project && this.project.stc && (this.project.stc.ports || []).find((p) => p.name.toLowerCase() === f('PORT').toLowerCase());
+                return portCfg ? `P${portCfg.port}` : `0 /* read ${this.cComment(f('PORT'))} */`;
+            }
             case 'argument_reporter_boolean': return this.cName(f('VALUE'));
             default: return `(${this.cRep(b, blocks)})`;
         }
@@ -4003,6 +4356,39 @@ class SB3Creator {
                 const sfr = this.cSfr(f('PIN'));
                 return line(sfr ? `${sfr} = !${sfr};` : `/* toggle ${this.cComment(f('PIN'))} */`);
             }
+            case 'stc12_setpwm': {
+                this._cUses.pwm = true;
+                const pin = this._cPins && this._cPins.get(f('PIN').toLowerCase());
+                const module = pin ? `${pin.port * 8 + pin.bit}` : '0';
+                return line(`pwm_set(${module}, ${v('VALUE')});`);
+            }
+            case 'stc12_settone': {
+                this._cUses.tone = true;
+                return line(`tone_set(${v('VALUE')});`);
+            }
+            case 'stc12_setport': {
+                const port = f('PORT');
+                const portCfg = this.project && this.project.stc && (this.project.stc.ports || []).find((p) => p.name.toLowerCase() === port.toLowerCase());
+                const sfr = portCfg ? `P${portCfg.port}` : `/* ${this.cComment(port)} */`;
+                return line(`${sfr} = (unsigned char)(${v('VALUE')});`);
+            }
+            case 'stc12_setpart': {
+                this._cUses.shiftOut = true;
+                const part = f('PART');
+                const partCfg = this.project && this.project.stc && (this.project.stc.parts || []).find((p) => p.name.toLowerCase() === part.toLowerCase());
+                if (!partCfg) return line(`/* set ${this.cComment(part)} — undeclared PART */`);
+                const { data, clock, latch } = partCfg;
+                return line(`shift_out(P${data.port}_${data.bit}, P${clock.port}_${clock.bit}, P${latch.port}_${latch.bit}, ${partCfg.activeLow ? '1' : '0'}, (unsigned char)(${v('VALUE')}));`);
+            }
+            case 'stc12_print': {
+                this._cUses.print = true;
+                const mode = f('MODE');
+                if (mode === 'text') {
+                    const text = this.dval(b.inputs.VALUE, blocks).replace(/^"|"$/g, '');
+                    return line(`bw_print("${this.cComment(text)}");`);
+                }
+                return line(`bw_print_num(${v('VALUE')});`);
+            }
             case 'procedures_call': return line(this.cProcCall(b, blocks));
             default: {
                 const text = (this.decompileStackBlock(b, blocks, 0)[0] || b.opcode).trim();
@@ -4032,10 +4418,19 @@ class SB3Creator {
         const pad = '    '.repeat(level);
         while (id && blocks[id]) {
             lines.push(...this.cCommentLines(id, pad));
-            lines.push(...this.cTaskBlock(blocks[id], blocks, level, ctx));
+            lines.push(...this.cTaskBlock(blocks[id], blocks, level, ctx, id));
             id = blocks[id].next;
         }
         return lines;
+    }
+
+    // Record a yield point: `<task>_state == state` means "about to run this block".
+    // The state number is minted here so the map can never disagree with the `case`
+    // labels — they come from the same counter, in the same order.
+    cYield(ctx, blockId, kind) {
+        const state = ++ctx.state;
+        ctx.yields.push({ task: ctx.task, state, block: blockId, kind });
+        return state;
     }
 
     // One task's statements as the interior of a Duff's-device state machine. The switch
@@ -4043,7 +4438,7 @@ class SB3Creator {
     // which C allows as long as no inner switch appears (we emit none). Every wait AND
     // every loop back-edge is a numbered yield — the latter is Scratch's own scheduling
     // contract, and it is what makes a busy FOREVER unable to starve the other tasks.
-    cTaskBlock(b, blocks, level, ctx) {
+    cTaskBlock(b, blocks, level, ctx, blockId) {
         const pad = '    '.repeat(level);
         const v = (k) => this.cVal(b.inputs[k], blocks);
         const f = (k) => (b.fields[k] ? b.fields[k][0] : '');
@@ -4053,7 +4448,7 @@ class SB3Creator {
         switch (b.opcode) {
             case 'control_wait': {
                 this._cUses.now = true;
-                const s = ++ctx.state;
+                const s = this.cYield(ctx, blockId, 'wait');
                 return [
                     `${pad}${task}_until = bw_now() + (${this.cMs(b.inputs.DURATION, blocks)});`,
                     `${pad}${task}_state = ${s};`,
@@ -4062,11 +4457,11 @@ class SB3Creator {
                 ];
             }
             case 'control_wait_until': {
-                const s = ++ctx.state;
+                const s = this.cYield(ctx, blockId, 'wait-until');
                 return [`${pad}${task}_state = ${s};`, `${pad}case ${s}:`, `${pad}if (!(${cond()})) return;`];
             }
             case 'control_forever': {
-                const s = ++ctx.state;
+                const s = this.cYield(ctx, blockId, 'forever');
                 return [`${pad}${task}_state = ${s};`, `${pad}case ${s}:`,
                     ...sub('SUBSTACK', level),
                     `${pad}${task}_state = ${s};`, `${pad}return;`];
@@ -4075,7 +4470,7 @@ class SB3Creator {
                 // The counter has to survive the yield, so it is a static, not a local.
                 const name = `bw_i${++this._cCounter}`;
                 ctx.statics.push(name);
-                const s = ++ctx.state;
+                const s = this.cYield(ctx, blockId, 'repeat');
                 return [`${pad}${name} = (${v('TIMES')});`,
                     `${pad}${task}_state = ${s};`,
                     `${pad}case ${s}:`,
@@ -4087,7 +4482,7 @@ class SB3Creator {
                     `${pad}}`];
             }
             case 'control_repeat_until': {
-                const s = ++ctx.state;
+                const s = this.cYield(ctx, blockId, 'repeat-until');
                 return [`${pad}${task}_state = ${s};`,
                     `${pad}case ${s}:`,
                     `${pad}if (!(${cond()})) {`,
@@ -4561,16 +4956,34 @@ class SB3Creator {
         // Same section rule as the Python/JS back ends, so sprite prefixes line up.
         const sections = targets.filter((t) => !t.isStage || Object.values(t.blocks || {}).some((b) => b.topLevel));
 
-        // Pass 1 — count the `when green flag clicked` scripts. Several means the
-        // cooperative scheduler; exactly one keeps straight-line code in main().
+        // Pass 1 — count scripts that become tasks. Several means the cooperative
+        // scheduler; exactly one `when green flag clicked` keeps straight-line code in
+        // main(). A `when X pressed` hat ALWAYS forces the scheduler — there is no
+        // straight-line form of something that has to be sampled.
         let scriptCount = 0;
+        let hasEventHat = false;
         for (const t of sections) {
             for (const b of Object.values(t.blocks || {})) {
-                if (b.topLevel && b.opcode === 'event_whenflagclicked') scriptCount++;
+                if (!b.topLevel) continue;
+                if (b.opcode === 'event_whenflagclicked') scriptCount++;
+                if (b.opcode === 'stc12_whenpin') {
+                    const pn = b.fields.PIN ? b.fields.PIN[0] : '';
+                    const pc = this._cPins && this._cPins.get(pn.toLowerCase());
+                    if (pc && pc.direction === 'input') { scriptCount++; hasEventHat = true; }
+                }
             }
         }
-        this._cTasks = scriptCount > 1;
+        // `{debug: true}` forces the scheduler even for one script. Straight-line code in
+        // main() has no `<task>_state`, so it has no Level 1 position — and a debugger that
+        // cannot say where it is in the commonest beginner project (a single WHEN) is not
+        // worth having. The cooperative form costs the Timer-0 ISR and a dispatch loop and
+        // changes nothing semantically: a lone task that yields simply re-enters at once.
+        // Release builds are untouched. See reference/debugger-ui.md §7.
+        // Event hats always force the scheduler — a polled task has no straight-line form.
+        const debug = !!(opts && opts.debug);
+        this._cTasks = scriptCount > 1 || hasEventHat || (scriptCount > 0 && debug);
         const taskNames = Array.from({ length: scriptCount }, (_, n) => `bw_task${n}`);
+        const yieldMap = [];   // only emitted for a debug build — see the marker header below
 
         // Pass 2 — declare state. Names are claimed here so a custom block's parameter can
         // never quietly take a variable's identifier.
@@ -4602,8 +5015,8 @@ class SB3Creator {
                 : new Set([...Object.values(t.variables || {}).map((v) => v[0]),
                     ...Object.values(t.lists || {}).map((l) => l[0])]);
             const blocks = t.blocks || {};
-            for (const b of Object.values(blocks)) {
-                if (!b.topLevel) continue;
+            for (const [topId, b] of Object.entries(blocks)) {
+                if (!b || !b.topLevel) continue;
                 if (b.opcode === 'procedures_definition') {
                     const proto = blocks[b.inputs.custom_block[1]];
                     const m = proto.mutation;
@@ -4622,8 +5035,7 @@ class SB3Creator {
                     // A comment on the hat belongs to the script. The host target
                     // carries it; this one was dropping it, which is the only thing
                     // that stopped a device round trip from being a fixed point.
-                    const hatNote = this.codeCommentLines(Object.keys(blocks)
-                        .find((k) => blocks[k] === b), '', '//');
+                    const hatNote = this.codeCommentLines(topId, '', '//');
                     markScripts.push(`script ${this._cTasks ? task : 'main'} ${n}`
                         + (t.isStage ? ' stage' : ` sprite ${this.pyStr(t.name)}`));
                     if (!this._cTasks) {
@@ -4631,7 +5043,11 @@ class SB3Creator {
                         mainBody = this.cStackFrom(b.next, blocks, 1);
                         continue;
                     }
-                    const ctx = { task, state: 0, statics, tasks: taskNames };
+                    // State 0 is `case 0:` — the task has not started, so the block to point
+                    // at is the hat itself. That is what Scratch shows for a script that has
+                    // not run, and it means the map covers every reachable state.
+                    const ctx = { task, state: 0, statics, tasks: taskNames, yields: debug ? yieldMap : [] };
+                    if (debug) yieldMap.push({ task, state: 0, block: topId, kind: 'hat' });
                     const body = this.cTaskFrom(b.next, blocks, 1, ctx);
                     taskDefs.push(`static unsigned int ${task}_state;`);
                     if (this.cHasWait(b.next, blocks)) taskDefs.push(`static unsigned int ${task}_until;`);
@@ -4644,6 +5060,60 @@ class SB3Creator {
                         '    }',
                         `    ${task}_state = 0xFFFF;   /* ran to the end */`,
                         '}', '');
+                } else if (b.opcode === 'stc12_whenpin') {
+                    const pinName = b.fields.PIN ? b.fields.PIN[0] : '';
+                    const edge = b.fields.EDGE ? b.fields.EDGE[0] : 'pressed';
+                    const pin = this._cPins && this._cPins.get(pinName.toLowerCase());
+                    if (!pin) {
+                        this.cWarn(`"when ${pinName} ${edge}" — undeclared pin; script skipped`);
+                    } else if (pin.direction !== 'input') {
+                        this.cWarn(`"when ${pinName} ${edge}" — ${pinName} is ${pin.direction.toUpperCase()}, not INPUT; script skipped`);
+                    } else {
+                        const n = taskIndex++;
+                        const task = taskNames[n];
+                        const where = t.isStage ? '' : `, ${this.cComment(t.name)}`;
+                        const hatNote = this.codeCommentLines(topId, '', '//');
+                        markScripts.push(`script ${task} ${n}`
+                            + (t.isStage ? ' stage' : ` sprite ${this.pyStr(t.name)}`));
+                        const ctx = { task, state: 0, statics, tasks: taskNames, yields: debug ? yieldMap : [] };
+                        if (debug) yieldMap.push({ task, state: 0, block: topId, kind: 'hat' });
+                        // Body starts at case 1 — case 0 is the edge test.
+                        ctx.state = 1;
+                        const body = this.cTaskFrom(b.next, blocks, 1, ctx);
+                        // The polarity-aware LOGICAL level — same rule as cPinRead: ACTIVE
+                        // LOW means pressed = pin low, so `!Px_y` reads as 1 when pressed.
+                        const sfr = `P${pin.port}_${pin.bit}`;
+                        const level = pin.activeLow ? `!${sfr}` : sfr;
+                        const test = edge === 'pressed'
+                            ? `now && !${task}_prev`
+                            : `!now && ${task}_prev`;
+                        taskDefs.push(`static unsigned int ${task}_state;`);
+                        if (this.cHasWait(b.next, blocks)) taskDefs.push(`static unsigned int ${task}_until;`);
+                        taskDefs.push(`static unsigned char ${task}_prev;`);
+                        taskDefs.push(...hatNote,
+                            `/* WHEN ${this.cComment(pinName)} ${edge}: (script ${n + 1}${where})`,
+                            ' *',
+                            ` * Polled once per dispatch and EDGE-triggered: \`_prev\` is updated on every`,
+                            ` * pass, so a held button runs the body once rather than every millisecond,`,
+                            ` * and a release during the body does not queue a second run. The level read`,
+                            ` * is the LOGICAL one, so an ACTIVE LOW button reads as pressed when the pin`,
+                            ` * is low. */`,
+                            `static void ${task}(void)`, '{',
+                            `    unsigned char now   = (${level}) ? 1 : 0;`,
+                            `    unsigned char fired = (${test}) ? 1 : 0;`,
+                            `    ${task}_prev = now;`,
+                            '',
+                            `    switch (${task}_state) {`,
+                            '    case 0:',
+                            '        if (!fired)',
+                            '            return;',
+                            `        ${task}_state = 1;`,
+                            '    case 1:',
+                            ...body,
+                            '    }',
+                            `    ${task}_state = 0;   /* ready for the next edge */`,
+                            '}', '');
+                    }
                 } else if (this.isHat(b.opcode) || this.runtimeOp(b.opcode)) {
                     this.cWarn(`"${this.decompileHat(b, blocks) || b.opcode}" has no meaning on the chip — script skipped`);
                 }
@@ -4698,7 +5168,20 @@ class SB3Creator {
                 `device ${device}`,
                 `clock ${clock}`,
                 ...pins.map((p) => `pin ${p.name} P${p.port}.${p.bit} ${p.direction}${p.activeLow ? ' active-low' : ''}`),
-                ...markVars, ...markProcs, ...markScripts
+                ...markVars, ...markProcs, ...markScripts,
+                // The yield map: `<task>_state == N` means "about to run this block". It is
+                // the only thing that turns a Level 1 position into something the block
+                // editor can point at, and only the emitter knows it — the C form has lost
+                // it by the time stc_symtab or either emulator sees the file.
+                //
+                // Debug builds only, and that is not squeamishness: block ids are minted
+                // afresh by every parse, so emitting them unconditionally would make
+                // generateC's output differ run to run for the same program. That breaks
+                // the `C -> pseudocode -> C` fixed point the other three languages hold
+                // themselves to, and makes emitted C undiffable. A debugger asks for
+                // {debug: true} anyway — it needs the scheduler form regardless.
+                // reference/debugger-ui.md §7 is the normative spec.
+                ...yieldMap.map((y) => `yield ${y.task} ${y.state} ${this.cMark(y.block)} ${y.kind}`)
             ];
             out.push('/* @bw-begin — machine-readable; do not hand-edit.');
             for (const m of marks) out.push(` * @bw ${this.cComment(m)}`);
@@ -4983,7 +5466,29 @@ SB3Creator.RUNTIME_EXTENSIONS = {
             setpin: { kind: 'command', method: 'setPin', args: ['PIN', 'STATE'] },
             toggle: { kind: 'command', method: 'togglePin', args: ['PIN'] },
             writepin: { kind: 'command', method: 'writePin', args: ['PIN', 'VALUE'] },
-            read: { kind: 'reporter', method: 'readPin', args: ['PIN'], neutral: '0' }
+            read: { kind: 'reporter', method: 'readPin', args: ['PIN'], neutral: '0' },
+            setpwm: { kind: 'command', method: 'setPwm', args: ['PIN', 'VALUE'] },
+            settone: { kind: 'command', method: 'setTone', args: ['PIN', 'VALUE'] },
+            setport: { kind: 'command', method: 'setPort', args: ['PORT', 'VALUE'] },
+            readport: { kind: 'reporter', method: 'readPort', args: ['PORT'], neutral: '0' },
+            setpart: { kind: 'command', method: 'setPart', args: ['PART', 'VALUE'] },
+            print: { kind: 'command', method: 'print', args: ['VALUE', 'MODE'] }
+        }
+    },
+    // The circuit extension — board instruments and controls (simulation-only reporters).
+    // Meter reporters sample at display rate (~60 Hz), not per edge — measured constraint
+    // from bw-board 88ac0d6: branchCurrent on a PWM pin at 7.2K edges/sec against a
+    // 7.0K ops/sec MNA solver budget would drop below real time.
+    circuit: {
+        runtime: 'circuit',
+        ops: {
+            nodevoltage: { kind: 'reporter', method: 'nodeVoltage', args: ['NET'], neutral: '0' },
+            branchcurrent: { kind: 'reporter', method: 'branchCurrent', args: ['PART'], neutral: '0' },
+            resistance: { kind: 'reporter', method: 'resistance', args: ['A', 'B'], neutral: '"requires-power-off"' },
+            ledbrightness: { kind: 'reporter', method: 'ledBrightness', args: ['PART'], neutral: '0' },
+            buzzertone: { kind: 'reporter', method: 'buzzerTone', args: ['PART'], neutral: '0' },
+            setcontrol: { kind: 'command', method: 'setControl', args: ['CONTROL', 'VALUE'] },
+            setpower: { kind: 'command', method: 'setPower', args: ['STATE'] }
         }
     }
 };
