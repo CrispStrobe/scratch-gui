@@ -47,13 +47,17 @@ class CircuitTab extends React.Component {
         this.loading = false;
     }
 
-    /** The project's own hardware declarations — device, clock, and the pin table. */
+    /** The project's own hardware declarations — device, clock, and the pin table.
+     *
+     * They live on the runtime, not in the serialised project: scratch-vm's sb3
+     * serializer emits targets/monitors/extensions/meta and drops every other
+     * top-level key, so the `stc` block that SB3Creator writes into the .sb3 never
+     * came back out of vm.toJSON(). This read used to be that one, which is why the
+     * designer opened empty for every project, hardware or not. */
     readStc () {
-        try {
-            return JSON.parse(this.props.vm.toJSON()).stc || null;
-        } catch {
-            return null;
-        }
+        const vm = this.props.vm;
+        if (vm && vm.runtime && vm.runtime.stc) return vm.runtime.stc;
+        try { return JSON.parse(vm.toJSON()).stc || null; } catch { return null; }
     }
 
     render () {
