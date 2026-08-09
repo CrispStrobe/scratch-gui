@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
 import DebugDrawer from './debug-drawer.jsx';
+import DebugInspector from './debug-inspector.jsx';
 
 /**
  * The debugger's controls: ⚑ ⏸ ⏭ ⏹, a speed dial, and what the program is doing.
@@ -36,6 +37,7 @@ const L10N = {
         pausedAt: 'Paused at', afterMs: 'after',
         noPins: 'Declare pins in the Code tab to debug this project.',
         bps: 'Pause points', noBps: 'Right-click a block and choose “Pause here”.',
+        skipped: 'hits passed over — a wait is re-entered constantly, and conditions filter the rest',
         unreachable: 'cannot be stopped at',
         unreachableWhy: 'The program only stops at a wait or a loop, so these marks have ' +
             'nowhere to land in this build. They are kept in case a later edit gives them one.',
@@ -51,6 +53,7 @@ const L10N = {
         pausedAt: 'Angehalten bei', afterMs: 'nach',
         noPins: 'Für das Debuggen im Code-Tab Pins deklarieren.',
         bps: 'Haltepunkte', noBps: 'Rechtsklick auf einen Block, dann „Hier anhalten“.',
+        skipped: 'übergangene Treffer — ein Warten wird ständig neu betreten, Bedingungen filtern den Rest',
         unreachable: 'nicht anhaltbar',
         unreachableWhy: 'Das Programm hält nur bei einem Warten oder einer Schleife an; diese ' +
             'Markierungen haben in diesem Build keinen Platz. Sie bleiben erhalten, falls eine ' +
@@ -212,10 +215,28 @@ class DebugPanel extends React.Component {
                                     <div key={id} style={{color: dead ? '#7f8c8d' : '#ecf0f1'}}>
                                         {'● '}
                                         {(ui.yieldKinds && ui.yieldKinds[id]) || id.slice(0, 8)}
+                                        {/* The condition belongs NEXT TO the mark:
+                                            a pause point that has one and does not
+                                            say so is the hardest kind to debug. */}
+                                        {ui.conditions && ui.conditions[id] ? (
+                                            <span style={{color: '#3498db', marginLeft: 6}}>
+                                                {`when ${ui.conditions[id]}`}
+                                            </span>
+                                        ) : null}
+                                        {ui.conditionErrors && ui.conditionErrors[id] ? (
+                                            <span style={{color: '#e74c3c', marginLeft: 6}}>
+                                                {ui.conditionErrors[id]}
+                                            </span>
+                                        ) : null}
                                         {dead ? ` — ${this.tx('unreachable')}` : ''}
                                     </div>
                                 );
                             })}
+                            {ui.skippedHits ? (
+                                <div style={{fontSize: 11, marginTop: 4, color: '#5d6d7e'}}>
+                                    {`${ui.skippedHits.toLocaleString()} ${this.tx('skipped')}`}
+                                </div>
+                            ) : null}
                             {(ui.unreachableBreakpoints || []).length ? (
                                 <div style={{fontSize: 11, marginTop: 4, color: '#7f8c8d'}}>
                                     {this.tx('unreachableWhy')}
@@ -224,6 +245,14 @@ class DebugPanel extends React.Component {
                         </div>
                     )}
                 </div>
+
+                {/* What is happening, in the user's own nouns. This comes FIRST
+                    and the machine's view comes underneath — the order every
+                    mature debugger uses, and the one this could not offer until
+                    the symbol table learned which memory holds `counter`. */}
+                {this.state.runner ? (
+                    <DebugInspector runner={this.state.runner} locale={this.props.locale} />
+                ) : null}
 
                 {/* Parity with emu8051's TUI, closed by default: opening it is
                     the user declaring they want the engineer's view. */}

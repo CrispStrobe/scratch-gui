@@ -69,7 +69,7 @@ export function createTrace({ capacity = DEFAULT_CAPACITY } = {}) {
          * @param {object} target a DebugTarget
          * @param {string} why what caused this row: 'step' | 'halt' | 'trace'
          */
-        record(target, why = 'halt') {
+        record(target, why = 'halt', extra = null) {
             const regs = target.regs();
             const pc = regs.pc;
             const len = instructionLength(target.readMem('code', pc, 1)[0]);
@@ -96,6 +96,12 @@ export function createTrace({ capacity = DEFAULT_CAPACITY } = {}) {
             for (const { name, addr } of [...IO_SFRS, ...TIMER_SFRS]) {
                 row.sfr[name] = target.readMem('sfr', addr, 1)[0];
             }
+
+            // The user's own variables, captured WITH the row. This is what
+            // makes the timeline a time machine rather than a log: scrubbing
+            // back shows what `counter` was then, not what it is now.
+            if (extra && extra.variables) row.variables = extra.variables;
+            if (extra && extra.tasks) row.tasks = extra.tasks;
 
             rows.push(row);
             if (rows.length > capacity) {

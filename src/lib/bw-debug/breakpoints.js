@@ -23,6 +23,15 @@
 /** @type {Set<string>} block ids the user has marked. */
 const marked = new Set();
 
+/**
+ * @type {Map<string, string>} block id -> condition source, for the marks that
+ * have one. Kept beside the set rather than inside it so that clearing a
+ * condition never clears the mark: "pause here, but only when…" and "pause
+ * here" are the same breakpoint with a filter, and losing the breakpoint while
+ * editing its filter would be its own small betrayal.
+ */
+const conditions = new Map();
+
 /** @type {Set<(ids: string[]) => void>} */
 const listeners = new Set();
 
@@ -47,16 +56,39 @@ export function listBreakpoints() {
  */
 export function toggleBreakpoint(blockId) {
     if (!blockId) return false;
-    if (marked.has(blockId)) marked.delete(blockId);
+    if (marked.has(blockId)) { marked.delete(blockId); conditions.delete(blockId); }
     else marked.add(blockId);
     notify();
     return marked.has(blockId);
+}
+
+/**
+ * Attach (or with a falsy value, remove) a condition on a mark.
+ * Marks the block if it was not marked — asking to pause when `counter > 10`
+ * plainly means pause here.
+ */
+export function setCondition(blockId, source) {
+    if (!blockId) return;
+    if (source) { marked.add(blockId); conditions.set(blockId, String(source)); }
+    else conditions.delete(blockId);
+    notify();
+}
+
+/** The condition on this mark, or null. */
+export function conditionOf(blockId) {
+    return conditions.get(blockId) || null;
+}
+
+/** Every condition, as {blockId: source}. */
+export function allConditions() {
+    return Object.fromEntries(conditions);
 }
 
 /** Forget everything. Loading a different project should call this. */
 export function clearBreakpoints() {
     if (!marked.size) return;
     marked.clear();
+    conditions.clear();
     notify();
 }
 

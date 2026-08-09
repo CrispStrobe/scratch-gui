@@ -34,9 +34,21 @@
  * @module
  */
 
-import { listBreakpoints, subscribeBreakpoints, toggleBreakpoint } from './breakpoints.js';
+import {
+    listBreakpoints, subscribeBreakpoints, toggleBreakpoint,
+    setCondition, conditionOf, allConditions
+} from './breakpoints.js';
+import { parseCondition } from './condition.js';
 import { createTrace, IO_SFRS, TIMER_SFRS } from './trace.js';
+import { setValueResolver } from './hover-values.js';
 import { instructionLength } from './opcodes.js';
+
+/**
+ * How many suppressed breakpoint hits one frame will absorb before yielding to
+ * the browser. A yield breakpoint on a `wait` re-fires every pass of the
+ * dispatch loop, so this is routinely in the thousands.
+ */
+const SKIP_BUDGET = 20000;
 
 /**
  * @param {object} opts
@@ -70,6 +82,12 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
     let variableTable = [];
     /** The project's declared pins, for the physical view. */
     let pinTable = [];
+    /** Conditions that failed to parse, surfaced rather than silently ignored. */
+    let conditionErrors = {};
+    /** How many conditional hits were skipped, so the UI can show it happened. */
+    let skipped = 0;
+    /** Set by the halt handler when a stop should not be shown; read by pumpFrame. */
+    let skipRequested = false;
     /** Address breakpoints, which the drawer sets by number rather than by block. */
     const addrBps = new Map();
 
@@ -104,6 +122,9 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
             breakpoints: listBreakpoints(),
             /** Marked blocks the current build has no yield point for. */
             unreachableBreakpoints: listBreakpoints().filter((id) => yieldOf.size && !yieldOf.has(id)),
+            conditions: allConditions(),
+            conditionErrors,
+            skippedHits: skipped,
             /** block id -> `wait` / `forever` / … so a list can name them, not hash them. */
             yieldKinds: Object.fromEntries(
                 [...yieldOf].map(([id, y]) => [id, y.kind])
@@ -310,6 +331,9 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
             );
         }
 
+        // The block editor asks for hover values through this, because the
+        // workspace and the runner are in different component trees.
+        setValueResolver((blockId) => runner.valuesAtBlock(blockId));
         symbols = built.symbols;
         variableTable = (symbols.variables || []).filter((v) => v.space);
         pinTable = stc.pins || [];
@@ -317,10 +341,23 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
         session = createDebugSession(target, {
             onChange: (st) => {
                 if (st.halted) {
+                    // A conditional pause point whose condition is false is not
+                    // a stop at all: resume before anything observes it, so the
+                    // glow does not flicker, the trace is not polluted with
+                    // hits the user asked not to see, and the UI never shows a
+                    // pause that immediately un-pauses.
+                    // Not resumed here: the frame loop does it, so that many
+                    // skips can be absorbed inside ONE frame. Resuming from
+                    // here cost a whole frame per skipped hit, and since a
+                    // yield breakpoint re-fires within microseconds the program
+                    // advanced by microseconds per frame — 1765 skips and the
+                    // wait had barely started.
+                    if (shouldSkip(st)) { skipped++; skipRequested = true; return; }
                     glow(st.tasks);
                     // One row per stop, always. The drawer's trace pane is the
                     // TUI's history ring; this is the cheap half of filling it.
-                    trace.record(target, st.why ? st.why.cause : 'halt');
+                    trace.record(target, st.why ? st.why.cause : 'halt',
+                        { variables: runner.variables(), tasks: st.tasks });
                 } else clearGlow();
                 emit();
             }
@@ -330,12 +367,86 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
         return session;
     }
 
+    /**
+     * Should this halt be swallowed?
+     *
+     * Only for a breakpoint hit on a block carrying a condition that evaluates
+     * false. Everything else — a step, a pause, an unconditional breakpoint, a
+     * condition that will not parse — stops. Erring towards stopping is
+     * deliberate: a pause point that silently never fires looks exactly like a
+     * broken debugger, while one that fires too often is merely annoying and
+     * is visibly the user's own condition.
+     */
+    function shouldSkip(st) {
+        const why = st.why;
+        if (!why || why.cause !== 'breakpoint' || why.bp === undefined) return false;
+
+        // A yield breakpoint is a code address at a `case` label, and the
+        // scheduler re-enters that label on EVERY pass of the dispatch loop
+        // while the task sits in it. A pause point on a `wait 0.3 seconds`
+        // therefore fires thousands of times during that one wait — measured
+        // at 1749 hits before this — so "resume" appears to do nothing and a
+        // condition never gets the chance to become true.
+        //
+        // The task itself already knows the difference: while it is waiting,
+        // `<task>_until` is in the future, and the C's own test is a
+        // wraparound-safe 16-bit compare. Reuse it. One stop per visit, on the
+        // pass where the wait is over — which is also the moment the user means
+        // by "pause here".
+        if (stillWaiting(why)) return true;
+
+        const blockId = [...bps].find(([, handle]) => handle === why.bp)?.[0];
+        if (!blockId) return false;
+        const source = conditionOf(blockId);
+        if (!source) return false;
+        const parsed = parseCondition(source);
+        if (parsed.error) return false;          // reported in the snapshot, and it stops
+        const vars = Object.fromEntries(runner.variables().map((v) => [v.name, v.value]));
+        try {
+            return !parsed.test(vars);
+        } catch {
+            return false;                        // never let a condition trap the debugger
+        }
+    }
+
+    /**
+     * Is the task we stopped in still counting down a wait?
+     *
+     * Mirrors the generated C exactly: `(int)(bw_now() - <task>_until) < 0`,
+     * a 16-bit wraparound-safe compare. A task with no deadline (`until`
+     * absent, which is how the target reports a task that is not waiting or
+     * has finished) is never "still waiting".
+     */
+    function stillWaiting(why) {
+        if (!target || !why || !why.tasks) return false;
+        const ms = target.bwMs();
+        if (ms === undefined) return false;
+        for (const t of why.tasks) {
+            if (t.until === undefined) continue;
+            const delta = (ms - t.until) & 0xFFFF;
+            const signed = delta > 0x7FFF ? delta - 0x10000 : delta;
+            if (signed < 0) return true;
+        }
+        return false;
+    }
+
     // ─── the frame loop ──────────────────────────────────────────────────
 
     function pumpFrame() {
         rafId = null;
         if (!session) return;
-        const outcome = session.pump();
+        let outcome = session.pump();
+
+        // Absorb skipped hits in this frame rather than one per frame. Bounded,
+        // because a pause point inside a tight loop with a condition that never
+        // becomes true would otherwise never hand the browser back: at the cap
+        // we simply return and try again next frame, which is slow but alive.
+        for (let n = 0; skipRequested && n < SKIP_BUDGET; n++) {
+            skipRequested = false;
+            session.resume();
+            outcome = session.pump();
+        }
+        if (skipRequested) { skipRequested = false; session.resume(); schedule(); return; }
         // Boundary A's clock. The emulator pushes PIN CHANGES to the board by
         // itself (emu_set_board_callbacks), but nothing pushes TIME: the debug
         // run path never calls on_advance, and the board integrates time to get
@@ -447,6 +558,42 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
             return now;
         },
 
+        /**
+         * "Pause here when counter > 10".
+         *
+         * Validated on the way in, so a typo is reported where it was typed
+         * rather than becoming a pause point that mysteriously never fires.
+         * Returns the parse error, or undefined on success.
+         */
+        setCondition(blockId, source) {
+            if (source) {
+                const parsed = parseCondition(source);
+                if (parsed.error) {
+                    conditionErrors = { ...conditionErrors, [blockId]: parsed.error };
+                    emit();
+                    return { error: parsed.error };
+                }
+                // A name the build does not have is not fatal — the variable may
+                // appear after an edit — but it IS worth saying, because the
+                // commonest condition that never fires is a misspelt name.
+                const known = new Set(runner.variables().map((v) => v.name));
+                const unknown = parsed.names.filter((n) => !known.has(n));
+                conditionErrors = { ...conditionErrors };
+                delete conditionErrors[blockId];
+                if (unknown.length && known.size) {
+                    conditionErrors[blockId] = `no variable named ${unknown.join(', ')}`;
+                }
+            } else {
+                conditionErrors = { ...conditionErrors };
+                delete conditionErrors[blockId];
+            }
+            setCondition(blockId, source);
+            emit();
+            return undefined;
+        },
+
+        conditionOf,
+
         // ─── the engineer's view ─────────────────────────────────────
         //
         // Everything below exists so the drawer can show what emu8051's TUI
@@ -515,8 +662,8 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
         setPc(addr) { return target ? target.setPc(addr) : { refused: 'nothing is loaded' }; },
 
         /** Reset registers only, or reset and clear RAM. The TUI's R) and W). */
-        resetCpu() { if (target) { target.reset(); trace.record(target, 'reset'); emit(); } },
-        wipe() { if (target) { target.wipe(); trace.record(target, 'reset'); emit(); } },
+        resetCpu() { if (target) { target.reset(); trace.record(target, 'reset', {variables: runner.variables()}); emit(); } },
+        wipe() { if (target) { target.wipe(); trace.record(target, 'reset', {variables: runner.variables()}); emit(); } },
 
         /** A breakpoint at a code ADDRESS, which blocks cannot express. */
         addressBreakpoints: () => [...addrBps.keys()],
@@ -633,6 +780,47 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
             return board.getLeds().map((id) => ({ id, brightness: board.ledBrightness(id) }));
         },
 
+        /**
+         * What the program looked like the last time it was AT this block.
+         *
+         * The debugger's answer to "what was `counter` here?", which is the
+         * question a learner actually has and the one a live-values pane
+         * cannot answer: by the time you look, the program has moved on.
+         * Every recorded stop already carries a full variable snapshot and the
+         * position it was taken at, so this is a lookup, not new machinery.
+         *
+         * Returns null when this block has never been stopped at — which is
+         * the honest answer, and different from "all its variables were zero".
+         *
+         * @param {string} blockId
+         * @returns {{variables: Array, tNs: bigint, agoMs: number, why: string} | null}
+         */
+        valuesAtBlock(blockId) {
+            const y = yieldOf.get(blockId);
+            if (!y) return null;
+            const rows = trace.rows();
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const row = rows[i];
+                if (!row.variables || !row.tasks) continue;
+                // The row was taken while this task sat in this state — which
+                // is exactly "the program was at this block".
+                const here = row.tasks.some((t) => t.task === y.task && t.state === y.state);
+                if (!here) continue;
+                const now = target ? target.timeNs() : row.tNs;
+                return {
+                    variables: row.variables,
+                    tNs: row.tNs,
+                    // Clamped: when the program is paused AT this block, now
+                    // and the row are the same instant, and `-0 ms ago` is a
+                    // JS artefact rather than a fact about the program.
+                    agoMs: Math.max(0, Number(now - row.tNs) / 1e6),
+                    why: row.why,
+                    kind: y.kind
+                };
+            }
+            return null;
+        },
+
         /** Program time, in ms, or null before anything has run. */
         timeMs: () => (target ? Number(target.timeNs()) / 1e6 : null),
 
@@ -642,6 +830,7 @@ export function createDebugRunner({ vm, compilerUrl = 'https://stc-compiler.verc
         symbols: () => symbols,
 
         destroy() {
+            setValueResolver(null);
             unschedule();
             if (unsubscribeBps) { unsubscribeBps(); unsubscribeBps = null; }
             clearGlow();
