@@ -62,7 +62,13 @@ const base = {
         symlinks: false,
         alias: {
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
-            'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts')
+            'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
+            // Emscripten emits one `require("node:fs")` for its Node path, behind an
+            // ENVIRONMENT_IS_NODE guard that is false in a browser. webpack 5 knows the
+            // `node:` scheme and shrugs; webpack 4 does not, and fails the whole build
+            // with "Can't resolve 'node:fs'". Point it at an empty module: the branch
+            // that would use it cannot run here.
+            'node:fs$': path.resolve(__dirname, 'src/lib/tw-empty-module.js')
         }
     },
     module: {
