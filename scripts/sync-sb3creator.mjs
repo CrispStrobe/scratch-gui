@@ -32,7 +32,9 @@ const FILES = [
     ['src/utils/javascriptToPseudocode.js', path.join(lib, 'sb3-creator-javascript.js')],
     ['src/utils/cToPseudocode.js', path.join(lib, 'sb3-creator-c.js')],
     ['src/utils/runtimeRegistry.generated.js', path.join(lib, 'sb3-creator-runtime.js')],
-    ['src/utils/scratchRuntime.js', path.join(lib, 'sb3-creator-scratchruntime.js')]
+    ['src/utils/scratchRuntime.js', path.join(lib, 'sb3-creator-scratchruntime.js')],
+    ['src/utils/cHostRuntime.js', path.join(lib, 'sb3-creator-chostruntime.js')],
+    ['src/utils/cHostToPseudocode.js', path.join(lib, 'sb3-creator-chost.js')]
 ];
 
 async function readSource (rel) {
@@ -47,7 +49,9 @@ async function readSource (rel) {
 const rewriteImports = (src) => src
     .replace(/(['"])\.\/pythonToPseudocode\.js\1/g, "'./sb3-creator-python.js'")
     .replace(/(['"])\.\/runtimeRegistry\.generated\.js\1/g, "'./sb3-creator-runtime.js'")
-    .replace(/(['"])\.\/scratchRuntime\.js\1/g, "'./sb3-creator-scratchruntime.js'");
+    .replace(/(['"])\.\/scratchRuntime\.js\1/g, "'./sb3-creator-scratchruntime.js'")
+    .replace(/(['"])\.\/cHostRuntime\.js\1/g, "'./sb3-creator-chostruntime.js'")
+    .replace(/(['"])\.\/cHostToPseudocode\.js\1/g, "'./sb3-creator-chost.js'");
 
 let stale = 0;
 for (const [remote, dest] of FILES) {
@@ -65,6 +69,22 @@ for (const [remote, dest] of FILES) {
         console.log(`  wrote ${path.basename(dest)}`);
     }
 }
+
+// A hardcoded file list is only as good as the last person to edit it: a new
+// module in sb3-creator would be missed here and surface as a webpack
+// missing-module error far from the cause. So check that every relative import
+// in what we just vendored actually resolves to something we vendored.
+const vendored = new Set(FILES.map(([, dest]) => path.basename(dest)));
+let unresolved = 0;
+for (const [, dest] of FILES) {
+    const text = await readFile(dest, 'utf8').catch(() => '');
+    for (const m2 of text.matchAll(/from\s+['"](\.\/[^'"\n]+)['"]/g)) {
+        if (vendored.has(path.basename(m2[1]))) continue;
+        unresolved++;
+        console.error(`  MISSING ${path.basename(dest)} imports ${m2[1]} — add it to FILES`);
+    }
+}
+if (unresolved) process.exit(1);
 
 if (check && stale) {
     console.error(`\n${stale} vendored file(s) out of date — run: npm run sync:sb3creator`);
