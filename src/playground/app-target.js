@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom';
 import {setAppElement} from 'react-modal';
+import {applyStoredChrome} from '../components/gui/chrome-toggle.jsx';
 
 const appTarget = document.getElementById('app');
 
@@ -11,6 +12,8 @@ while (appTarget.firstChild) {
 setAppElement(appTarget);
 
 const render = children => {
+    // Before first paint, or the tall chrome flashes and then collapses.
+    applyStoredChrome();
     ReactDOM.render(children, appTarget);
 
     if (window.SplashEnd) {

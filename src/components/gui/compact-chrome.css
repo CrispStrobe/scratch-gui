@@ -1,0 +1,78 @@
+/*
+ * The collapsed chrome. Slice 1 of reference/gui-layout.md.
+ *
+ * Everything here hangs off one class on <body>, so the rest of the editor needs
+ * no knowledge of it. Selectors are :global because the elements they touch are
+ * rendered by components with their own CSS modules -- reaching them from a
+ * module-scoped class is not possible, and duplicating those components to add a
+ * modifier class would be a far larger change than the feature is worth.
+ */
+
+/* The toggle itself: quiet, in the corner, and the same size in both states so
+   the chrome does not jump under the cursor that just clicked it. */
+.chrome-toggle {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    z-index: 100;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.85);
+    color: #575e75;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.chrome-toggle:hover {
+    background: #fff;
+    border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* ---- collapsed ---------------------------------------------------------- */
+
+/* The menu bar folds away. Not `display: none`: it keeps its box so the toggle
+   stays where it was and the click target does not move out from under you. */
+:global(body.bw-compact-chrome) [class*="menu-bar_menu-bar"] {
+    height: 32px;
+    min-height: 32px;
+    overflow: hidden;
+}
+
+/* Its contents scale with it rather than being clipped mid-glyph. */
+:global(body.bw-compact-chrome) [class*="menu-bar_menu-bar-item"] {
+    height: 32px;
+    font-size: 0.72rem;
+}
+
+:global(body.bw-compact-chrome) [class*="menu-bar_logo-wrapper"],
+:global(body.bw-compact-chrome) [class*="menu-bar_feedback"] {
+    display: none;
+}
+
+/* The tab row keeps every tab -- capability, not permanence -- but drops the
+   words. The icons and emoji stay, so nothing becomes unreachable. */
+:global(body.bw-compact-chrome) [class*="gui_tab-list"] {
+    height: 28px;
+}
+
+:global(body.bw-compact-chrome) [class*="gui_tab"] {
+    padding: 0 10px !important;
+    font-size: 0;             /* hides the label text */
+    line-height: 28px;
+}
+
+/* …but not the icon, which is a child element and needs its size back. */
+:global(body.bw-compact-chrome) [class*="gui_tab"] img,
+:global(body.bw-compact-chrome) [class*="gui_tab"] span {
+    font-size: 15px;
+    margin: 0;
+}
+
+/* The body reclaims exactly what the two rows gave up. */
+:global(body.bw-compact-chrome) [class*="gui_body-wrapper"] {
+    height: calc(100% - 32px);
+}

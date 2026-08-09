@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
+import DebugPanel from './debug-panel.jsx';
+
 /**
  * The circuit designer, as a first-class editor tab beside Code / Costumes / Sounds.
  *
@@ -21,7 +23,8 @@ import {connect} from 'react-redux';
 class CircuitTab extends React.Component {
     constructor (props) {
         super(props);
-        this.state = {Designer: null, error: null, stc: null};
+        this.state = {Designer: null, error: null, stc: null, board: null, debugState: null};
+        this.handleRunnerChange = this.handleRunnerChange.bind(this);
     }
 
     componentDidMount () {
@@ -45,6 +48,27 @@ class CircuitTab extends React.Component {
             this.setState({error: e.message});
         }
         this.loading = false;
+    }
+
+    /**
+     * The debugger's board is THE board.
+     *
+     * Without this the tab builds its own and the runner builds another, and the
+     * one on screen is not the one the emulator is driving — LEDs stay dark while
+     * the program blinks them. Boundary A × D needs nothing more than handing the
+     * same instance over: a halted MCU stops calling advanceTo, so the board
+     * freezes coherently and no pause() is needed (DEBUG-CONTROL-MODEL §3.1).
+     */
+    handleRunnerChange (runner, ui) {
+        const board = runner.board();
+        const halted = !!(ui && ui.session && ui.session.halted);
+        const why = ui && ui.session && ui.session.why;
+        if (board !== this.state.board || halted !== (this.state.debugState || {}).halted) {
+            this.setState({
+                board,
+                debugState: {halted, skewNs: why ? why.skewNs : 0n}
+            });
+        }
     }
 
     /** The project's own hardware declarations — device, clock, and the pin table.
@@ -83,7 +107,30 @@ class CircuitTab extends React.Component {
                          'and the designer will suggest the matching parts.'}
                     </div>
                 )}
-                <Designer stc={stc} />
+                {/* The debugger's controls, above the board they act on. The design note
+                    puts them in the stage header; they are here because that header is
+                    shown for every project including pure Scratch ones — see the panel's
+                    own comment. The block glow lands in the Blocks tab regardless. */}
+                {stc && stc.pins && stc.pins.length ? (
+                    <div style={{marginBottom: 10}}>
+                        <DebugPanel
+                            clockHz={(stc && Number(stc.clock)) || 11059200}
+                            onRunnerChange={this.handleRunnerChange}
+                        />
+                    </div>
+                ) : null}
+                <Designer
+                    stc={stc}
+                    board={this.state.board || undefined}
+                    debugState={this.state.debugState || undefined}
+                    onDeclarationChange={(decls) => {
+                        // TODO: write decls back to project.stc so the block palette updates.
+                        // Currently project.stc is read-only from the VM — writing it back
+                        // requires either a vm.setStc() API or round-tripping through loadProject.
+                        // For now, declarations are derived but not persisted.
+                        // The bw-blocks agent may provide the integration path.
+                    }}
+                />
             </div>
         );
     }
